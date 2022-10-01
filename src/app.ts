@@ -92,7 +92,7 @@ class App {
             },
         })
 
-        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))
+        this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec))
     }
 
     private initializeErrorHandling() {
