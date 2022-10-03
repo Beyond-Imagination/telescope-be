@@ -13,6 +13,7 @@ import swaggerUi from 'swagger-ui-express'
 import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
 import { logger, stream } from '@utils/logger'
+import dbConnector from '@models/connector'
 
 class App {
     public app: express.Application
@@ -28,6 +29,10 @@ class App {
         this.initializeRoutes(Controllers)
         this.initializeSwagger(Controllers)
         this.initializeErrorHandling()
+    }
+
+    public async connectDB() {
+        await dbConnector()
     }
 
     public listen() {
