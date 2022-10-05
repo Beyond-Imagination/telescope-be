@@ -1,9 +1,9 @@
-import { getModelForClass, mongoose, prop } from '@typegoose/typegoose'
+import { getModelForClass, prop } from '@typegoose/typegoose'
 import { Document } from './document'
 
-class Point extends Document {
+export class Point extends Document {
     @prop()
-    public client_id: string
+    public clientId: string
 
     @prop()
     public type: string
@@ -12,4 +12,4 @@ class Point extends Document {
     public point: number
 }
 
-export default getModelForClass(Point)
+export const PointModel = getModelForClass(Point)
