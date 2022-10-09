@@ -1,5 +1,11 @@
+import { modelOptions } from '@typegoose/typegoose'
 import { Expose, Transform } from 'class-transformer'
 
+@modelOptions({
+    schemaOptions: {
+        timestamps: true,
+    },
+})
 export class Document {
     @Expose()
     @Transform(value => {
