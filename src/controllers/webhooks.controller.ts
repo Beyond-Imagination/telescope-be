@@ -1,6 +1,8 @@
-import { Controller, Post } from 'routing-controllers'
+import { Controller, Post, UseBefore } from 'routing-controllers'
+import { webhookValidation } from '@middlewares/validation.middleware'
 
 @Controller('/webhooks')
+@UseBefore(webhookValidation)
 export class WebhooksController {
     @Post('/issue/create')
     createIssue() {

@@ -1,13 +1,14 @@
 import { OrganizationModel } from '@models/organization'
 import { OrganizationExistException } from '@exceptions/OrganizationExistException'
 import axios from 'axios'
-import { Body } from 'routing-controllers'
 import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { getBearerToken, verifyRequest } from '@utils/verifyUtil'
+import { getAxiosOption, getBearerToken } from '@utils/verifyUtil'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { SERVER_URL, VERSION } from '@utils/constants'
 import { Request } from 'express'
+import { PointModel } from '@models/point'
+import { Transactional } from '@utils/util'
 
 export class IndexService {
     webHookInfos = [
@@ -19,19 +20,9 @@ export class IndexService {
         new WebHookInfo('close_code_review', '/code-review/close', 'close_code_review', 'CodeReview', 'CodeReview.Closed'),
     ]
 
-    async install(request: Request, @Body() dto: InstallDTO) {
-        const bearerToken = `Bearer ${await getBearerToken(dto.serverUrl, dto.clientId, dto.clientSecret)}`
-
-        const axiosOptions = {
-            headers: {
-                'content-type': 'application/json',
-                Accept: 'application/json',
-                Authorization: bearerToken,
-            },
-        }
-
-        // 해당 요청이 올바른 요청인지 확인한다
-        await verifyRequest(request, dto.serverUrl, dto.clientId, axiosOptions)
+    @Transactional()
+    async install(request: Request, dto: InstallDTO, bearerToken: string) {
+        const axiosOptions = getAxiosOption(bearerToken)
 
         if (dto.className != 'InitPayload') {
             throw new WrongClassNameException()
@@ -44,13 +35,7 @@ export class IndexService {
         await this.registerUIExtension(dto.serverUrl, axiosOptions)
 
         // 스페이스 정보를 저장한다.
-        await new OrganizationModel({
-            clientId: dto.clientId,
-            clientSecret: dto.clientSecret,
-            serverUrl: dto.serverUrl,
-            admin: [dto.userId],
-            version: VERSION,
-        }).save()
+        await this.insertDBData(dto)
     }
 
     private addWebhooks(url: string, clientId: string, axiosOptions: any) {
@@ -113,5 +98,28 @@ export class IndexService {
             },
             axiosOptions,
         )
+    }
+
+    private async insertDBData(dto: InstallDTO) {
+        const promises = []
+
+        this.webHookInfos.forEach(webHookInfo => {
+            promises.push(
+                new PointModel({
+                    clientId: dto.clientId,
+                    type: webHookInfo.webHookName,
+                    point: 1,
+                }).save(),
+            )
+        })
+
+        await new OrganizationModel({
+            clientId: dto.clientId,
+            clientSecret: dto.clientSecret,
+            serverUrl: dto.serverUrl,
+            admin: [dto.userId],
+            version: VERSION,
+            point: await Promise.all(promises),
+        }).save()
     }
 }

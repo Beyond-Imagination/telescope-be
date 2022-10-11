@@ -14,6 +14,7 @@ import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
 import { logger, stream } from '@utils/logger'
 import dbConnector from '@models/connector'
+import { requestValidationMiddleware } from '@middlewares/validation.middleware'
 
 class App {
     public app: express.Application

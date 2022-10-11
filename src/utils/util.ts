@@ -1,3 +1,5 @@
+import { startSession } from 'mongoose'
+
 /**
  * @method isEmpty
  * @param {String | Number | Object} value
@@ -11,9 +13,26 @@ export const isEmpty = (value: string | number | object): boolean => {
         return true
     } else if (typeof value === 'undefined' || value === undefined) {
         return true
-    } else if (value !== null && typeof value === 'object' && !Object.keys(value).length) {
-        return true
-    } else {
-        return false
+    } else return value !== null && typeof value === 'object' && !Object.keys(value).length
+}
+
+// DB 트랜잭션을 걸어주는 데코레이터
+export function Transactional() {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const method = descriptor.value
+        descriptor.value = async function (...args) {
+            const session = await startSession()
+            try {
+                session.startTransaction()
+                const result = method.apply(this, args)
+                await session.commitTransaction()
+                await session.endSession()
+                return result
+            } catch (error) {
+                await session.abortTransaction()
+                await session.endSession()
+                throw error
+            }
+        }
     }
 }
