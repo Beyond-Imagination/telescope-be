@@ -1,6 +1,5 @@
-import { getModelForClass, prop, Ref, ReturnModelType } from '@typegoose/typegoose'
+import { getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
 import { Document } from '@models/document'
-import { Point } from '@models/point'
 
 export enum AchievementType {
     CreateIssue = 'create_issue',
@@ -18,9 +17,6 @@ export class Achievement extends Document {
 
     @prop({ enum: AchievementType, type: String })
     public type: AchievementType
-
-    @prop({ ref: 'Point' })
-    public point: Ref<Point>
 
     @prop()
     public performedAt: Date
@@ -47,8 +43,8 @@ export class Achievement extends Document {
             },
             {
                 $lookup: {
-                    // score table 과 join. 1:1 match
-                    from: 'score',
+                    // points table 과 join. 1:1 match
+                    from: 'points',
                     localField: 'type',
                     foreignField: 'type',
                     pipeline: [{ $match: { $expr: { $eq: ['$clientId', clientId] } } }],
