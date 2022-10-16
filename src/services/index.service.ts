@@ -9,6 +9,7 @@ import { SERVER_URL, VERSION } from '@utils/constants'
 import { Request } from 'express'
 import { PointModel } from '@models/point'
 import { Transactional } from '@utils/util'
+import { AchievementType } from '@models/achievement'
 
 export class IndexService {
     webHookInfos = [
@@ -103,11 +104,12 @@ export class IndexService {
     private async insertDBData(dto: InstallDTO) {
         const promises = []
 
-        this.webHookInfos.forEach(webHookInfo => {
+        const achievementTypes = Object.values(AchievementType)
+        achievementTypes.forEach(type => {
             promises.push(
                 new PointModel({
                     clientId: dto.clientId,
-                    type: webHookInfo.webHookName,
+                    type: type,
                     point: 1,
                 }).save(),
             )

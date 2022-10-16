@@ -2,6 +2,13 @@ import { getModelForClass, prop, Ref, ReturnModelType } from '@typegoose/typegoo
 import { Document } from '@models/document'
 import { Point } from '@models/point'
 
+export enum AchievementType {
+    CreateIssue = 'create_issue',
+    ResolveIssue = 'resolve_issue',
+    CreateCodeReview = 'create_code_review',
+    MergeMr = 'merge_mr',
+}
+
 export class Achievement extends Document {
     @prop()
     public clientId: string
@@ -9,16 +16,16 @@ export class Achievement extends Document {
     @prop()
     public user: string
 
-    @prop()
-    public type: string
+    @prop({ enum: AchievementType, type: String })
+    public type: AchievementType
 
-    @prop()
+    @prop({ ref: 'Point' })
     public point: Ref<Point>
 
     @prop()
     public performedAt: Date
 
-    public static async getTeamScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date ) {
+    public static async getTeamScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         return this.aggregate(this.getAggregationPipeline(clientId, fromDate, toDate, '$clientId'))
     }
 
