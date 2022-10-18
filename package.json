@@ -4,6 +4,7 @@
     "description": "TypeScript + Routing Controllers + Express API Server",
     "author": "",
     "license": "ISC",
+    "private": true,
     "scripts": {
         "start": "yarn build && cross-env NODE_ENV=production node dist/server.js",
         "dev": "cross-env NODE_ENV=development nodemon",

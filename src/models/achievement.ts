@@ -22,7 +22,9 @@ export class Achievement extends Document {
     public performedAt: Date
 
     public static async getTeamScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
-        return this.aggregate(this.getAggregationPipeline(clientId, fromDate, toDate, '$clientId'))
+        const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$clientId')
+        pipeline.push({ $unset: '_id' })
+        return this.aggregate(pipeline)
     }
 
     public static async getRankingsByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {

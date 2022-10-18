@@ -3,7 +3,7 @@ import { OrganizationExistException } from '@exceptions/OrganizationExistExcepti
 import axios from 'axios'
 import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { getAxiosOption, getBearerToken } from '@utils/verifyUtil'
+import { getAxiosOption } from '@utils/verifyUtil'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { SERVER_URL, VERSION } from '@utils/constants'
 import { Request } from 'express'
