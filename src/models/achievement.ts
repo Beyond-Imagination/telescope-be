@@ -1,4 +1,4 @@
-import { getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
+import { DocumentType, getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
 import { Document } from '@models/document'
 
 export enum AchievementType {
@@ -20,6 +20,23 @@ export class Achievement extends Document {
 
     @prop()
     public performedAt: Date
+
+    public static async saveAchievement(clientId: string, user: string, type: AchievementType): Promise<any> {
+        return new AchievementModel({
+            clientId,
+            user,
+            type,
+            performedAt: new Date(),
+        }).save()
+    }
+
+    public static async deleteAchievement(clientId: string, user: string, type: AchievementType): Promise<any> {
+        return AchievementModel.deleteOne({
+            clientId,
+            user,
+            type,
+        })
+    }
 
     public static async getTeamScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$clientId')
