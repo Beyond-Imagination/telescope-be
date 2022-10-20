@@ -13,10 +13,38 @@ import { AchievementType } from '@models/achievement'
 
 export class IndexService {
     webHookInfos = [
-        new WebHookInfo('create_issue', '/issue/create', 'create_issue', 'Issue', 'Issue.Created'),
-        new WebHookInfo('update_issue_status', '/issue/update/status', 'update_issue_status', 'Issue', 'Issue.StatusUpdated'),
-        new WebHookInfo('update_issue_assignee', '/issue/update/assignee', 'update_issue_assignee', 'Issue', 'Issue.AssigneeUpdated'),
-        new WebHookInfo('delete_issue', '/issue/delete', 'delete_issue', 'Issue', 'Issue.Deleted'),
+        new WebHookInfo(
+            'create_issue',
+            '/issue/create',
+            'create_issue',
+            'Issue',
+            'Issue.Created',
+            'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id))',
+        ),
+        new WebHookInfo(
+            'update_issue_status',
+            '/issue/update/status',
+            'update_issue_status',
+            'Issue',
+            'Issue.StatusUpdated',
+            'clientId,verificationToken,webhookId,payload(issue(id,assignee(id)),status(new(resolved),old(resolved)))',
+        ),
+        new WebHookInfo(
+            'update_issue_assignee',
+            '/issue/update/assignee',
+            'update_issue_assignee',
+            'Issue',
+            'Issue.AssigneeUpdated',
+            'clientId,verificationToken,webhookId,payload(assignee(old(id),new(id)),issue(id,status(resolved)))',
+        ),
+        new WebHookInfo(
+            'delete_issue',
+            '/issue/delete',
+            'delete_issue',
+            'Issue',
+            'Issue.Deleted',
+            'clientId,verificationToken,webhookId,payload(issue(id,assignee(id),status(resolved)),deleted(new))',
+        ),
         new WebHookInfo('create_code_review', '/code-review/create', 'create_code_review', 'CodeReview', 'CodeReview.Created'),
         new WebHookInfo('close_code_review', '/code-review/close', 'close_code_review', 'CodeReview', 'CodeReview.Closed'),
     ]
@@ -65,6 +93,7 @@ export class IndexService {
                     sslVerification: false,
                 },
                 acceptedHttpResponseCodes: [],
+                payloadFields: webHookInfo.payloadFields,
             },
             axiosOptions,
         )

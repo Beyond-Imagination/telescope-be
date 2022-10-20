@@ -5,6 +5,7 @@ export class WebHookInfo {
         public subscriptionName: string,
         public subjectCode: string,
         public eventTypeCode: string,
+        public payloadFields: string = null,
     ) {
         // nothing to do
     }
