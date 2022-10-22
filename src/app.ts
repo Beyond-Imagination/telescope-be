@@ -14,6 +14,7 @@ import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
 import { logger, stream } from '@utils/logger'
 import dbConnector from '@models/connector'
+import * as mongoose from 'mongoose'
 
 class App {
     public app: express.Application
@@ -36,12 +37,28 @@ class App {
     }
 
     public listen() {
-        this.app.listen(this.port, () => {
+        const server = this.app.listen(this.port, () => {
             logger.info(`=================================`)
             logger.info(`======= ENV: ${this.env} =======`)
             logger.info(`🚀 App listening on the port ${this.port}`)
             logger.info(`=================================`)
         })
+
+        const gracefulShutdownHandler = function gracefulShutdownHandler() {
+            console.log(`Gracefully shutting down`)
+
+            setTimeout(() => {
+                console.log('Shutting down application')
+                server.close(async function () {
+                    console.log('All requests stopped, shutting down')
+                    await mongoose.connection.close(false)
+                    process.exit()
+                })
+            }, 0)
+        }
+
+        process.on('SIGINT', gracefulShutdownHandler)
+        process.on('SIGTERM', gracefulShutdownHandler)
     }
 
     public getServer() {

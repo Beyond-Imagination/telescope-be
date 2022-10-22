@@ -1,7 +1,8 @@
-import { Body, Controller, Post, UseBefore, OnUndefined } from 'routing-controllers'
+import { Body, Controller, Post, UseBefore, OnUndefined, Res } from 'routing-controllers'
 import { webhookValidation } from '@middlewares/validation.middleware'
-import { UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDTO, UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
+import { Response } from 'express'
 
 @Controller('/webhooks')
 @UseBefore(webhookValidation)
@@ -30,12 +31,14 @@ export class WebhooksController {
     }
 
     @Post('/code-review/create')
-    createCodeReview() {
-        return 'OK'
+    @OnUndefined(204)
+    async createCodeReview(@Body() payload: CodeReviewDTO, @Res() response: Response) {
+        await this.service.handleCodeReviewWebHook(payload, response.locals.bearerToken, true)
     }
 
     @Post('/code-review/close')
-    deleteCodeReview() {
-        return 'OK'
+    @OnUndefined(204)
+    async closeCodeReview(@Body() payload: CodeReviewDTO, @Res() response: Response) {
+        await this.service.handleCodeReviewWebHook(payload, response.locals.bearerToken, false)
     }
 }

@@ -1,4 +1,4 @@
-import { DocumentType, getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
+import { getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
 import { Document } from '@models/document'
 
 export enum AchievementType {

@@ -49,6 +49,9 @@ export class IndexService {
         new WebHookInfo('close_code_review', '/code-review/close', 'close_code_review', 'CodeReview', 'CodeReview.Closed'),
     ]
 
+    // API 실행에 필요한 권한은 여기에 넣어주시면 application 설치시에 자동으로 신청됩니다.
+    rightCodes = ['Project.CodeReview.View']
+
     @Transactional()
     async install(request: Request, dto: InstallDTO, bearerToken: string) {
         const axiosOptions = getAxiosOption(bearerToken)
@@ -59,12 +62,22 @@ export class IndexService {
 
         if (await OrganizationModel.findByClientId(dto.clientId)) throw new OrganizationExistException()
 
+        await this.requestPermissions(dto.serverUrl, dto.clientId, axiosOptions)
+
         await Promise.all(this.addWebhooks(dto.serverUrl, dto.clientId, axiosOptions))
 
         await this.registerUIExtension(dto.serverUrl, axiosOptions)
 
         // 스페이스 정보를 저장한다.
         await this.insertDBData(dto)
+    }
+
+    private requestPermissions(url: string, clientId: string, axiosOptions: any) {
+        return axios.patch(
+            `${url}/api/http/applications/clientId:${clientId}/authorizations/authorized-rights/request-rights`,
+            { contextIdentifier: 'global', rightCodes: this.rightCodes },
+            axiosOptions,
+        )
     }
 
     private addWebhooks(url: string, clientId: string, axiosOptions: any) {

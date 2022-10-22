@@ -36,3 +36,25 @@ export class UpdateIssueStatusDTO {
         return this.payload.status.old.resolved && !this.payload.status.new.resolved
     }
 }
+
+export class CodeReviewDTO {
+    @IsNotEmpty()
+    clientId: string
+
+    @IsNotEmpty()
+    payload: {
+        className: string
+        isMergeRequest: boolean
+        projectKey: {
+            key: string
+        }
+        repository: string
+        reviewId: string
+        title: string
+    }
+
+    verificationToken: string
+
+    @IsNotEmpty()
+    webhookId: string
+}
