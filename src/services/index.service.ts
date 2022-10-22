@@ -5,11 +5,11 @@ import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { getAxiosOption } from '@utils/verifyUtil'
 import { WebHookInfo } from '@dtos/WebHookInfo'
-import { SERVER_URL, VERSION } from '@utils/constants'
 import { Request } from 'express'
 import { PointModel } from '@models/point'
 import { Transactional } from '@utils/util'
 import { AchievementType } from '@models/achievement'
+import { SERVER_URL, CLIENT_URL, VERSION } from '@config'
 
 export class IndexService {
     webHookInfos = [
@@ -135,7 +135,7 @@ export class IndexService {
                 extensions: [
                     {
                         className: 'ApplicationHomepageUiExtensionIn',
-                        iframeUrl: 'https://someFrontEnd.com',
+                        iframeUrl: CLIENT_URL,
                     },
                 ],
             },
