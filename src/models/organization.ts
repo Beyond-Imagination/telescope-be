@@ -1,9 +1,11 @@
-import { ReturnModelType, getModelForClass, prop, Ref, plugin } from '@typegoose/typegoose'
+import { ReturnModelType, getModelForClass, prop, Ref, index, plugin } from '@typegoose/typegoose'
 import autopopulate from 'mongoose-autopopulate'
 
 import { Document } from './document'
 import { Point } from '@models/point'
 
+@index({ clientId: 1 })
+@index({ serverUrl: 1 })
 @plugin(autopopulate as any)
 export class Organization extends Document {
     @prop()

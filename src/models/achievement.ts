@@ -1,4 +1,4 @@
-import { getModelForClass, prop, ReturnModelType } from '@typegoose/typegoose'
+import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typegoose'
 import { Document } from '@models/document'
 
 export enum AchievementType {
@@ -8,6 +8,7 @@ export enum AchievementType {
     MergeMr = 'merge_mr',
 }
 
+@index({ clientId: 1, achievedAt: -1 })
 export class Achievement extends Document {
     @prop()
     public clientId: string
@@ -19,7 +20,7 @@ export class Achievement extends Document {
     public type: AchievementType
 
     @prop()
-    public performedAt: Date
+    public achievedAt: Date
 
     public static async saveAchievement(clientId: string, user: string, type: AchievementType): Promise<any> {
         return new AchievementModel({
@@ -47,17 +48,16 @@ export class Achievement extends Document {
     public static async getRankingsByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
         pipeline.push({ $sort: { total: -1 } })
-        return this.aggregate(pipeline)
+        return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
     }
 
-    // TODO sample data 추가 후 테스트
     private static getAggregationPipeline(clientId: string, fromDate: Date, toDate: Date, groupKey: string): any[] {
         return [
             {
                 $match: {
                     // where 조건. clientId 가 같으면서 원하는 범위의 날짜만
                     clientId: clientId,
-                    performedAt: { $gte: fromDate, $lte: toDate },
+                    achievedAt: { $gte: fromDate, $lte: toDate },
                 },
             },
             {
@@ -75,6 +75,15 @@ export class Achievement extends Document {
                 // 기존 : score = [ { $score_info } ]
                 // 변경 : score = { $score_info }
                 $unwind: '$score',
+            },
+            {
+                $project: {
+                    user: 1,
+                    type: 1,
+                    score: {
+                        point: 1,
+                    },
+                },
             },
             {
                 // user 의 각 type 별 점수 계산
