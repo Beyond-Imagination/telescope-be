@@ -50,7 +50,7 @@ export class IndexService {
     ]
 
     // API 실행에 필요한 권한은 여기에 넣어주시면 application 설치시에 자동으로 신청됩니다.
-    rightCodes = ['Project.CodeReview.View']
+    rightCodes = ['Project.CodeReview.View', 'Profile.View']
 
     @Transactional()
     async install(request: Request, dto: InstallDTO, bearerToken: string) {
