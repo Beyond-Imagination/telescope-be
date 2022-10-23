@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseBefore, OnUndefined, Res } from 'routing-controllers'
 import { webhookValidation } from '@middlewares/validation.middleware'
-import { CodeReviewDTO, UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDTO, UpdateIssueStatusDTO, UpdateIssueAssigneeDTO, CreateIssueDTO, DeleteIssueDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Response } from 'express'
 
@@ -10,8 +10,9 @@ export class WebhooksController {
     service: WebhookService = new WebhookService()
 
     @Post('/issue/create')
-    createIssue() {
-        return 'OK'
+    @OnUndefined(204)
+    async createIssue(@Body() payload: CreateIssueDTO) {
+        await this.service.createIssue(payload)
     }
 
     @Post('/issue/update/status')
@@ -21,13 +22,15 @@ export class WebhooksController {
     }
 
     @Post('/issue/update/assignee')
-    updateIssueAssignee() {
-        return 'OK'
+    @OnUndefined(204)
+    async updateIssueAssignee(@Body() payload: UpdateIssueAssigneeDTO) {
+        await this.service.updateIssueAssignee(payload)
     }
 
     @Post('/issue/delete')
-    deleteIssue() {
-        return 'OK'
+    @OnUndefined(204)
+    async deleteIssue(@Body() payload: DeleteIssueDTO) {
+        await this.service.deleteIssue(payload)
     }
 
     @Post('/code-review/create')

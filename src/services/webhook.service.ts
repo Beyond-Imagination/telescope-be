@@ -1,11 +1,19 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
-import { CodeReviewDTO, UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
 import { getAxiosOption } from '@utils/verifyUtil'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import axios from 'axios'
 import { OrganizationModel } from '@models/organization'
+import { CodeReviewDTO, UpdateIssueStatusDTO, UpdateIssueAssigneeDTO, CreateIssueDTO, DeleteIssueDTO } from '@dtos/webhooks.dtos'
 
 export class WebhookService {
+    public async createIssue(createIssueDTO: CreateIssueDTO) {
+        await AchievementModel.saveAchievement(
+            createIssueDTO.clientId,
+            createIssueDTO.payload.meta.principal.details.user.id,
+            AchievementType.CreateIssue,
+        )
+    }
+
     public async updateIssueStatus(updateIssueStatusDTO: UpdateIssueStatusDTO) {
         if (updateIssueStatusDTO.isResolved()) {
             await AchievementModel.saveAchievement(
@@ -19,6 +27,28 @@ export class WebhookService {
                 updateIssueStatusDTO.payload.issue.assignee.id,
                 AchievementType.ResolveIssue,
             )
+        }
+    }
+
+    public async updateIssueAssignee(updateIssueAssigneeDTO: UpdateIssueAssigneeDTO) {
+        if (updateIssueAssigneeDTO.checkResolved()) {
+            await AchievementModel.saveAchievement(
+                updateIssueAssigneeDTO.clientId,
+                updateIssueAssigneeDTO.payload.assignee.new.id,
+                AchievementType.ResolveIssue,
+            )
+
+            await AchievementModel.deleteAchievement(
+                updateIssueAssigneeDTO.clientId,
+                updateIssueAssigneeDTO.payload.assignee.old.id,
+                AchievementType.ResolveIssue,
+            )
+        }
+    }
+
+    public async deleteIssue(deleteIssueDTO: DeleteIssueDTO) {
+        if (deleteIssueDTO.checkResolved()) {
+            await AchievementModel.deleteAchievement(deleteIssueDTO.clientId, deleteIssueDTO.payload.issue.assignee.id, AchievementType.ResolveIssue)
         }
     }
 
