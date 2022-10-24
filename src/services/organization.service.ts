@@ -51,11 +51,11 @@ export class OrganizationService {
     }
 
     private async getServerInfoByUrl(serverUrl: string): Promise<string[]> {
-        const info = await OrganizationModel.findOne({serverUrl: serverUrl}).exec();
+        const info = await OrganizationModel.findOne({ serverUrl: serverUrl }).exec()
         if (info == null) {
-            throw new OrganizationNotFoundException();
+            throw new OrganizationNotFoundException()
         }
-        return [info.clientId, info.clientSecret];
+        return [info.clientId, info.clientSecret]
     }
 
     private async requestProfiles(token: string, serverUrl: string) {

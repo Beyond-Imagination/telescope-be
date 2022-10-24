@@ -1,4 +1,4 @@
-import { isNotEmpty, IsNotEmpty } from 'class-validator'
+import { IsNotEmpty } from 'class-validator'
 
 class WebhookPayload {
     className: string
@@ -97,6 +97,22 @@ class CreateIssueWebhookPayload {
     }
 }
 
+class DeleteIssueWebhookPayload {
+    className: string
+    issue: {
+        id: string
+        assignee: {
+            id: string
+        }
+        status: {
+            resolved: boolean
+        }
+    }
+    deleted: {
+        new: boolean
+    }
+}
+
 export class DeleteIssueDTO {
     @IsNotEmpty()
     className: string
@@ -109,23 +125,6 @@ export class DeleteIssueDTO {
 
     public checkResolved(): boolean {
         return this.payload.issue.status.resolved
-    }
-}
-
-class DeleteIssueWebhookPayload {
-    className: string
-    issue: {
-        id: string
-        assignee: {
-            id: string
-        }
-        status: {
-            resolved: boolean
-        }
-    }
-
-    deleted: {
-        new: boolean
     }
 }
 

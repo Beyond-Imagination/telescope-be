@@ -27,7 +27,7 @@ export class Achievement extends Document {
             clientId,
             user,
             type,
-            performedAt: new Date(),
+            achievedAt: new Date(),
         }).save()
     }
 
