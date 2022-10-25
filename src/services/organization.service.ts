@@ -1,7 +1,6 @@
 import { AchievementModel } from '@models/achievement'
 import { OrganizationModel } from '@models/organization'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
-import { dateToString } from '@utils/DateUtils'
 import { ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
@@ -18,7 +17,7 @@ export class OrganizationService {
         score = score as ScoreDtos
         const scoreResult: ScoreDtos = score.length > 0 ? score[0] : new ScoreDtos()
 
-        return { from: dateToString(from), to: dateToString(to), score: scoreResult }
+        return { from: from, to: to, score: scoreResult }
     }
 
     public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
@@ -47,7 +46,7 @@ export class OrganizationService {
         }
 
         size = scoreInfos.length
-        return { size: size, from: dateToString(from), to: dateToString(to), rankings: rankInfos }
+        return { size: size, from: from, to: to, rankings: rankInfos }
     }
 
     private async getServerInfoByUrl(serverUrl: string): Promise<string[]> {
