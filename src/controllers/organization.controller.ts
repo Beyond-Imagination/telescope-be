@@ -1,6 +1,16 @@
-import { Controller, Get, QueryParam } from 'routing-controllers'
+import { Controller, Get, QueryParams } from 'routing-controllers'
 import { OrganizationService } from '@services/organization.service'
 import { getDaysBefore } from '@utils/date'
+
+class OrganizationQuery {
+    serverUrl: string
+
+    from: Date | null
+
+    to: Date | null
+
+    size: number | null
+}
 
 @Controller('/api/organization')
 export class OrganizationController {
@@ -13,11 +23,11 @@ export class OrganizationController {
      * @param to 기본값(오늘), 'yyyy-mm-dd' 형식의 String
      */
     @Get('/score')
-    score(@QueryParam('serverUrl') serverUrl: string, @QueryParam('from') from: Date | null, @QueryParam('to') to: Date | null) {
-        from = from || getDaysBefore(7)
-        to = to || new Date()
+    score(@QueryParams() query: OrganizationQuery) {
+        const from = query.from ? new Date(query.from) : getDaysBefore(7)
+        const to = query.to ? new Date(query.to) : new Date()
 
-        return this.service.getOrganizationScore(serverUrl, from, to)
+        return this.service.getOrganizationScore(query.serverUrl, from, to)
     }
 
     /**
@@ -28,15 +38,10 @@ export class OrganizationController {
      * @param to 기본값(오늘), 'yyyy-mm-dd' 형식의 String
      */
     @Get('/rankings')
-    rankings(
-        @QueryParam('serverUrl') serverUrl: string,
-        @QueryParam('size') size: number | null,
-        @QueryParam('from') from: Date | null,
-        @QueryParam('to') to: Date | null,
-    ) {
-        from = from || getDaysBefore(7)
-        to = to || new Date()
+    rankings(@QueryParams() query: OrganizationQuery) {
+        const from = query.from ? new Date(query.from) : getDaysBefore(7)
+        const to = query.to ? new Date(query.to) : new Date()
 
-        return this.service.getRankingsInOrganization(serverUrl, from, to, size)
+        return this.service.getRankingsInOrganization(query.serverUrl, from, to, query.size)
     }
 }
