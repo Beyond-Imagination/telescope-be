@@ -1,15 +1,13 @@
-import { OrganizationModel } from '@models/organization'
+import { Organization, OrganizationModel } from '@models/organization'
 import { OrganizationExistException } from '@exceptions/OrganizationExistException'
-import axios from 'axios'
 import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { getAxiosOption } from '@utils/verifyUtil'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { Request } from 'express'
-import { PointModel } from '@models/point'
+import { Point } from '@models/point'
 import { Transactional } from '@utils/util'
 import { AchievementType } from '@models/achievement'
-import { SERVER_URL, CLIENT_URL, VERSION } from '@config'
+import { SpaceClient } from '@/client/space.client'
 
 export class IndexService {
     webHookInfos = [
@@ -49,121 +47,50 @@ export class IndexService {
         new WebHookInfo('close_code_review', '/code-review/close', 'close_code_review', 'CodeReview', 'CodeReview.Closed'),
     ]
 
+    spaceClient = new SpaceClient()
+
     // API 실행에 필요한 권한은 여기에 넣어주시면 application 설치시에 자동으로 신청됩니다.
-    rightCodes = ['Project.CodeReview.View', 'Profile.View']
+    rightCodes = ['Project.CodeReview.View', 'Profile.View', 'Project.Issues.View']
 
     @Transactional()
-    async install(request: Request, dto: InstallDTO, bearerToken: string) {
-        const axiosOptions = getAxiosOption(bearerToken)
-
+    async install(request: Request, dto: InstallDTO, axiosOption: any) {
         if (dto.className != 'InitPayload') {
             throw new WrongClassNameException()
         }
 
-        if (await OrganizationModel.findByClientId(dto.clientId)) throw new OrganizationExistException()
-
-        await this.requestPermissions(dto.serverUrl, dto.clientId, axiosOptions)
-
-        await Promise.all(this.addWebhooks(dto.serverUrl, dto.clientId, axiosOptions))
-
-        await this.registerUIExtension(dto.serverUrl, axiosOptions)
+        if (await OrganizationModel.findByClientId(dto.clientId)) {
+            throw new OrganizationExistException()
+        }
 
         // 스페이스 정보를 저장한다.
         await this.insertDBData(dto)
-    }
 
-    private requestPermissions(url: string, clientId: string, axiosOptions: any) {
-        return axios.patch(
-            `${url}/api/http/applications/clientId:${clientId}/authorizations/authorized-rights/request-rights`,
-            { contextIdentifier: 'global', rightCodes: this.rightCodes },
-            axiosOptions,
-        )
-    }
-
-    private addWebhooks(url: string, clientId: string, axiosOptions: any) {
-        const promises = []
-        const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
-        this.webHookInfos.forEach(webHookInfo => {
-            promises.push(this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOptions))
-        })
-
-        return promises
-    }
-
-    private async addWebhook(url: string, webHookInfo: WebHookInfo, axiosOptions: any) {
-        const response = await this.registerWebHook(url, webHookInfo, axiosOptions)
-        const webHookId = response.data.id
-        await this.registerSubscription(url, webHookInfo, webHookId, axiosOptions) // 웹훅이 등록이 된 후에 subscription을 등록
-    }
-
-    private registerWebHook(url: string, webHookInfo: WebHookInfo, axiosOptions: any) {
-        return axios.post(
-            url,
-            {
-                name: webHookInfo.webHookName,
-                endpoint: {
-                    url: `${SERVER_URL}/webhooks${webHookInfo.url}`,
-                    sslVerification: false,
-                },
-                acceptedHttpResponseCodes: [],
-                payloadFields: webHookInfo.payloadFields,
-            },
-            axiosOptions,
-        )
-    }
-
-    private registerSubscription(url: string, webHookInfo: WebHookInfo, webHookId: string, axiosOptions: any) {
-        return axios.post(
-            `${url}/${webHookId}/subscriptions`,
-            {
-                name: webHookInfo.subscriptionName,
-                subscription: {
-                    subjectCode: webHookInfo.subjectCode,
-                    filters: [],
-                    eventTypeCodes: [webHookInfo.eventTypeCode],
-                },
-            },
-            axiosOptions,
-        )
-    }
-
-    private registerUIExtension(url: string, axiosOptions: any) {
-        return axios.patch(
-            `${url}/api/http/applications/ui-extensions`,
-            {
-                contextIdentifier: 'global',
-                extensions: [
-                    {
-                        className: 'ApplicationHomepageUiExtensionIn',
-                        iframeUrl: CLIENT_URL,
-                    },
-                ],
-            },
-            axiosOptions,
-        )
+        await Promise.all([
+            // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
+            this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, this.rightCodes),
+            this.addWebhooks(dto.serverUrl, dto.clientId, axiosOption),
+            this.spaceClient.registerUIExtension(dto.serverUrl, axiosOption),
+        ])
     }
 
     private async insertDBData(dto: InstallDTO) {
-        const promises = []
-
-        const achievementTypes = Object.values(AchievementType)
-        achievementTypes.forEach(type => {
-            promises.push(
-                new PointModel({
-                    clientId: dto.clientId,
-                    type: type,
-                    point: 1,
-                }).save(),
-            )
+        const promises = Object.values(AchievementType).map(type => {
+            return Point.savePoint(dto.clientId, type)
         })
 
-        await new OrganizationModel({
-            clientId: dto.clientId,
-            clientSecret: dto.clientSecret,
-            serverUrl: dto.serverUrl,
-            admin: [dto.userId],
-            version: VERSION,
-            point: await Promise.all(promises),
-        }).save()
+        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, await Promise.all(promises))
+    }
+
+    private addWebhooks(url: string, clientId: string, axiosOption: any) {
+        const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
+        return this.webHookInfos.map(webHookInfo => {
+            return this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
+        })
+    }
+
+    private async addWebhook(url: string, webHookInfo: WebHookInfo, axiosOption: any) {
+        const response = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
+        const webHookId = response.data.id
+        await this.spaceClient.registerSubscription(url, webHookInfo, webHookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
     }
 }

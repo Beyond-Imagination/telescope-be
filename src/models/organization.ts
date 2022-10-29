@@ -1,8 +1,9 @@
-import { ReturnModelType, getModelForClass, prop, Ref, index, plugin } from '@typegoose/typegoose'
+import { getModelForClass, index, plugin, prop, Ref, ReturnModelType } from '@typegoose/typegoose'
 import autopopulate from 'mongoose-autopopulate'
 
 import { Document } from './document'
 import { Point } from '@models/point'
+import { VERSION } from '@config'
 
 @index({ clientId: 1 })
 @index({ serverUrl: 1 })
@@ -32,6 +33,23 @@ export class Organization extends Document {
 
     public static async findByClientId(this: ReturnModelType<typeof Organization>, clientId: string) {
         return this.findOne({ clientId }).exec()
+    }
+
+    public static async saveOrganization(
+        clientId: string,
+        clientSecret: string,
+        serverUrl: string,
+        admin: string,
+        points: Point[],
+    ): Promise<Organization> {
+        return new OrganizationModel({
+            clientId: clientId,
+            clientSecret: clientSecret,
+            serverUrl: serverUrl,
+            admin: [admin],
+            version: VERSION,
+            point: points,
+        }).save()
     }
 }
 

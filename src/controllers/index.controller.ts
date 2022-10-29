@@ -16,7 +16,7 @@ export class IndexController {
     @Post('/')
     @UseBefore(webhookValidation)
     async install(@Req() request: Request, @Body() dto: InstallDTO, @Res() response: Response) {
-        await this.service.install(request, dto, response.locals.bearerToken)
+        await this.service.install(request, dto, response.locals.axiosOption)
         return response.status(200).end()
     }
 }

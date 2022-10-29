@@ -1,18 +1,19 @@
 import { AchievementModel } from '@models/achievement'
 import { OrganizationModel } from '@models/organization'
-import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
-import axios from 'axios'
-import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { getBearerToken } from '@utils/verifyUtil'
+import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+import { SpaceClient } from '@/client/space.client'
 
 export class OrganizationService {
+    spaceClient = new SpaceClient()
+
     // serverUrl에 해당하는 조직의 점수를 반환한다.
     public async getOrganizationScore(serverUrl: string, from: Date, to: Date) {
-        const serverId: string = (await this.getServerInfoByUrl(serverUrl))[0]
-        let score: any = await AchievementModel.getOrganizationScoreByClientId(serverId, from, to)
+        const clientId: string = ((await OrganizationModel.findByServerUrl(serverUrl)) ?? this.throwException()).clientId
+        let score: any = await AchievementModel.getOrganizationScoreByClientId(clientId, from, to)
 
         score = score as ScoreDtos
         const scoreResult: ScoreDtos = score.length > 0 ? score[0] : new ScoreDtos()
@@ -21,11 +22,11 @@ export class OrganizationService {
     }
 
     public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
-        const serverInfo = await this.getServerInfoByUrl(serverUrl)
-        const scoreInfos = await AchievementModel.getRankingsByClientId(serverInfo[0], from, to)
-        const token = await getBearerToken(serverUrl, serverInfo[0], serverInfo[1])
+        const serverInfo = (await OrganizationModel.findByServerUrl(serverUrl)) ?? this.throwException()
+        const scoreInfos = await AchievementModel.getRankingsByClientId(serverInfo.clientId, from, to)
+        const token = await getBearerToken(serverUrl, serverInfo.clientId, serverInfo.clientSecret)
 
-        const profiles = await this.requestProfiles(token, serverUrl)
+        const profiles = await this.spaceClient.requestProfiles(token, serverUrl)
 
         const profileSize = profiles.data.totalCount
         const rankInfos: Array<RankingsDtos> = []
@@ -49,29 +50,7 @@ export class OrganizationService {
         return { size: size, from: from, to: to, rankings: rankInfos }
     }
 
-    private async getServerInfoByUrl(serverUrl: string): Promise<string[]> {
-        const info = await OrganizationModel.findOne({ serverUrl: serverUrl }).exec()
-        if (info == null) {
-            throw new OrganizationNotFoundException()
-        }
-        return [info.clientId, info.clientSecret]
-    }
-
-    private async requestProfiles(token: string, serverUrl: string) {
-        const requestUrl = `${serverUrl}/api/http/team-directory/profiles`
-        return axios
-            .get(requestUrl, {
-                headers: {
-                    Authorization: `${token}`,
-                    Accept: `application/json`,
-                },
-                params: {
-                    $fields: 'data(id,name),totalCount',
-                },
-            })
-            .catch(function (error) {
-                console.log(error)
-                throw new InvalidRequestException()
-            })
+    private throwException(): never {
+        throw new OrganizationNotFoundException()
     }
 }

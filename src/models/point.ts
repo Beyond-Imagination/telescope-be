@@ -1,4 +1,4 @@
-import { getModelForClass, prop, index } from '@typegoose/typegoose'
+import { getModelForClass, index, prop } from '@typegoose/typegoose'
 import { Document } from './document'
 import { AchievementType } from '@models/achievement'
 
@@ -12,6 +12,14 @@ export class Point extends Document {
 
     @prop()
     public point: number
+
+    public static async savePoint(clientId: string, type: AchievementType): Promise<Point> {
+        return new PointModel({
+            clientId: clientId,
+            type: type,
+            point: 1,
+        }).save()
+    }
 }
 
 export const PointModel = getModelForClass(Point)
