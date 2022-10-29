@@ -35,7 +35,7 @@ export class OrganizationService {
             const target = scoreInfos[i]._id
             for (let j = 0; j < profileSize; j++) {
                 if (profiles.data.data[j].id == target) {
-                    const targetName = profiles.data.data[j].name.firstName + profiles.data.data[j].name.lastName
+                    const targetName = `${profiles.data.data[j].name.firstName} ${profiles.data.data[j].name.lastName}`
                     rankInfos.push(new RankingsDtos(target, targetName, scoreInfos[i]))
                     break
                 }
