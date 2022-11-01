@@ -1,5 +1,6 @@
 import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typegoose'
 import { Document } from '@models/document'
+import { ClientSession } from 'mongoose'
 
 export enum AchievementType {
     CreateIssue = 'create_issue',
@@ -37,6 +38,10 @@ export class Achievement extends Document {
             user,
             type,
         })
+    }
+
+    public static async deleteAllByClientId(clientId: string, session: ClientSession): Promise<any> {
+        return AchievementModel.deleteMany({ clientId: clientId }).session(session)
     }
 
     public static async getOrganizationScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {

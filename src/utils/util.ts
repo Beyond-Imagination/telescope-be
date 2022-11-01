@@ -1,4 +1,4 @@
-import { startSession } from 'mongoose'
+import { ClientSession, startSession } from 'mongoose'
 
 /**
  * @method isEmpty
@@ -16,23 +16,25 @@ export const isEmpty = (value: string | number | object): boolean => {
     } else return value !== null && typeof value === 'object' && !Object.keys(value).length
 }
 
-// DB 트랜잭션을 걸어주는 데코레이터
-export function Transactional() {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        const method = descriptor.value
-        descriptor.value = async function (...args) {
-            const session = await startSession()
-            try {
-                session.startTransaction()
-                const result = method.apply(this, args)
-                await session.commitTransaction()
-                await session.endSession()
-                return result
-            } catch (error) {
-                await session.abortTransaction()
-                await session.endSession()
-                throw error
-            }
-        }
+// DB 트랜잭션을 걸어주는 핸들러
+export const mongooseTransactionHandler = async <T = any>(method: (session: ClientSession) => Promise<T>): Promise<T> => {
+    const session = await startSession()
+    session.startTransaction()
+
+    let error
+    let result: T
+    try {
+        result = await method(session)
+        await session.commitTransaction()
+    } catch (err) {
+        error = err
+        await session.abortTransaction()
+    } finally {
+        await session.endSession()
     }
+    if (error) {
+        throw error
+    }
+
+    return result
 }

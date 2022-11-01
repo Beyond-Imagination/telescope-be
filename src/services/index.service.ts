@@ -5,9 +5,11 @@ import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { Request } from 'express'
 import { Point } from '@models/point'
-import { Transactional } from '@utils/util'
-import { AchievementType } from '@models/achievement'
+import { mongooseTransactionHandler } from '@utils/util'
+import { Achievement, AchievementType } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
+import { ClientSession } from 'mongoose'
+import { getBearerToken } from '@utils/verifyUtil'
 
 export class IndexService {
     webHookInfos = [
@@ -52,33 +54,57 @@ export class IndexService {
     // API 실행에 필요한 권한은 여기에 넣어주시면 application 설치시에 자동으로 신청됩니다.
     rightCodes = ['Project.CodeReview.View', 'Profile.View', 'Project.Issues.View']
 
-    @Transactional()
     async install(request: Request, dto: InstallDTO, axiosOption: any) {
         if (dto.className != 'InitPayload') {
             throw new WrongClassNameException()
         }
 
-        if (await OrganizationModel.findByClientId(dto.clientId)) {
-            throw new OrganizationExistException()
+        await this.deleteOrganizationIfExist(dto.serverUrl)
+
+        const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
+            // Transaction이 필요한 operation들은 요 메소드 안에 넣는다
+            await this.insertDBData(dto, session)
+
+            await Promise.all([
+                // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
+                this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, this.rightCodes),
+                this.addWebhooks(dto.serverUrl, dto.clientId, axiosOption),
+                this.spaceClient.registerUIExtension(dto.serverUrl, axiosOption),
+            ])
         }
 
-        // 스페이스 정보를 저장한다.
-        await this.insertDBData(dto)
-
-        await Promise.all([
-            // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
-            this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, this.rightCodes),
-            this.addWebhooks(dto.serverUrl, dto.clientId, axiosOption),
-            this.spaceClient.registerUIExtension(dto.serverUrl, axiosOption),
-        ])
+        await mongooseTransactionHandler(transactionHandlerMethod)
     }
 
-    private async insertDBData(dto: InstallDTO) {
+    private async deleteOrganizationIfExist(serverUrl: string) {
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+        if (organization) {
+            try {
+                await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
+            } catch (e) {
+                // 스페이스에 설치되어있는 기존의 application이 지워지고 재설치중임을 의미한다
+                const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
+                    await Promise.all([
+                        // 기존 application정보를 전부 지운다
+                        Achievement.deleteAllByClientId(organization.clientId, session),
+                        Point.deleteAllByClientId(organization.clientId, session),
+                        Organization.deleteAllByClientId(organization.clientId, session),
+                    ])
+                }
+                await mongooseTransactionHandler(transactionHandlerMethod)
+                return
+            }
+            // 중복설치는 제한한다
+            throw new OrganizationExistException()
+        }
+    }
+
+    private async insertDBData(dto: InstallDTO, session: ClientSession) {
         const promises = Object.values(AchievementType).map(type => {
-            return Point.savePoint(dto.clientId, type)
+            return Point.savePoint(dto.clientId, type, session)
         })
 
-        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, await Promise.all(promises))
+        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, await Promise.all(promises), session)
     }
 
     private addWebhooks(url: string, clientId: string, axiosOption: any) {
