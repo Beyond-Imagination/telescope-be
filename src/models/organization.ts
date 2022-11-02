@@ -1,14 +1,26 @@
-import { getModelForClass, index, plugin, prop, Ref, ReturnModelType } from '@typegoose/typegoose'
-import autopopulate from 'mongoose-autopopulate'
+import { ClientSession } from 'mongoose'
+import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typegoose'
 
 import { Document } from './document'
-import { Point } from '@models/point'
 import { VERSION } from '@config'
-import { ClientSession } from 'mongoose'
+import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+
+export class Point {
+    @prop({ default: 1 })
+    public createIssue: number
+
+    @prop({ default: 1 })
+    public resolveIssue: number
+
+    @prop({ default: 1 })
+    public createCodeReview: number
+
+    @prop({ default: 1 })
+    public mergeMr: number
+}
 
 @index({ clientId: 1 })
 @index({ serverUrl: 1 })
-@plugin(autopopulate as any)
 export class Organization extends Document {
     @prop()
     public clientId: string
@@ -19,8 +31,8 @@ export class Organization extends Document {
     @prop()
     public serverUrl: string
 
-    @prop({ ref: () => Point, autopopulate: true })
-    public point: Ref<Point>[]
+    @prop({ _id: false })
+    public points: Point
 
     @prop({ type: String })
     public admin: string[]
@@ -29,11 +41,21 @@ export class Organization extends Document {
     public version: string
 
     public static async findByServerUrl(this: ReturnModelType<typeof Organization>, serverUrl: string): Promise<Organization> {
-        return this.findOne({ serverUrl }).exec()
+        const organization = await this.findOne({ serverUrl }).exec()
+        if (organization) {
+            return organization
+        } else {
+            throw new OrganizationNotFoundException()
+        }
     }
 
     public static async findByClientId(this: ReturnModelType<typeof Organization>, clientId: string): Promise<Organization> {
-        return this.findOne({ clientId }).exec()
+        const organization = await this.findOne({ clientId }).exec()
+        if (organization) {
+            return organization
+        } else {
+            throw new OrganizationNotFoundException()
+        }
     }
 
     public static async deleteAllByClientId(clientId: string, session: ClientSession): Promise<any> {
@@ -45,7 +67,6 @@ export class Organization extends Document {
         clientSecret: string,
         serverUrl: string,
         admin: string,
-        points: Point[],
         session: ClientSession,
     ): Promise<Organization> {
         return new OrganizationModel({
@@ -53,8 +74,8 @@ export class Organization extends Document {
             clientSecret: clientSecret,
             serverUrl: serverUrl,
             admin: [admin],
+            points: new Point(),
             version: VERSION,
-            point: points,
         }).save({ session })
     }
 }

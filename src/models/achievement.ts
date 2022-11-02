@@ -47,12 +47,11 @@ export class Achievement extends Document {
     public static async getOrganizationScoreByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$clientId')
         pipeline.push({ $unset: '_id' })
-        return this.aggregate(pipeline)
+        return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
     }
 
     public static async getRankingsByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
-        pipeline.push({ $sort: { total: -1 } })
         return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
     }
 
@@ -66,39 +65,13 @@ export class Achievement extends Document {
                 },
             },
             {
-                $lookup: {
-                    // points table 과 join. 1:1 match
-                    from: 'points',
-                    localField: 'type',
-                    foreignField: 'type',
-                    pipeline: [{ $match: { $expr: { $eq: ['$clientId', clientId] } } }],
-                    as: 'score',
-                },
-            },
-            {
-                // lookup 결과가 배열 형태로 저장됨. score 객체 배열 제거
-                // 기존 : score = [ { $score_info } ]
-                // 변경 : score = { $score_info }
-                $unwind: '$score',
-            },
-            {
-                $project: {
-                    user: 1,
-                    type: 1,
-                    score: {
-                        point: 1,
-                    },
-                },
-            },
-            {
-                // user 의 각 type 별 점수 계산
+                // user 의 각 type 별 횟수 계산
                 $group: {
                     _id: groupKey,
-                    total: { $sum: '$score.point' },
-                    createIssue: { $sum: { $cond: [{ $eq: ['$type', 'create_issue'] }, '$score.point', 0] } },
-                    resolveIssue: { $sum: { $cond: [{ $eq: ['$type', 'resolve_issue'] }, '$score.point', 0] } },
-                    createCodeReview: { $sum: { $cond: [{ $eq: ['$type', 'create_code_review'] }, '$score.point', 0] } },
-                    mergeMr: { $sum: { $cond: [{ $eq: ['$type', 'merge_mr'] }, '$score.point', 0] } },
+                    createIssue: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateIssue] }, 1, 0] } },
+                    resolveIssue: { $sum: { $cond: [{ $eq: ['$type', AchievementType.ResolveIssue] }, 1, 0] } },
+                    createCodeReview: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateCodeReview] }, 1, 0] } },
+                    mergeMr: { $sum: { $cond: [{ $eq: ['$type', AchievementType.MergeMr] }, 1, 0] } },
                 },
             },
         ]

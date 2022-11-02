@@ -1,10 +1,9 @@
 import { AchievementModel } from '@models/achievement'
-import { OrganizationModel } from '@models/organization'
-import { ScoreDtos } from '@dtos/score.dtos'
+import { OrganizationModel, Point } from '@models/organization'
+import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
 import { getBearerToken } from '@utils/verifyUtil'
-import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { SpaceClient } from '@/client/space.client'
 
 export class OrganizationService {
@@ -12,45 +11,47 @@ export class OrganizationService {
 
     // serverUrl에 해당하는 조직의 점수를 반환한다.
     public async getOrganizationScore(serverUrl: string, from: Date, to: Date) {
-        const clientId: string = ((await OrganizationModel.findByServerUrl(serverUrl)) ?? this.throwException()).clientId
-        let score: any = await AchievementModel.getOrganizationScoreByClientId(clientId, from, to)
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+        const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreByClientId(organization.clientId, from, to)
 
-        score = score as ScoreDtos
-        const scoreResult: ScoreDtos = score.length > 0 ? score[0] : new ScoreDtos()
+        const result = new ScoreDtos(organization.points, achievementCounts[0])
 
-        return { from: from, to: to, score: scoreResult }
+        return { from: from, to: to, score: result }
     }
 
     public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
-        const serverInfo = (await OrganizationModel.findByServerUrl(serverUrl)) ?? this.throwException()
-        const scoreInfos = await AchievementModel.getRankingsByClientId(serverInfo.clientId, from, to)
-        const token = await getBearerToken(serverUrl, serverInfo.clientId, serverInfo.clientSecret)
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
 
-        const profiles = await this.spaceClient.requestProfiles(token, serverUrl)
+        const [userAchievements, profilesArray] = await Promise.all([
+            AchievementModel.getRankingsByClientId(organization.clientId, from, to),
+            this.spaceClient.requestProfiles(token, serverUrl),
+        ])
 
-        const profileSize = profiles.data.totalCount
-        const rankInfos: Array<RankingsDtos> = []
-        // O(N^2), 추후에 개선 필요한 로직입니다.
-        for (let i = 0; i < scoreInfos.length; i++) {
-            const target = scoreInfos[i]._id
-            for (let j = 0; j < profileSize; j++) {
-                if (profiles.data.data[j].id == target) {
-                    const targetName = `${profiles.data.data[j].name.firstName} ${profiles.data.data[j].name.lastName}`
-                    rankInfos.push(new RankingsDtos(target, targetName, scoreInfos[i]))
-                    break
-                }
+        const profileMap = profilesArray.data.data.reduce((map, obj) => {
+            map.set(obj.id, obj)
+            return map
+        }, new Map())
+
+        const rankings: Array<RankingsDtos> = []
+        userAchievements.forEach(achievement => {
+            const profile = profileMap.get(achievement._id)
+            if (!profile) {
+                return
             }
+            const name = `${profile.name.firstName} ${profile.name.lastName}`
+            const score = new ScoreDtos(organization.points, achievement)
+            rankings.push(new RankingsDtos(achievement._id, name, score))
+        })
+
+        rankings.sort((a, b) => b.score.total - a.score.total)
+
+        if (isNumber(size) && size > rankings.length) {
+            rankings.splice(size)
+        } else {
+            size = rankings.length
         }
 
-        if (isNumber(size) && size > 0) {
-            scoreInfos.splice(size)
-        }
-
-        size = scoreInfos.length
-        return { size: size, from: from, to: to, rankings: rankInfos }
-    }
-
-    private throwException(): never {
-        throw new OrganizationNotFoundException()
+        return { size: size, from: from, to: to, rankings: rankings }
     }
 }

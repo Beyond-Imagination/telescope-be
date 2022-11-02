@@ -4,7 +4,6 @@ import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { Request } from 'express'
-import { Point } from '@models/point'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement, AchievementType } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
@@ -87,7 +86,6 @@ export class IndexService {
                     await Promise.all([
                         // 기존 application정보를 전부 지운다
                         Achievement.deleteAllByClientId(organization.clientId, session),
-                        Point.deleteAllByClientId(organization.clientId, session),
                         Organization.deleteAllByClientId(organization.clientId, session),
                     ])
                 }
@@ -100,11 +98,7 @@ export class IndexService {
     }
 
     private async insertDBData(dto: InstallDTO, session: ClientSession) {
-        const promises = Object.values(AchievementType).map(type => {
-            return Point.savePoint(dto.clientId, type, session)
-        })
-
-        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, await Promise.all(promises), session)
+        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, session)
     }
 
     private addWebhooks(url: string, clientId: string, axiosOption: any) {

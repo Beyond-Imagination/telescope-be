@@ -1,15 +1,21 @@
-export class ScoreDtos {
-    total: number
-    createIssue: number
-    resolveIssue: number
-    createCodeReview: number
-    mergeMr: number
+import { Point } from '@models/organization'
 
-    constructor(total = 0, create_issue = 0, resolve_issue = 0, create_code_review = 0, merge_mr = 0) {
-        this.total = total
-        this.createIssue = create_issue
-        this.resolveIssue = resolve_issue
-        this.createCodeReview = create_code_review
-        this.mergeMr = merge_mr
+export class AchievementCount {
+    createIssue = 0
+    resolveIssue = 0
+    createCodeReview = 0
+    mergeMr = 0
+}
+
+export class ScoreDtos extends AchievementCount {
+    total: number
+
+    constructor(point: Point, count: AchievementCount = new AchievementCount()) {
+        super()
+        this.createIssue = point.createIssue * count.createIssue
+        this.resolveIssue = point.resolveIssue * count.resolveIssue
+        this.createCodeReview = point.createCodeReview * count.createCodeReview
+        this.mergeMr = point.mergeMr * count.mergeMr
+        this.total = this.createIssue + this.resolveIssue + this.createCodeReview + this.mergeMr
     }
 }

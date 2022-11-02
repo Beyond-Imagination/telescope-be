@@ -3,7 +3,7 @@ import { ScoreDtos } from '@dtos/score.dtos'
 export class RankingsDtos {
     id: string
     name: string
-    score: ScoreDtos[]
+    score: ScoreDtos
 
     constructor(id, name, score) {
         this.id = id
