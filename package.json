@@ -1,14 +1,14 @@
 {
     "name": "telescope-backend",
     "version": "0.0.0",
-    "description": "TypeScript + Routing Controllers + Express API Server",
-    "author": "",
-    "license": "ISC",
+    "description": "telescope api server",
+    "author": "Beyond_Imagination",
+    "license": "Apache-2.0",
     "private": true,
     "scripts": {
         "start": "yarn build && cross-env NODE_ENV=production node dist/server.js",
         "dev": "cross-env NODE_ENV=development nodemon",
-        "build": "swc src -d dist --source-maps --copy-files",
+        "build": "rm -rf dist && swc src -d dist --source-maps --copy-files",
         "build:tsc": "tsc && tsc-alias",
         "test": "jest --forceExit --detectOpenHandles",
         "lint": "eslint --ignore-path .gitignore --ext .ts src/",
