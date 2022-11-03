@@ -11,6 +11,7 @@ export class WebhookService {
         await AchievementModel.saveAchievement(
             createIssueDTO.clientId,
             createIssueDTO.payload.meta.principal.details.user.id,
+            createIssueDTO.payload.issue.id,
             AchievementType.CreateIssue,
         )
     }
@@ -19,9 +20,19 @@ export class WebhookService {
         const assignee = updateIssueStatusDTO.payload.issue.assignee
         if (assignee) {
             if (updateIssueStatusDTO.isResolved()) {
-                await AchievementModel.saveAchievement(updateIssueStatusDTO.clientId, assignee.id, AchievementType.ResolveIssue)
+                await AchievementModel.saveAchievement(
+                    updateIssueStatusDTO.clientId,
+                    assignee.id,
+                    updateIssueStatusDTO.payload.issue.id,
+                    AchievementType.ResolveIssue,
+                )
             } else if (updateIssueStatusDTO.isUnresolved()) {
-                await AchievementModel.deleteAchievement(updateIssueStatusDTO.clientId, assignee.id, AchievementType.ResolveIssue)
+                await AchievementModel.deleteAchievement(
+                    updateIssueStatusDTO.clientId,
+                    assignee.id,
+                    updateIssueStatusDTO.payload.issue.id,
+                    AchievementType.ResolveIssue,
+                )
             }
         }
     }
@@ -32,11 +43,21 @@ export class WebhookService {
             const oldAssignee = updateIssueAssigneeDTO.payload.assignee.old
             if (newAssignee) {
                 // issue가 unassigned되는 케이스를 방어한다
-                await AchievementModel.saveAchievement(updateIssueAssigneeDTO.clientId, newAssignee.id, AchievementType.ResolveIssue)
+                await AchievementModel.saveAchievement(
+                    updateIssueAssigneeDTO.clientId,
+                    newAssignee.id,
+                    updateIssueAssigneeDTO.payload.issue.id,
+                    AchievementType.ResolveIssue,
+                )
             }
             if (oldAssignee) {
                 // 기존에 issue가 unassigned되어있는 경우를 방어한다
-                await AchievementModel.deleteAchievement(updateIssueAssigneeDTO.clientId, oldAssignee.id, AchievementType.ResolveIssue)
+                await AchievementModel.deleteAchievement(
+                    updateIssueAssigneeDTO.clientId,
+                    oldAssignee.id,
+                    updateIssueAssigneeDTO.payload.issue.id,
+                    AchievementType.ResolveIssue,
+                )
             }
         }
     }
@@ -44,7 +65,12 @@ export class WebhookService {
     public async deleteIssue(deleteIssueDTO: DeleteIssueDTO) {
         const assignee = deleteIssueDTO.payload.issue.assignee
         if (assignee && deleteIssueDTO.checkResolved()) {
-            await AchievementModel.deleteAchievement(deleteIssueDTO.clientId, assignee.id, AchievementType.ResolveIssue)
+            await AchievementModel.deleteAchievement(
+                deleteIssueDTO.clientId,
+                assignee.id,
+                deleteIssueDTO.payload.issue.id,
+                AchievementType.ResolveIssue,
+            )
         }
     }
 
@@ -61,10 +87,10 @@ export class WebhookService {
         )
 
         if (isOpen) {
-            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, AchievementType.CreateCodeReview)
+            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, null, AchievementType.CreateCodeReview)
         } else if (codeReviewDTO.payload.isMergeRequest && reviewInfo.branchPairs[0].isMerged) {
             // MR이면서 머지가 됐을때만 저장한다
-            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, AchievementType.MergeMr)
+            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, null, AchievementType.MergeMr)
         }
     }
 }

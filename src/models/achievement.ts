@@ -17,25 +17,30 @@ export class Achievement extends Document {
     @prop()
     public user: string
 
+    @prop()
+    public issueId?: string
+
     @prop({ enum: AchievementType, type: String })
     public type: AchievementType
 
     @prop()
     public achievedAt: Date
 
-    public static async saveAchievement(clientId: string, user: string, type: AchievementType): Promise<any> {
+    public static async saveAchievement(clientId: string, user: string, issueId: string, type: AchievementType): Promise<any> {
         return new AchievementModel({
             clientId,
             user,
+            issueId,
             type,
             achievedAt: new Date(),
         }).save()
     }
 
-    public static async deleteAchievement(clientId: string, user: string, type: AchievementType): Promise<any> {
+    public static async deleteAchievement(clientId: string, user: string, issueId: string, type: AchievementType): Promise<any> {
         return AchievementModel.deleteOne({
             clientId,
             user,
+            issueId,
             type,
         })
     }
