@@ -9,6 +9,8 @@ import { Achievement, AchievementType } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
 import { ClientSession } from 'mongoose'
 import { getBearerToken } from '@utils/verifyUtil'
+import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+import { NODE_ENV } from '@config'
 
 export class IndexService {
     webHookInfos = [
@@ -76,25 +78,25 @@ export class IndexService {
     }
 
     private async deleteOrganizationIfExist(serverUrl: string) {
-        const organization = await OrganizationModel.findByServerUrl(serverUrl)
-        if (organization) {
-            try {
-                await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
-            } catch (e) {
-                // 스페이스에 설치되어있는 기존의 application이 지워지고 재설치중임을 의미한다
-                const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
-                    await Promise.all([
-                        // 기존 application정보를 전부 지운다
-                        Achievement.deleteAllByClientId(organization.clientId, session),
-                        Organization.deleteAllByClientId(organization.clientId, session),
-                    ])
-                }
-                await mongooseTransactionHandler(transactionHandlerMethod)
+        let organization: Organization
+        try {
+            organization = await OrganizationModel.findByServerUrl(serverUrl)
+        } catch (e) {
+            if (e instanceof OrganizationNotFoundException) {
                 return
+            } else {
+                throw e
             }
-            // 중복설치는 제한한다
-            throw new OrganizationExistException()
         }
+
+        const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
+            await Promise.all([
+                // 기존 application정보를 전부 지운다
+                Achievement.deleteAllByClientId(organization.clientId, session),
+                Organization.deleteAllByClientId(organization.clientId, session),
+            ])
+        }
+        await mongooseTransactionHandler(transactionHandlerMethod)
     }
 
     private async insertDBData(dto: InstallDTO, session: ClientSession) {
