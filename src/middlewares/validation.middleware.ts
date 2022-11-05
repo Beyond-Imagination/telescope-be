@@ -44,6 +44,10 @@ export const validationMiddleware = (
 export const webhookValidation = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const requestBody = request.body
+        if (requestBody.className == 'AppPublicationCheckPayload') {
+            response.status(200).end()
+            return
+        }
         const organization = await getOrganization(requestBody)
         const verifyInfo = await getVerifyInfo(organization, request)
         await client.verifyAndGetBearerToken(verifyInfo)
