@@ -3,6 +3,7 @@ import { InstallDTO } from '@dtos/index.dtos'
 import { Request, Response } from 'express'
 import { IndexService } from '@services/index.service'
 import { webhookValidation } from '@middlewares/validation.middleware'
+import { VERSION } from '@config'
 
 @Controller()
 export class IndexController {
@@ -10,7 +11,7 @@ export class IndexController {
 
     @Get('/')
     index() {
-        return 'OK'
+        return { version: VERSION }
     }
 
     @Post('/')
