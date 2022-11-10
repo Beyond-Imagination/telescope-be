@@ -2,33 +2,16 @@ import axios from 'axios'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { CLIENT_URL, SERVER_URL } from '@config'
-import crypto from 'crypto'
-
-const jwkToPem = require('jwk-to-pem')
 
 export class SpaceClient {
-    async verifyAndGetBearerToken(verifyInfo: any) {
+    async getPublicKeys(verifyInfo: any) {
         const fullUrl = `${verifyInfo.url}/api/http/applications/clientId:${verifyInfo.clientId}/public-keys`
-        const publicKeyResponse = JSON.parse((await axios.get(fullUrl, verifyInfo.axiosOption)).data)
-
-        for (const i in publicKeyResponse.keys) {
-            // 반환된 키중에 하나라도 맞으면 검증 성공한다
-            const publicKey = jwkToPem(publicKeyResponse.keys[i])
-            const verified = crypto.verify(
-                'SHA512',
-                Buffer.from(verifyInfo.verifiableData),
-                {
-                    key: publicKey,
-                    padding: crypto.constants.RSA_PKCS1_PADDING,
-                },
-                Buffer.from(verifyInfo.signature, 'base64'),
-            )
-
-            if (verified) {
-                return
-            }
+        let publicKeyResponse = (await axios.get(fullUrl, verifyInfo.axiosOption)).data
+        if (!(publicKeyResponse instanceof Object)) {
+            // Axios mocking 라이브러리에 body를 string으로 못 반환하는 버그가 있어서 불가피 하게 추가된 분기문
+            publicKeyResponse = JSON.parse(publicKeyResponse)
         }
-        throw new InvalidRequestException()
+        return publicKeyResponse.keys
     }
 
     requestPermissions(url: string, clientId: string, axiosOption: any, rightCodes: string[]) {

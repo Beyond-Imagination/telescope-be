@@ -7,6 +7,9 @@ import { HttpException } from '@exceptions/HttpException'
 import { plainToClass } from 'class-transformer'
 import { validate, ValidationError } from 'class-validator'
 import { SpaceClient } from '@/client/space.client'
+import crypto from 'crypto'
+
+const jwkToPem = require('jwk-to-pem')
 
 const client = new SpaceClient()
 
@@ -50,12 +53,34 @@ export const webhookValidation = async (request: Request, response: Response, ne
         }
         const organization = await getOrganization(requestBody)
         const verifyInfo = await getVerifyInfo(organization, request)
-        await client.verifyAndGetBearerToken(verifyInfo)
+        await verifyRequest(verifyInfo)
         response.locals.axiosOption = verifyInfo.axiosOption // 컨트롤러에서 Bearer token을 바로 사용할수 있도록 저장 합니다.
         next()
     } catch (error) {
         next(error)
     }
+}
+
+async function verifyRequest(verifyInfo: any) {
+    const keys = await client.getPublicKeys(verifyInfo)
+    for (const i in keys) {
+        // 반환된 키중에 하나라도 맞으면 검증 성공한다
+        const publicKey = jwkToPem(keys[i])
+        const verified = crypto.verify(
+            'SHA512',
+            verifyInfo.verifiableData,
+            {
+                key: publicKey,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+            },
+            Buffer.from(verifyInfo.signature, 'base64'),
+        )
+
+        if (verified) {
+            return
+        }
+    }
+    throw new InvalidRequestException()
 }
 
 async function getOrganization(requestBody: any) {
