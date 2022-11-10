@@ -1,16 +1,13 @@
 import { Organization, OrganizationModel } from '@models/organization'
-import { OrganizationExistException } from '@exceptions/OrganizationExistException'
 import { InstallDTO } from '@dtos/index.dtos'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { Request } from 'express'
 import { mongooseTransactionHandler } from '@utils/util'
-import { Achievement, AchievementType } from '@models/achievement'
+import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
 import { ClientSession } from 'mongoose'
-import { getBearerToken } from '@utils/verifyUtil'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
-import { NODE_ENV } from '@config'
 
 export class IndexService {
     webHookInfos = [
