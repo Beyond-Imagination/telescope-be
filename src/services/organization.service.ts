@@ -1,5 +1,5 @@
 import { AchievementModel } from '@models/achievement'
-import { OrganizationModel, Point } from '@models/organization'
+import { OrganizationModel } from '@models/organization'
 import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
@@ -40,8 +40,9 @@ export class OrganizationService {
                 return
             }
             const name = `${profile.name.firstName} ${profile.name.lastName}`
+            const profilePicture = profile.profilePicture
             const score = new ScoreDtos(organization.points, achievement)
-            rankings.push(new RankingsDtos(achievement._id, name, score))
+            rankings.push(new RankingsDtos(achievement._id, name, score, profilePicture))
         })
 
         rankings.sort((a, b) => b.score.total - a.score.total)

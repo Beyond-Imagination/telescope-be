@@ -95,7 +95,7 @@ export class SpaceClient {
                     Accept: `application/json`,
                 },
                 params: {
-                    $fields: 'data(id,name),totalCount',
+                    $fields: 'data(profilePicture,id,name),totalCount',
                 },
             })
             .catch(function (error) {
