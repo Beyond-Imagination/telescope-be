@@ -11,7 +11,6 @@ class OrganizationQuery {
 
     size: number | null
 }
-
 @Controller('/api/organization')
 export class OrganizationController {
     service: OrganizationService = new OrganizationService()

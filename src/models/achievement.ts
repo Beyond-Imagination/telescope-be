@@ -60,6 +60,19 @@ export class Achievement extends Document {
         return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
     }
 
+    public static async getUserScoreByClientId(
+        this: ReturnModelType<typeof Achievement>,
+        clientId: string,
+        fromDate: Date,
+        toDate: Date,
+        targetUser: string,
+    ) {
+        const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
+        pipeline[0]['$match']['user'] = targetUser
+        pipeline.push({ $unset: '_id' })
+        return this.aggregate(pipeline)
+    }
+
     private static getAggregationPipeline(clientId: string, fromDate: Date, toDate: Date, groupKey: string): any[] {
         return [
             {

@@ -3,3 +3,4 @@ GET {{baseUrl}}/api/organization/score?serverUrl={{serverUrl}}
 
 ### rankings api
 GET {{baseUrl}}/api/organization/rankings?serverUrl={{serverUrl}}
+
