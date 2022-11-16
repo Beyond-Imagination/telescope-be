@@ -2,6 +2,7 @@ import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import winston from 'winston'
 import winstonDaily from 'winston-daily-rotate-file'
+import expressWinston from 'express-winston'
 import { LOG_DIR } from '@config'
 
 // logs dir
@@ -11,19 +12,17 @@ if (!existsSync(logDir)) {
     mkdirSync(logDir)
 }
 
-// Define log format
-const logFormat = winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
-
 /*
  * Log Level
  * error: 0, warn: 1, info: 2, http: 3, verbose: 4, debug: 5, silly: 6
  */
-const logger = winston.createLogger({
+const winstonOption = {
     format: winston.format.combine(
         winston.format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss',
         }),
-        logFormat,
+        winston.format.errors({ stack: true }),
+        winston.format.prettyPrint(),
     ),
     transports: [
         // debug log setting
@@ -46,20 +45,18 @@ const logger = winston.createLogger({
             handleExceptions: true,
             json: false,
             zippedArchive: true,
+            format: winston.format.errors({ stack: true }),
         }),
+        new winston.transports.Console(),
     ],
-})
-
-logger.add(
-    new winston.transports.Console({
-        format: winston.format.combine(winston.format.splat(), winston.format.colorize()),
-    }),
-)
-
-const stream = {
-    write: (message: string) => {
-        logger.info(message.substring(0, message.lastIndexOf('\n')))
-    },
 }
 
-export { logger, stream }
+const loggerMiddleware = expressWinston.logger({
+    ...winstonOption,
+    requestWhitelist: ['headers', 'body', 'query'],
+    responseWhitelist: ['body'],
+})
+
+const logger = winston.createLogger(winstonOption)
+
+export { logger, loggerMiddleware }
