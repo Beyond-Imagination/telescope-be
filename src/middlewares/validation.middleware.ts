@@ -51,7 +51,7 @@ export const webhookValidation = async (request: Request, response: Response, ne
         if (requestBody.className === 'AppPublicationCheckPayload') {
             response.status(200).end()
             return
-        } else if (requestBody.className === '') {
+        } else if (!requestBody.className) {
             throw new WrongClassNameException()
         }
         const organization = await getOrganization(requestBody)
