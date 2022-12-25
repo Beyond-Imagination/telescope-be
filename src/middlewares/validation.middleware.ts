@@ -8,6 +8,7 @@ import { plainToClass } from 'class-transformer'
 import { validate, ValidationError } from 'class-validator'
 import { SpaceClient } from '@/client/space.client'
 import crypto from 'crypto'
+import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 const jwkToPem = require('jwk-to-pem')
 
@@ -47,9 +48,11 @@ export const validationMiddleware = (
 export const webhookValidation = async (request: Request, response: Response, next: NextFunction) => {
     try {
         const requestBody = request.body
-        if (requestBody.className == 'AppPublicationCheckPayload') {
+        if (requestBody.className === 'AppPublicationCheckPayload') {
             response.status(200).end()
             return
+        } else if (requestBody.className === '') {
+            throw new WrongClassNameException()
         }
         const organization = await getOrganization(requestBody)
         const verifyInfo = await getVerifyInfo(organization, request)

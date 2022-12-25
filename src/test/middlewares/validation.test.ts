@@ -3,6 +3,7 @@ import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/testUtils'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
+import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 describe('validation.middleware 모듈', () => {
     let body
@@ -61,6 +62,16 @@ describe('validation.middleware 모듈', () => {
 
             it('항상 webhookValidation가 성공한다', async () => {
                 await expect(testWebHookValidation('Whatever!')).resolves.not.toThrow()
+            })
+        })
+
+        describe('className이 empty string 일떄', () => {
+            beforeEach(() => {
+                body['className'] = ''
+            })
+
+            it('WrongClassNameException 이 발생한다', async () => {
+                await expect(testWebHookValidation('Whatever!')).rejects.toThrowError(WrongClassNameException)
             })
         })
 
