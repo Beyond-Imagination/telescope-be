@@ -9,7 +9,7 @@ import {
     testIssueId,
     testSpaceURL,
     testWebhookId,
-} from '@/test/testUtils'
+} from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
@@ -57,9 +57,7 @@ describe('WebhookService 클래스', () => {
             })
 
             it('정상적인 요청이면 성공한다', async () => {
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), true)).resolves.not.toThrowError(
-                    WrongClassNameException,
-                )
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), true)).resolves.not.toThrowError()
             })
         })
 
@@ -77,9 +75,7 @@ describe('WebhookService 클래스', () => {
             })
 
             it('정상적인 요청이면 성공한다', async () => {
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), false)).resolves.not.toThrowError(
-                    WrongClassNameException,
-                )
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), false)).resolves.not.toThrowError()
             })
         })
     })

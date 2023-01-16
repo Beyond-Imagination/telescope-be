@@ -1,5 +1,5 @@
 import { OrganizationModel } from '@models/organization'
-import { setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/testUtils'
+import { setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 
 describe('Organization 클래스', () => {

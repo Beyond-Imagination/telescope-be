@@ -1,8 +1,7 @@
-import { getTestAxiosOption, mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testIssueId, testSpaceURL } from '@/test/testUtils'
+import { getTestAxiosOption, mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testIssueId, testSpaceURL } from '@/test/test.util'
 import { IndexService } from '@services/index.service'
-import { getAxiosOption, getBearerToken } from '@utils/verifyUtil'
+import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
 import { AchievementModel, AchievementType } from '@models/achievement'
 
@@ -62,7 +61,7 @@ describe('IndexService 클래스', () => {
                     },
                     getAxiosOption(await getBearerToken(testSpaceURL, testClientId, testClientSecret)),
                 ),
-            ).resolves.not.toThrowError(OrganizationNotFoundException)
+            ).resolves.not.toThrowError()
         })
 
         // 요 테스트는 트랜잭션 에러로 가끔 실패 하는것 같은데 이유는 파악 못했습니다 ㅠㅠ 실패하면 30초정도 기다렸다가 다시 실행해주세요!
@@ -82,7 +81,7 @@ describe('IndexService 클래스', () => {
                     },
                     getTestAxiosOption(),
                 ),
-            ).resolves.not.toThrowError(OrganizationNotFoundException)
+            ).resolves.not.toThrowError()
         })
     })
 })

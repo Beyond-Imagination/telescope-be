@@ -3,7 +3,7 @@ import { OrganizationModel } from '@models/organization'
 import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
-import { getBearerToken } from '@utils/verifyUtil'
+import { getBearerToken } from '@utils/verify.util'
 import { SpaceClient } from '@/client/space.client'
 
 export class OrganizationService {

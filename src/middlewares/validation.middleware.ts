@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
-import { getAxiosOption, getBearerToken } from '@utils/verifyUtil'
+import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { Organization, OrganizationModel } from '@models/organization'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { HttpException } from '@exceptions/HttpException'

@@ -1,6 +1,6 @@
 import { webhookValidation } from '@middlewares/validation.middleware'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
-import { mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/testUtils'
+import { mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'

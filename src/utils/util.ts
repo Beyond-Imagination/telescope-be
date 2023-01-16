@@ -26,3 +26,9 @@ export const mongooseTransactionHandler = async <T = any>(method: (session: Clie
 
     return result
 }
+
+export function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
+}

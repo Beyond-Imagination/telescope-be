@@ -8,6 +8,7 @@ import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
 import { ClientSession } from 'mongoose'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+import { deleteAllCacheByKeyPattern } from '@utils/cache.util'
 
 export class IndexService {
     webHookInfos = [
@@ -91,6 +92,9 @@ export class IndexService {
                 // 기존 application정보를 전부 지운다
                 Achievement.deleteAllByClientId(organization.clientId, session),
                 Organization.deleteAllByClientId(organization.clientId, session),
+                // 캐싱된 서버 정보를 전부 삭제
+                deleteAllCacheByKeyPattern(new RegExp(`.*${organization.clientId}.*`)),
+                deleteAllCacheByKeyPattern(new RegExp(`.*${organization.serverUrl}.*`)),
             ])
         }
         await mongooseTransactionHandler(transactionHandlerMethod)

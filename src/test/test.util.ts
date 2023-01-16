@@ -3,7 +3,8 @@ import axios from 'axios'
 import { Point } from '@models/organization'
 import { VERSION } from '@config'
 import { InMemoryDB } from '@/test/inMemoryDB'
-import { getAxiosOption, getBearerToken } from '@utils/verifyUtil'
+import { getAxiosOption, getBearerToken } from '@utils/verify.util'
+import { clearCache } from '@utils/cache.util'
 import ProvidesHookCallback = jest.ProvidesHookCallback
 
 export const testSpaceURL = 'https://test.jetbrains.space'
@@ -66,7 +67,11 @@ export function mockingAxios() {
 export function setTestDB(beforeEachFun: ProvidesHookCallback = null) {
     beforeAll(async () => await InMemoryDB.connect())
     if (beforeEachFun) beforeEach(beforeEachFun)
-    afterEach(async () => await InMemoryDB.clearDatabase())
+    afterEach(async () => {
+        // 캐시로 인한 영향 제거
+        clearCache()
+        await InMemoryDB.clearDatabase()
+    })
     afterAll(async () => await InMemoryDB.closeDatabase())
 }
 

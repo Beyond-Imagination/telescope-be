@@ -4,6 +4,7 @@ import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typeg
 import { Document } from './document'
 import { VERSION } from '@config'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+import { Cached } from '@utils/cache.util'
 
 export class Point {
     @prop({ default: 1 })
@@ -40,6 +41,9 @@ export class Organization extends Document {
     @prop()
     public version: string
 
+    // 서버 정보는 24시간동안 캐싱합니다
+    // 요 함수의 경우 keyParams이 조금 예외적인데 this의 경우 파라메터로 들어가는게 아니라서 serverUrl의 인덱스가 0입니다
+    @Cached({ keyParams: ['$[0]'], prefix: 'findByServerUrl', ttl: 1000 * 60 * 60 * 24 })
     public static async findByServerUrl(this: ReturnModelType<typeof Organization>, serverUrl: string): Promise<Organization> {
         const organization = await this.findOne({ serverUrl }).exec()
         if (organization) {
@@ -49,6 +53,9 @@ export class Organization extends Document {
         }
     }
 
+    // 서버 정보는 24시간동안 캐싱합니다
+    // 요 함수의 경우 keyParams이 조금 예외적인데 this의 경우 파라메터로 들어가는게 아니라서 clientId의 인덱스가 0입니다
+    @Cached({ keyParams: ['$[0]'], prefix: 'findByClientId', ttl: 1000 * 60 * 60 * 24 })
     public static async findByClientId(this: ReturnModelType<typeof Organization>, clientId: string): Promise<Organization> {
         const organization = await this.findOne({ clientId }).exec()
         if (organization) {

@@ -1,4 +1,4 @@
-import { setTestDB, testAdmin, testClientId, testIssueId } from '@/test/testUtils'
+import { setTestDB, testAdmin, testClientId, testIssueId } from '@/test/test.util'
 import { AchievementModel, AchievementType } from '@models/achievement'
 import { getDaysBefore } from '@utils/date'
 

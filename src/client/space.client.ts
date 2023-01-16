@@ -2,6 +2,7 @@ import axios from 'axios'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { CLIENT_URL, SERVER_URL } from '@config'
+import { Cached } from '@utils/cache.util'
 
 export class SpaceClient {
     async getPublicKeys(verifyInfo: any) {
@@ -69,6 +70,7 @@ export class SpaceClient {
         )
     }
 
+    @Cached({ keyParams: ['$[1]'], prefix: 'requestProfiles' })
     requestProfiles(token: string, serverUrl: string) {
         const requestUrl = `${serverUrl}/api/http/team-directory/profiles`
         return axios
