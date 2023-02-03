@@ -8,7 +8,7 @@ import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
 import { ClientSession } from 'mongoose'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
-import { deleteAllCacheByKeyPattern } from '@utils/cache.util'
+import { deleteAllCacheByKeyPattern, deleteCache } from '@utils/cache.util'
 
 export class IndexService {
     webHookInfos = [
@@ -81,6 +81,9 @@ export class IndexService {
             organization = await OrganizationModel.findByServerUrl(serverUrl)
         } catch (e) {
             if (e instanceof OrganizationNotFoundException) {
+                // 아래 코드가 없으면 OrganizationNotFoundException를 던지는 promise가 캐싱되어
+                // 이후 findByServerUrl 호출시 OrganizationNotFoundException가 throw된다.
+                deleteCache(`findByServerUrl_${serverUrl}`)
                 return
             } else {
                 throw e
