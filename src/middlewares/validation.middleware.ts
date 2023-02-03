@@ -7,7 +7,7 @@ import { HttpException } from '@exceptions/HttpException'
 import { plainToClass } from 'class-transformer'
 import { validate, ValidationError } from 'class-validator'
 import { SpaceClient } from '@/client/space.client'
-import crypto from 'crypto'
+import crypto, { privateEncrypt } from 'crypto'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 const jwkToPem = require('jwk-to-pem')
@@ -114,5 +114,18 @@ async function getVerifyInfo(organization: Organization, request: Request) {
         signature: request.headers['x-space-public-key-signature'].toString(),
         verifiableData: `${request.headers['x-space-timestamp']}:${JSON.stringify(request.body)}`,
         axiosOption: getAxiosOption(bearerToken),
+    }
+}
+
+export const issueWebhookValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+        if (requestBody.payload.className === 'IssueWebhookEvent') {
+            next()
+        } else {
+            throw new WrongClassNameException()
+        }
+    } catch (error) {
+        next(error)
     }
 }

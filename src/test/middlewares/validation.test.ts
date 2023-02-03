@@ -1,4 +1,4 @@
-import { webhookValidation } from '@middlewares/validation.middleware'
+import { webhookValidation, issueWebhookValidation } from '@middlewares/validation.middleware'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testSpaceURL } from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
@@ -94,6 +94,40 @@ describe('validation.middleware 모듈', () => {
             })
         })
 
+        describe('payload의 className이 IssueWebhookEvent 일때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'IssueWebhookEvent',
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('항상 issueWebhookValidation가 성공한다', async () => {
+                await expect(testIssueWebHookValidation()).resolves.not.toThrow()
+            })
+        })
+
+        describe('payload의 className이 IssueWebhookEvent가 아닐 때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'whatever',
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('WrongClassNameException 이 발생한다', async () => {
+                await expect(testIssueWebHookValidation()).rejects.toThrowError(WrongClassNameException)
+            })
+        })
+
         async function testWebHookValidation(publicKeySignature: string) {
             const res: any = {
                 locals: {},
@@ -104,6 +138,17 @@ describe('validation.middleware 모듈', () => {
             }
             req.headers['x-space-public-key-signature'] = publicKeySignature
             await webhookValidation(req, res, next)
+        }
+
+        async function testIssueWebHookValidation() {
+            const res: any = {
+                locals: {},
+                status: jest.fn().mockReturnValue({ end: jest.fn() }),
+            }
+            const next = e => {
+                if (e) throw e
+            }
+            await issueWebhookValidation(req, res, next)
         }
     })
 })

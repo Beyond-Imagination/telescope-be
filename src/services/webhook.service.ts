@@ -1,76 +1,80 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
-import { CodeReviewDTO, CreateIssueDTO, DeleteIssueDTO, UpdateIssueAssigneeDTO, UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDTO, IssueDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
+import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
 
 export class WebhookService {
     spaceClient = new SpaceClient()
 
-    public async createIssue(createIssueDTO: CreateIssueDTO) {
-        await AchievementModel.saveAchievement(
-            createIssueDTO.clientId,
-            createIssueDTO.payload.meta.principal.details.user.id,
-            createIssueDTO.payload.issue.id,
-            AchievementType.CreateIssue,
-        )
+    public async createIssue(issueDTO: IssueDTO) {
+        if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user.id && issueDTO.payload.issue.id) {
+            await AchievementModel.saveAchievement(
+                issueDTO.clientId,
+                issueDTO.payload.meta.principal.details.user.id,
+                issueDTO.payload.issue.id,
+                AchievementType.CreateIssue,
+            )
+        } else {
+            throw InvalidRequestException
+        }
     }
 
-    public async updateIssueStatus(updateIssueStatusDTO: UpdateIssueStatusDTO) {
-        const assignee = updateIssueStatusDTO.payload.issue.assignee
+    public async updateIssueStatus(issueDTO: IssueDTO) {
+        const assignee = issueDTO.payload.issue.assignee
+
         if (assignee) {
-            if (updateIssueStatusDTO.isResolved()) {
-                await AchievementModel.saveAchievement(
-                    updateIssueStatusDTO.clientId,
-                    assignee.id,
-                    updateIssueStatusDTO.payload.issue.id,
-                    AchievementType.ResolveIssue,
-                )
-            } else if (updateIssueStatusDTO.isUnresolved()) {
-                await AchievementModel.deleteAchievement(
-                    updateIssueStatusDTO.clientId,
-                    assignee.id,
-                    updateIssueStatusDTO.payload.issue.id,
-                    AchievementType.ResolveIssue,
-                )
+            if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
+                if (issueDTO.isResolved()) {
+                    await AchievementModel.saveAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+                } else if (issueDTO.isUnresolved()) {
+                    await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+                }
+            } else {
+                throw InvalidRequestException
             }
         }
     }
 
-    public async updateIssueAssignee(updateIssueAssigneeDTO: UpdateIssueAssigneeDTO) {
-        if (updateIssueAssigneeDTO.checkResolved()) {
-            const newAssignee = updateIssueAssigneeDTO.payload.assignee.new
-            const oldAssignee = updateIssueAssigneeDTO.payload.assignee.old
+    public async updateIssueAssignee(issueDTO: IssueDTO) {
+        if (issueDTO.checkResolved()) {
+            const newAssignee = issueDTO.payload.assignee.new
+            const oldAssignee = issueDTO.payload.assignee.old
+
             if (newAssignee) {
                 // issue가 unassigned되는 케이스를 방어한다
-                await AchievementModel.saveAchievement(
-                    updateIssueAssigneeDTO.clientId,
-                    newAssignee.id,
-                    updateIssueAssigneeDTO.payload.issue.id,
-                    AchievementType.ResolveIssue,
-                )
+                if (issueDTO.clientId && newAssignee.id && issueDTO.payload.issue.id) {
+                    await AchievementModel.saveAchievement(issueDTO.clientId, newAssignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+                } else {
+                    throw InvalidRequestException
+                }
             }
+
             if (oldAssignee) {
                 // 기존에 issue가 unassigned되어있는 경우를 방어한다
-                await AchievementModel.deleteAchievement(
-                    updateIssueAssigneeDTO.clientId,
-                    oldAssignee.id,
-                    updateIssueAssigneeDTO.payload.issue.id,
-                    AchievementType.ResolveIssue,
-                )
+                if (issueDTO.clientId && oldAssignee.id && issueDTO.payload.issue.id) {
+                    await AchievementModel.deleteAchievement(
+                        issueDTO.clientId,
+                        oldAssignee.id,
+                        issueDTO.payload.issue.id,
+                        AchievementType.ResolveIssue,
+                    )
+                } else {
+                    throw InvalidRequestException
+                }
             }
         }
     }
 
-    public async deleteIssue(deleteIssueDTO: DeleteIssueDTO) {
-        const assignee = deleteIssueDTO.payload.issue.assignee
-        if (assignee && deleteIssueDTO.checkResolved()) {
-            await AchievementModel.deleteAchievement(
-                deleteIssueDTO.clientId,
-                assignee.id,
-                deleteIssueDTO.payload.issue.id,
-                AchievementType.ResolveIssue,
-            )
+    public async deleteIssue(issueDTO: IssueDTO) {
+        const assignee = issueDTO.payload.issue.assignee
+        if (assignee && issueDTO.checkResolved()) {
+            if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
+                await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+            } else {
+                throw InvalidRequestException
+            }
         }
     }
 

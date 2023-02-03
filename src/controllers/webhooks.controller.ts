@@ -1,6 +1,6 @@
 import { Body, Controller, OnUndefined, Post, Res, UseBefore } from 'routing-controllers'
-import { webhookValidation } from '@middlewares/validation.middleware'
-import { CodeReviewDTO, CreateIssueDTO, DeleteIssueDTO, UpdateIssueAssigneeDTO, UpdateIssueStatusDTO } from '@dtos/webhooks.dtos'
+import { webhookValidation, issueWebhookValidation } from '@middlewares/validation.middleware'
+import { CodeReviewDTO, IssueDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Response } from 'express'
 
@@ -11,25 +11,29 @@ export class WebhooksController {
 
     @Post('/issue/create')
     @OnUndefined(204)
-    async createIssue(@Body() payload: CreateIssueDTO) {
+    @UseBefore(issueWebhookValidation)
+    async createIssue(@Body() payload: IssueDTO) {
         await this.service.createIssue(payload)
     }
 
     @Post('/issue/update/status')
     @OnUndefined(204)
-    async updateIssueStatus(@Body() payload: UpdateIssueStatusDTO) {
+    @UseBefore(issueWebhookValidation)
+    async updateIssueStatus(@Body() payload: IssueDTO) {
         await this.service.updateIssueStatus(payload)
     }
 
     @Post('/issue/update/assignee')
     @OnUndefined(204)
-    async updateIssueAssignee(@Body() payload: UpdateIssueAssigneeDTO) {
+    @UseBefore(issueWebhookValidation)
+    async updateIssueAssignee(@Body() payload: IssueDTO) {
         await this.service.updateIssueAssignee(payload)
     }
 
     @Post('/issue/delete')
     @OnUndefined(204)
-    async deleteIssue(@Body() payload: DeleteIssueDTO) {
+    @UseBefore(issueWebhookValidation)
+    async deleteIssue(@Body() payload: IssueDTO) {
         await this.service.deleteIssue(payload)
     }
 

@@ -13,6 +13,7 @@ export const testClientSecret = 'test_client_secret'
 export const testAdmin = 'testAdmin'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
+export const testUserId = 'testUserId'
 export const mockOrganization = {
     clientId: testClientId,
     clientSecret: testClientSecret,
