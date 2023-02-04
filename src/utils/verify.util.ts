@@ -3,7 +3,8 @@ import { Cached } from '@utils/cache.util'
 
 // 데코레이터는 클래스 내부에서만 사용이 가능해서 요런식으로 export function을 클래스 내부로 가져왔습니다
 class VerifyUtil {
-    @Cached({ keyParams: ['$..*'], prefix: 'bearerToken' })
+    // Bearer Token의 유효기간이 10분이므로 캐싱 만료시간은 9분정도로 잡는다
+    @Cached({ keyParams: ['$..*'], prefix: 'bearerToken', ttl: 1000 * 60 * 9 })
     async getBearerToken(url: string, clientId: string, clientSecret: string) {
         const fullUrl = url + '/oauth/token'
         const token = `Basic ${Buffer.from(clientId + ':' + clientSecret).toString('base64')}`
