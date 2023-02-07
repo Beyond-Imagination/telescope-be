@@ -7,7 +7,7 @@ import { HttpException } from '@exceptions/HttpException'
 import { plainToClass } from 'class-transformer'
 import { validate, ValidationError } from 'class-validator'
 import { SpaceClient } from '@/client/space.client'
-import crypto, { privateEncrypt } from 'crypto'
+import crypto from 'crypto'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 const jwkToPem = require('jwk-to-pem')

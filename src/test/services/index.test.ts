@@ -7,33 +7,15 @@ import { AchievementModel, AchievementType } from '@models/achievement'
 
 describe('IndexService 클래스', () => {
     const sut = new IndexService()
-    let body
-
-    let req
 
     mockingAxios()
 
     setTestDB()
 
-    beforeEach(() => {
-        body = {
-            serverUrl: testSpaceURL,
-            clientId: testClientId,
-            clientSecret: testClientSecret,
-        }
-        req = {
-            body: body,
-            headers: {
-                'x-space-timestamp': 12345,
-            },
-        }
-    })
-
-    describe('install 메소드에서', () => {
-        it('className이 InitPayload가 아니면 에러가 발생한다', async () => {
+    describe('handelInstallAndUninstall 메소드에서', () => {
+        it('className이 InitPayload혹은 ApplicationUninstalledPayload가 아니면 에러가 발생한다', async () => {
             await expect(
-                sut.install(
-                    req,
+                sut.handelInstallAndUninstall(
                     {
                         className: 'whatever',
                         clientSecret: testClientSecret,
@@ -49,8 +31,7 @@ describe('IndexService 클래스', () => {
 
         it('최초 설치시에 정상적인 요청이면 성공한다', async () => {
             await expect(
-                sut.install(
-                    req,
+                sut.handelInstallAndUninstall(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -69,8 +50,7 @@ describe('IndexService 클래스', () => {
             await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testAdmin, null)
             await AchievementModel.saveAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview)
             await expect(
-                sut.install(
-                    req,
+                sut.handelInstallAndUninstall(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -78,6 +58,24 @@ describe('IndexService 클래스', () => {
                         state: 'test',
                         clientId: testClientId,
                         userId: testAdmin,
+                    },
+                    getTestAxiosOption(),
+                ),
+            ).resolves.not.toThrowError()
+        })
+
+        it('정상적인 삭제 요청이면 성공한다', async () => {
+            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testAdmin, null)
+            await AchievementModel.saveAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview)
+            await expect(
+                sut.handelInstallAndUninstall(
+                    {
+                        className: 'InitPayload',
+                        clientSecret: undefined,
+                        serverUrl: testSpaceURL,
+                        state: undefined,
+                        clientId: testClientId,
+                        userId: undefined,
                     },
                     getTestAxiosOption(),
                 ),
