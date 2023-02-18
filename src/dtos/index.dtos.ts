@@ -20,3 +20,13 @@ export class InstallAndUninstallDTO {
 
     userId: string | undefined
 }
+
+export class LogDto {
+    logType: string
+    serverUrl: string
+
+    constructor(logType, serverUrl) {
+        this.logType = logType
+        this.serverUrl = serverUrl
+    }
+}

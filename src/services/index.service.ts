@@ -1,5 +1,5 @@
 import { Organization, OrganizationModel } from '@models/organization'
-import { InstallAndUninstallDTO } from '@dtos/index.dtos'
+import { InstallAndUninstallDTO, LogDto } from '@dtos/index.dtos'
 import { WebHookInfo } from '@dtos/WebHookInfo'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
@@ -8,6 +8,7 @@ import { ClientSession } from 'mongoose'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { deleteAllCacheByKeyPattern, deleteCache } from '@utils/cache.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
+import { logger } from '@utils/logger'
 
 export class IndexService {
     webHookInfos = [
@@ -53,16 +54,20 @@ export class IndexService {
     rightCodes = ['Project.CodeReview.View', 'Profile.View', 'Project.Issues.View']
 
     async handelInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
+        let logType
         switch (dto.className) {
             case 'InitPayload':
                 await this.install(dto, axiosOption)
+                logType = 'Install'
                 break
             case 'ApplicationUninstalledPayload':
                 await this.uninstall(dto)
+                logType = 'Uninstall'
                 break
             default:
                 throw new WrongClassNameException()
         }
+        logger.info(JSON.stringify(new LogDto(logType, dto.serverUrl)))
     }
 
     private async install(dto: InstallAndUninstallDTO, axiosOption: any) {
