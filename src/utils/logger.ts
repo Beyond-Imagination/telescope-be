@@ -53,7 +53,7 @@ const winstonOption = {
 
 const loggerMiddleware = expressWinston.logger({
     ...winstonOption,
-    requestWhitelist: ['headers', 'body', 'query'],
+    requestWhitelist: ['headers.origin', 'body', 'query'],
     responseWhitelist: ['body'],
 })
 
