@@ -8,6 +8,7 @@ import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException
 import { PageInfoDTO } from '@dtos/pagination.dtos'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 
 export class AdminService {
     async list(query: AdminListQueryDTO) {
@@ -52,5 +53,14 @@ export class AdminService {
         return jwt.sign({ id: admin._id, email: admin.email }, SECRET_KEY, {
             expiresIn: '1h',
         })
+    }
+
+    async approve(id: string) {
+        const admin = await AdminModel.findByIdCached(id)
+        if (admin.approved) {
+            throw new AdminApprovedException()
+        }
+        await AdminModel.updateOne({ _id: id }, { approved: true, approvedAt: new Date() })
+        deleteCache('findAdminById_' + id)
     }
 }

@@ -5,6 +5,7 @@ import { AdminExistException } from '@exceptions/AdminExistException'
 import { AdminNotFoundException } from '@exceptions/AdminNotFoundException'
 import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException'
 import { AdminSortType } from '@dtos/admin.dtos'
+import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 
 describe('AdminService 클래스', () => {
     const sut = new AdminService()
@@ -78,6 +79,30 @@ describe('AdminService 클래스', () => {
                     password: testAdminPassword,
                 }),
             ).resolves.not.toThrowError()
+        })
+    })
+
+    describe('approve 메소드에서', () => {
+        it('존재하지 않는 관리자를 승인하면 에러가 발생한다.', async () => {
+            await expect(sut.approve('whatever1234')).rejects.toThrowError(AdminNotFoundException)
+        })
+
+        it('이미 승인된 관리자를 승인하면 에러가 발생한다.', async () => {
+            await new AdminModel({
+                email: testAdminEmail,
+                password: testAdminHashedPassword,
+                name: testAdminName,
+                registeredAt: new Date(),
+                approved: true,
+            }).save()
+            const admin = await AdminModel.findByEmail(testAdminEmail)
+            await expect(sut.approve(admin._id)).rejects.toThrowError(AdminApprovedException)
+        })
+
+        it('정상적인 요청이면 성공한다', async () => {
+            await AdminModel.saveAdmin(testAdminEmail, testAdminPassword, testAdminName)
+            const admin = await AdminModel.findByEmail(testAdminEmail)
+            await expect(sut.approve(admin._id)).resolves.not.toThrowError()
         })
     })
 

@@ -1,4 +1,4 @@
-import { Authorized, Body, Controller, Get, OnUndefined, Post, QueryParams, UseBefore } from 'routing-controllers'
+import { Authorized, Body, BodyParam, Controller, Get, OnUndefined, Post, QueryParams, UseBefore } from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
 import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO } from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
@@ -23,5 +23,12 @@ export class AdminController {
     @Post('/login')
     async login(@Body() dto: LoginDTO) {
         return { token: await this.service.login(dto) }
+    }
+
+    @Authorized()
+    @Post('/approve')
+    @OnUndefined(204)
+    async approve(@BodyParam('id') id: string) {
+        await this.service.approve(id)
     }
 }
