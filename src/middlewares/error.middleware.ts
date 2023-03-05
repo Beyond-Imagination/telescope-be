@@ -4,7 +4,7 @@ import { logger } from '@utils/logger'
 
 const errorMiddleware = (error: HttpException, req: Request, res: Response, next: NextFunction) => {
     try {
-        error.status = error.status || 500
+        error.status = error.httpCode || error.status || 500
         error.message = error.message || 'Something went wrong'
 
         logger.error(error)

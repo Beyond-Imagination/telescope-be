@@ -1,6 +1,5 @@
 import LRUCache from 'lru-cache'
-
-const jsonPath = require('jsonpath')
+import jsonPath from 'jsonpath'
 
 const cache: LRUCache<string, any> = new LRUCache<string, any>({
     // 10000개의 정보까진 캐싱해둔다

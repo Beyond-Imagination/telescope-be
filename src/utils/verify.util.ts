@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { Cached } from '@utils/cache.util'
+import FormData from 'form-data'
 
 // 데코레이터는 클래스 내부에서만 사용이 가능해서 요런식으로 export function을 클래스 내부로 가져왔습니다
 class VerifyUtil {
@@ -8,7 +9,6 @@ class VerifyUtil {
     async getBearerToken(url: string, clientId: string, clientSecret: string) {
         const fullUrl = url + '/oauth/token'
         const token = `Basic ${Buffer.from(clientId + ':' + clientSecret).toString('base64')}`
-        const FormData = require('form-data')
 
         const form = new FormData()
         form.append('grant_type', 'client_credentials')

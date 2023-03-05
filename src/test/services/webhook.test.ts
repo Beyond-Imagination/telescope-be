@@ -3,13 +3,13 @@ import {
     getTestAxiosOption,
     mockingAxios,
     setTestDB,
-    testAdmin,
     testClientId,
     testClientSecret,
     testIssueId,
+    testOrganizationAdmin,
     testSpaceURL,
-    testWebhookId,
     testUserId,
+    testWebhookId,
 } from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
@@ -22,7 +22,7 @@ describe('WebhookService 클래스', () => {
     mockingAxios()
 
     setTestDB(async () => {
-        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testAdmin, null)
+        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
         codeReviewDto = {
             clientId: testClientId,
 

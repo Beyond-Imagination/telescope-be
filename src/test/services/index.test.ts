@@ -1,12 +1,25 @@
-import { getTestAxiosOption, mockingAxios, setTestDB, testAdmin, testClientId, testClientSecret, testIssueId, testSpaceURL } from '@/test/test.util'
+import {
+    getTestAxiosOption,
+    mockingAxios,
+    setTestDB,
+    testClientId,
+    testClientSecret,
+    testIssueId,
+    testOrganizationAdmin,
+    testSpaceURL,
+} from '@/test/test.util'
 import { IndexService } from '@services/index.service'
 import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
 import { AchievementModel, AchievementType } from '@models/achievement'
+import { logger } from '@utils/logger'
 
 describe('IndexService 클래스', () => {
     const sut = new IndexService()
+
+    // 콘솔창에 로그가 남는걸 막는다
+    logger.info = jest.fn()
 
     mockingAxios()
 
@@ -22,7 +35,7 @@ describe('IndexService 클래스', () => {
                         serverUrl: testSpaceURL,
                         state: 'test',
                         clientId: testClientId,
-                        userId: testAdmin,
+                        userId: testOrganizationAdmin,
                     },
                     getAxiosOption(await getBearerToken(testSpaceURL, testClientId, testClientSecret)),
                 ),
@@ -38,7 +51,7 @@ describe('IndexService 클래스', () => {
                         serverUrl: testSpaceURL,
                         state: 'test',
                         clientId: testClientId,
-                        userId: testAdmin,
+                        userId: testOrganizationAdmin,
                     },
                     getAxiosOption(await getBearerToken(testSpaceURL, testClientId, testClientSecret)),
                 ),
@@ -47,8 +60,8 @@ describe('IndexService 클래스', () => {
 
         // 요 테스트는 트랜잭션 에러로 가끔 실패 하는것 같은데 이유는 파악 못했습니다 ㅠㅠ 실패하면 30초정도 기다렸다가 다시 실행해주세요!
         it('재설치여도 정상적인 요청이면 성공한다', async () => {
-            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testAdmin, null)
-            await AchievementModel.saveAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview)
+            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
+            await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview)
             await expect(
                 sut.handelInstallAndUninstall(
                     {
@@ -57,7 +70,7 @@ describe('IndexService 클래스', () => {
                         serverUrl: testSpaceURL,
                         state: 'test',
                         clientId: testClientId,
-                        userId: testAdmin,
+                        userId: testOrganizationAdmin,
                     },
                     getTestAxiosOption(),
                 ),
@@ -65,8 +78,8 @@ describe('IndexService 클래스', () => {
         })
 
         it('정상적인 삭제 요청이면 성공한다', async () => {
-            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testAdmin, null)
-            await AchievementModel.saveAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview)
+            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
+            await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview)
             await expect(
                 sut.handelInstallAndUninstall(
                     {

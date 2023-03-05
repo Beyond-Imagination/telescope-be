@@ -5,20 +5,27 @@ import { VERSION } from '@config'
 import { InMemoryDB } from '@/test/inMemoryDB'
 import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { clearCache } from '@utils/cache.util'
+import bcrypt from 'bcrypt'
 import ProvidesHookCallback = jest.ProvidesHookCallback
 
 export const testSpaceURL = 'https://test.jetbrains.space'
 export const testClientId = 'test_client_id'
 export const testClientSecret = 'test_client_secret'
-export const testAdmin = 'testAdmin'
+export const testOrganizationAdmin = 'testAdmin'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
 export const testUserId = 'testUserId'
+
+export const testAdminEmail = 'testAdmin@email.com'
+export const testAdminPassword = 'testAdminPassword'
+export const testAdminHashedPassword = bcrypt.hashSync(testAdminPassword, 12)
+export const testAdminName = 'testAdminName'
+
 export const mockOrganization = {
     clientId: testClientId,
     clientSecret: testClientSecret,
     serverUrl: testSpaceURL,
-    admin: [testAdmin],
+    admin: [testOrganizationAdmin],
     points: new Point(),
     version: VERSION,
 }
@@ -62,7 +69,7 @@ export function mockingAxios() {
     // 코드리뷰 정보를 가져오는 부분을 mocking
     mockAxios
         .onGet(new RegExp(`${testSpaceURL}/api/http/projects/key:.*`))
-        .reply(200, { createdBy: { id: testAdmin }, branchPairs: [{ isMerged: true }] })
+        .reply(200, { createdBy: { id: testOrganizationAdmin }, branchPairs: [{ isMerged: true }] })
 }
 
 export function setTestDB(beforeEachFun: ProvidesHookCallback = null) {

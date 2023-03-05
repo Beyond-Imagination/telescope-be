@@ -9,8 +9,7 @@ import { validate, ValidationError } from 'class-validator'
 import { SpaceClient } from '@/client/space.client'
 import crypto from 'crypto'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-
-const jwkToPem = require('jwk-to-pem')
+import jwkToPem from 'jwk-to-pem'
 
 const client = new SpaceClient()
 

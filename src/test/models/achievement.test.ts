@@ -1,14 +1,14 @@
-import { setTestDB, testAdmin, testClientId, testIssueId } from '@/test/test.util'
+import { setTestDB, testClientId, testIssueId, testOrganizationAdmin } from '@/test/test.util'
 import { AchievementModel, AchievementType } from '@models/achievement'
 import { getDaysBefore } from '@utils/date'
 
 describe('Achievement 클래스', () => {
-    setTestDB(async () => await AchievementModel.saveAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview))
+    setTestDB(async () => await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview))
 
     describe('saveAchievement 메소드에서', () => {
         it('항상 성공한다', async () => {
             await expect(
-                AchievementModel.saveAchievement(testClientId, testAdmin, 'testIssueId2', AchievementType.CreateCodeReview),
+                AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, 'testIssueId2', AchievementType.CreateCodeReview),
             ).resolves.not.toThrow()
         })
     })
@@ -41,7 +41,7 @@ describe('Achievement 클래스', () => {
             expect((await AchievementModel.getOrganizationScoreByClientId(testClientId, getDaysBefore(7), new Date())).length).toEqual(1)
 
             await expect(
-                AchievementModel.deleteAchievement(testClientId, testAdmin, testIssueId, AchievementType.CreateCodeReview),
+                AchievementModel.deleteAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview),
             ).resolves.not.toThrow()
 
             //삭제한 이후에 조회하면 0개가 반환되어야 한다

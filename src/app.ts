@@ -6,14 +6,17 @@ import cookieParser from 'cookie-parser'
 import express from 'express'
 import helmet from 'helmet'
 import hpp from 'hpp'
-import { getMetadataArgsStorage, useExpressServer } from 'routing-controllers'
+import { Action, getMetadataArgsStorage, useExpressServer } from 'routing-controllers'
 import { routingControllersToSpec } from 'routing-controllers-openapi'
 import swaggerUi from 'swagger-ui-express'
-import { CREDENTIALS, NODE_ENV, ORIGIN, PORT } from '@config'
+import { SECRET_KEY, CREDENTIALS, NODE_ENV, ORIGIN, PORT } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
 import { logger, loggerMiddleware } from '@utils/logger'
 import dbConnector from '@models/connector'
 import * as mongoose from 'mongoose'
+import { AdminModel } from '@models/admin'
+import { AdminDTO } from '@dtos/admin.dtos'
+import jwt from 'jsonwebtoken'
 
 class App {
     public app: express.Application
@@ -79,6 +82,22 @@ class App {
             },
             controllers: controllers,
             defaultErrorHandler: false,
+            authorizationChecker: async (action: Action) => {
+                const authHeader = action.request.headers['authorization']
+                const token = authHeader && authHeader.split(' ')[1]
+                if (!token) {
+                    return false
+                }
+                const user = jwt.verify(token, SECRET_KEY)
+
+                const admin = await AdminModel.findByIdCached(user.id)
+                if (!admin.approved) {
+                    return false
+                }
+                action.request.user = new AdminDTO(admin)
+
+                return true
+            },
         })
     }
 

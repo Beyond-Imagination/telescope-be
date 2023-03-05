@@ -1,7 +1,6 @@
 import { DB_NAME } from '@config'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
-
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 let memoryServer
 
@@ -22,7 +21,7 @@ export class InMemoryDB {
 
         for (const key in collections) {
             const collection = collections[key]
-            collection.deleteMany()
+            await collection.deleteMany({})
         }
     }
 }
