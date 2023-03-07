@@ -33,7 +33,7 @@ const winstonOption = {
             filename: `%DATE%.log`,
             maxFiles: 30, // 30 Days saved
             json: false,
-            zippedArchive: true,
+            zippedArchive: false,
         }),
         // error log setting
         new winstonDaily({
@@ -44,7 +44,7 @@ const winstonOption = {
             maxFiles: 30, // 30 Days saved
             handleExceptions: true,
             json: false,
-            zippedArchive: true,
+            zippedArchive: false,
             format: winston.format.errors({ stack: true }),
         }),
         new winston.transports.Console(),
