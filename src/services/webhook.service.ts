@@ -17,7 +17,7 @@ export class WebhookService {
                 AchievementType.CreateIssue,
             )
         } else {
-            throw InvalidRequestException
+            throw new InvalidRequestException()
         }
     }
 
@@ -32,7 +32,7 @@ export class WebhookService {
                     await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
                 }
             } else {
-                throw InvalidRequestException
+                throw new InvalidRequestException()
             }
         }
     }
@@ -47,7 +47,7 @@ export class WebhookService {
                 if (issueDTO.clientId && newAssignee.id && issueDTO.payload.issue.id) {
                     await AchievementModel.saveAchievement(issueDTO.clientId, newAssignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
                 } else {
-                    throw InvalidRequestException
+                    throw new InvalidRequestException()
                 }
             }
 
@@ -61,7 +61,7 @@ export class WebhookService {
                         AchievementType.ResolveIssue,
                     )
                 } else {
-                    throw InvalidRequestException
+                    throw new InvalidRequestException()
                 }
             }
         }
@@ -73,7 +73,7 @@ export class WebhookService {
             if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
                 await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
             } else {
-                throw InvalidRequestException
+                throw new InvalidRequestException()
             }
         }
     }
@@ -89,12 +89,15 @@ export class WebhookService {
             codeReviewDTO.payload.reviewId,
             axiosOption.headers,
         )
-
-        if (isOpen) {
-            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, null, AchievementType.CreateCodeReview)
-        } else if (codeReviewDTO.payload.isMergeRequest && reviewInfo.branchPairs[0].isMerged) {
-            // MR이면서 머지가 됐을때만 저장한다
-            await Achievement.saveAchievement(codeReviewDTO.clientId, reviewInfo.createdBy.id, null, AchievementType.MergeMr)
+        const createdBy = reviewInfo.createdBy
+        if (createdBy) {
+            // 특정 사용자가 생성한 MR이 아니면 점수는 누구에게도 할당되지 않도록한다.
+            if (isOpen) {
+                await Achievement.saveAchievement(codeReviewDTO.clientId, createdBy.id, null, AchievementType.CreateCodeReview)
+            } else if (codeReviewDTO.payload.isMergeRequest && reviewInfo.branchPairs[0].isMerged) {
+                // MR이면서 머지가 됐을때만 저장한다
+                await Achievement.saveAchievement(codeReviewDTO.clientId, createdBy.id, null, AchievementType.MergeMr)
+            }
         }
     }
 }
