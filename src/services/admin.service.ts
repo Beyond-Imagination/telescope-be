@@ -9,6 +9,7 @@ import { PageInfoDTO } from '@dtos/pagination.dtos'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
+import { AdminRejectException } from '@exceptions/AdminRejectException'
 
 export class AdminService {
     async list(query: AdminListQueryDTO) {
@@ -62,5 +63,26 @@ export class AdminService {
         }
         await AdminModel.updateOne({ _id: id }, { approved: true, approvedAt: new Date() })
         deleteCache('findAdminById_' + id)
+    }
+
+    async reject(admin: Admin, id: string) {
+        const targetAdmin = await AdminModel.findByIdCached(id)
+        if (targetAdmin._id.toString() === admin._id.toString()) {
+            throw new AdminRejectException()
+        }
+        await AdminModel.updateOne(
+            { _id: id },
+            {
+                approved: false,
+                approvedAt: null,
+            },
+        )
+        deleteCache('findAdminById_' + id)
+    }
+}
+
+declare module 'express' {
+    interface Request {
+        user: any
     }
 }

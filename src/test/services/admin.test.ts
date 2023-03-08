@@ -6,6 +6,7 @@ import { AdminNotFoundException } from '@exceptions/AdminNotFoundException'
 import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException'
 import { AdminSortType } from '@dtos/admin.dtos'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
+import { AdminRejectException } from '@exceptions/AdminRejectException'
 
 describe('AdminService 클래스', () => {
     const sut = new AdminService()
@@ -96,13 +97,53 @@ describe('AdminService 클래스', () => {
                 approved: true,
             }).save()
             const admin = await AdminModel.findByEmail(testAdminEmail)
-            await expect(sut.approve(admin._id)).rejects.toThrowError(AdminApprovedException)
+            await expect(sut.approve(admin._id.toString())).rejects.toThrowError(AdminApprovedException)
         })
 
         it('정상적인 요청이면 성공한다', async () => {
             await AdminModel.saveAdmin(testAdminEmail, testAdminPassword, testAdminName)
+            let admin = await AdminModel.findByEmail(testAdminEmail)
+            await expect(sut.approve(admin._id.toString())).resolves.not.toThrowError()
+            admin = await AdminModel.findByIdCached(admin._id.toString())
+            expect(admin.approved).toBeTruthy()
+        })
+    })
+
+    describe('reject 메소드에서', () => {
+        beforeEach(async () => {
+            await new AdminModel({
+                email: testAdminEmail,
+                password: testAdminHashedPassword,
+                name: testAdminName,
+                registeredAt: new Date(),
+                approved: true,
+            }).save()
+        })
+
+        it('존재하지 않는 관리자를 승인 취소하면 에러가 발생한다.', async () => {
             const admin = await AdminModel.findByEmail(testAdminEmail)
-            await expect(sut.approve(admin._id)).resolves.not.toThrowError()
+            await expect(sut.reject(admin, 'whatever1234')).rejects.toThrowError(AdminNotFoundException)
+        })
+
+        it('스스로를 승인 취소하면 에러가 발생한다.', async () => {
+            const admin = await AdminModel.findByEmail(testAdminEmail)
+            await expect(sut.reject(admin, admin._id.toString())).rejects.toThrowError(AdminRejectException)
+        })
+
+        it('정상적인 요청이면 성공한다', async () => {
+            const admin = await AdminModel.findByEmail(testAdminEmail)
+            const targetTestAdminEmail = testAdminEmail + '2'
+            await new AdminModel({
+                email: targetTestAdminEmail,
+                password: testAdminHashedPassword,
+                name: testAdminName,
+                registeredAt: new Date(),
+                approved: true,
+            }).save()
+            let targetAdmin = await AdminModel.findByEmail(targetTestAdminEmail)
+            await expect(sut.reject(admin, targetAdmin._id.toString())).resolves.not.toThrowError()
+            targetAdmin = await AdminModel.findByIdCached(targetAdmin._id.toString())
+            expect(targetAdmin.approved).toBeFalsy()
         })
     })
 
