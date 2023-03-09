@@ -7,6 +7,7 @@ import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException
 import { AdminSortType } from '@dtos/admin.dtos'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
+import { checkTokenIsRevoked } from '@utils/cache.util'
 
 describe('AdminService 클래스', () => {
     const sut = new AdminService()
@@ -157,6 +158,13 @@ describe('AdminService 클래스', () => {
                     getSort: jest.fn(),
                 }),
             ).resolves.not.toThrowError()
+        })
+    })
+
+    describe('logout 메소드에서', () => {
+        it('항상 성공한다', async () => {
+            sut.logout('whatever')
+            expect(checkTokenIsRevoked('whatever')).toBeTruthy()
         })
     })
 })

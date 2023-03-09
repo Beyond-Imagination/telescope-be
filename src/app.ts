@@ -9,7 +9,7 @@ import hpp from 'hpp'
 import { Action, getMetadataArgsStorage, useExpressServer } from 'routing-controllers'
 import { routingControllersToSpec } from 'routing-controllers-openapi'
 import swaggerUi from 'swagger-ui-express'
-import { SECRET_KEY, CREDENTIALS, NODE_ENV, ORIGIN, PORT } from '@config'
+import { CREDENTIALS, NODE_ENV, ORIGIN, PORT, SECRET_KEY } from '@config'
 import errorMiddleware from '@middlewares/error.middleware'
 import { logger, loggerMiddleware } from '@utils/logger'
 import dbConnector from '@models/connector'
@@ -17,6 +17,7 @@ import * as mongoose from 'mongoose'
 import { AdminModel } from '@models/admin'
 import { AdminDTO } from '@dtos/admin.dtos'
 import jwt from 'jsonwebtoken'
+import { checkTokenIsRevoked } from '@utils/cache.util'
 
 class App {
     public app: express.Application
@@ -89,6 +90,10 @@ class App {
                     return false
                 }
                 const user = jwt.verify(token, SECRET_KEY)
+                if (checkTokenIsRevoked(user.jti)) {
+                    return false
+                }
+                action.request.jti = user.jti
 
                 const admin = await AdminModel.findByIdCached(user.id)
                 if (!admin.approved) {

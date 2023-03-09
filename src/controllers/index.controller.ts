@@ -1,6 +1,6 @@
-import { Body, Controller, Get, OnUndefined, Post, Res, UseBefore } from 'routing-controllers'
+import { Body, Controller, Get, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
 import { InstallAndUninstallDTO } from '@dtos/index.dtos'
-import { Response } from 'express'
+import { Request } from 'express'
 import { IndexService } from '@services/index.service'
 import { webhookValidation } from '@middlewares/validation.middleware'
 import { VERSION } from '@config'
@@ -17,7 +17,7 @@ export class IndexController {
     @Post('/')
     @UseBefore(webhookValidation)
     @OnUndefined(204)
-    async handelInstallAndUninstall(@Body() dto: InstallAndUninstallDTO, @Res() response: Response) {
-        await this.service.handelInstallAndUninstall(dto, response.locals.axiosOption)
+    async handelInstallAndUninstall(@Body() dto: InstallAndUninstallDTO, @Req() request: Request) {
+        await this.service.handelInstallAndUninstall(dto, request.axiosOption)
     }
 }

@@ -39,4 +39,11 @@ export class AdminController {
     async reject(@Req() req: Request, @BodyParam('id') id: string) {
         await this.service.reject(req.user, id)
     }
+
+    @Authorized()
+    @Post('/logout')
+    @OnUndefined(204)
+    logout(@Req() req: Request) {
+        this.service.logout(req.jti)
+    }
 }

@@ -71,6 +71,16 @@ export function clearCache() {
     cache.clear()
 }
 
+const tokenRevokeKey = 'REVOKED_TOKEN_'
+
+export function revokeToken(token: string) {
+    cache.set(tokenRevokeKey + token, true, { ttl: 1000 * 60 * 60 })
+}
+
+export function checkTokenIsRevoked(token) {
+    return cache.get(tokenRevokeKey + token) ?? false
+}
+
 export async function deleteAllCacheByKeyPattern(pattern: RegExp) {
     const keys = cache.keys()
 

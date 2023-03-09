@@ -56,7 +56,7 @@ export const webhookValidation = async (request: Request, response: Response, ne
         const organization = await getOrganization(requestBody)
         const verifyInfo = await getVerifyInfo(organization, request)
         await verifyRequest(verifyInfo)
-        response.locals.axiosOption = verifyInfo.axiosOption // 컨트롤러에서 Bearer token을 바로 사용할수 있도록 저장 합니다.
+        request.axiosOption = verifyInfo.axiosOption // 컨트롤러에서 Bearer token을 바로 사용할수 있도록 저장 합니다.
         next()
     } catch (error) {
         next(error)

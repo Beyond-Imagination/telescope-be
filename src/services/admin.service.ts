@@ -1,7 +1,7 @@
 import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO } from '@dtos/admin.dtos'
 import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
-import { deleteCache } from '@utils/cache.util'
+import { deleteCache, revokeToken } from '@utils/cache.util'
 import { AdminNotFoundException } from '@exceptions/AdminNotFoundException'
 import { SECRET_KEY } from '@config'
 import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException'
@@ -10,6 +10,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
+import { v4 } from 'uuid'
 
 export class AdminService {
     async list(query: AdminListQueryDTO) {
@@ -53,6 +54,7 @@ export class AdminService {
         await AdminModel.updateOne({ _id: admin._id }, { lastLoggedInAt: new Date() })
         return jwt.sign({ id: admin._id, email: admin.email }, SECRET_KEY, {
             expiresIn: '1h',
+            jwtid: v4(),
         })
     }
 
@@ -79,10 +81,18 @@ export class AdminService {
         )
         deleteCache('findAdminById_' + id)
     }
+
+    logout(token: string) {
+        revokeToken(token)
+    }
 }
 
 declare module 'express' {
     interface Request {
         user: any
+        axiosOption: any
+        jti: string
+        _routeWhitelists: any
+        _routeBlacklists: any
     }
 }

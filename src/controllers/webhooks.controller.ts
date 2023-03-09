@@ -1,8 +1,8 @@
-import { Body, Controller, OnUndefined, Post, Res, UseBefore } from 'routing-controllers'
-import { webhookValidation, issueWebhookValidation } from '@middlewares/validation.middleware'
+import { Body, Controller, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
+import { issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
 import { CodeReviewDTO, IssueDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
-import { Response } from 'express'
+import { Request } from 'express'
 
 @Controller('/webhooks')
 @UseBefore(webhookValidation)
@@ -39,13 +39,13 @@ export class WebhooksController {
 
     @Post('/code-review/create')
     @OnUndefined(204)
-    async createCodeReview(@Body() payload: CodeReviewDTO, @Res() response: Response) {
-        await this.service.handleCodeReviewWebHook(payload, response.locals.axiosOption, true)
+    async createCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
+        await this.service.handleCodeReviewWebHook(payload, request.axiosOption, true)
     }
 
     @Post('/code-review/close')
     @OnUndefined(204)
-    async closeCodeReview(@Body() payload: CodeReviewDTO, @Res() response: Response) {
-        await this.service.handleCodeReviewWebHook(payload, response.locals.axiosOption, false)
+    async closeCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
+        await this.service.handleCodeReviewWebHook(payload, request.axiosOption, false)
     }
 }
