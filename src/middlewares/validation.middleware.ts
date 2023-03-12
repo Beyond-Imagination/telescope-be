@@ -10,6 +10,7 @@ import { SpaceClient } from '@/client/space.client'
 import crypto from 'crypto'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import jwkToPem from 'jwk-to-pem'
+import { deleteCache } from '@utils/cache.util'
 
 const client = new SpaceClient()
 
@@ -55,7 +56,17 @@ export const webhookValidation = async (request: Request, response: Response, ne
         }
         const organization = await getOrganization(requestBody)
         const verifyInfo = await getVerifyInfo(organization, request)
-        await verifyRequest(verifyInfo)
+        try {
+            await verifyRequest(verifyInfo)
+        } catch (e) {
+            if (e instanceof InvalidRequestException) {
+                // 만약 캐시에 있는 public key가 만료되었을 경우를 고려해 캐시를 지우고 재시도 한다.
+                deleteCache(`getPublicKeys_${verifyInfo.clientId}`)
+                await verifyRequest(verifyInfo)
+            } else {
+                throw e
+            }
+        }
         request.axiosOption = verifyInfo.axiosOption // 컨트롤러에서 Bearer token을 바로 사용할수 있도록 저장 합니다.
         next()
     } catch (error) {

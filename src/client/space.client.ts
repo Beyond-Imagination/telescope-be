@@ -5,6 +5,8 @@ import { CLIENT_URL, SERVER_URL } from '@config'
 import { Cached } from '@utils/cache.util'
 
 export class SpaceClient {
+    // public key는 일정기간이 지나면 갱신된다고 하는데 갱신 기간을 명시 안해놨고 아마 꽤 길것으로 예상되어 캐싱기간은 1일로 잡아둔다
+    @Cached({ keyParams: ['$[0].clientId'], prefix: 'getPublicKeys', ttl: 1000 * 60 * 60 * 24 })
     async getPublicKeys(verifyInfo: any) {
         const fullUrl = `${verifyInfo.url}/api/http/applications/clientId:${verifyInfo.clientId}/public-keys`
         let publicKeyResponse = (await axios.get(fullUrl, verifyInfo.axiosOption)).data
@@ -84,7 +86,6 @@ export class SpaceClient {
                 },
             })
             .catch(function (error) {
-                console.log(error)
                 throw new InvalidRequestException()
             })
     }
