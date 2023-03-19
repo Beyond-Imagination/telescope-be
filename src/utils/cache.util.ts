@@ -1,5 +1,6 @@
 import LRUCache from 'lru-cache'
 import jsonPath from 'jsonpath'
+import { CacheApplyException } from '@exceptions/CacheApplyException'
 
 const cache: LRUCache<string, any> = new LRUCache<string, any>({
     // 10000개의 정보까진 캐싱해둔다
@@ -14,6 +15,7 @@ const delimiter = '_'
 
 /*
  * 요 데코레이터는 꼭 DB접근이나 API호출이 아니더라도 필요한곳 어디든지 사용가능합니다
+ * 단, 비동기가 아닌 함수에 Cached를 불힐 수 없습니다
  *
  * @parameter
  * keyParams : 캐시키로 사용될 파라메터들을 지정하는 리스트
@@ -29,7 +31,11 @@ const delimiter = '_'
 export function Cached({ keyParams = null, keyGenerator = allArgsKeyGenerator, prefix = '', ttl = 1000 * 60 * 60 * 6 }) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const method = descriptor.value
-        descriptor.value = function (...args) {
+        if (!method.constructor.name.startsWith('Async')) {
+            // 오용을 막기위해 비동기가 아닌 함수에 Cached를 붙히면 서버 실행이 안됩니다
+            throw new CacheApplyException()
+        }
+        descriptor.value = async function (...args) {
             let cacheKey = `${prefix}`
             // 함수의 모든 파라메터를 캐시를 위한 키로 사용한다
             if (keyParams) {
@@ -41,7 +47,7 @@ export function Cached({ keyParams = null, keyGenerator = allArgsKeyGenerator, p
             if (cache.has(cacheKey)) {
                 return cache.get(cacheKey)
             }
-            const result = method.apply(this, args)
+            const result = await method.apply(this, args)
             cache.set(cacheKey, result, { ttl: ttl })
             return result
         }

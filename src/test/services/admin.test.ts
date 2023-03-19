@@ -4,7 +4,7 @@ import { AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { AdminNotFoundException } from '@exceptions/AdminNotFoundException'
 import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException'
-import { AdminSortType } from '@dtos/admin.dtos'
+import { AdminDTO, AdminSortType } from '@dtos/admin.dtos'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
 import { checkTokenIsRevoked } from '@utils/cache.util'
@@ -122,17 +122,17 @@ describe('AdminService 클래스', () => {
         })
 
         it('존재하지 않는 관리자를 승인 취소하면 에러가 발생한다.', async () => {
-            const admin = await AdminModel.findByEmail(testAdminEmail)
+            const admin = new AdminDTO(await AdminModel.findByEmail(testAdminEmail))
             await expect(sut.reject(admin, 'whatever1234')).rejects.toThrowError(AdminNotFoundException)
         })
 
         it('스스로를 승인 취소하면 에러가 발생한다.', async () => {
-            const admin = await AdminModel.findByEmail(testAdminEmail)
-            await expect(sut.reject(admin, admin._id.toString())).rejects.toThrowError(AdminRejectException)
+            const admin = new AdminDTO(await AdminModel.findByEmail(testAdminEmail))
+            await expect(sut.reject(admin, admin.id.toString())).rejects.toThrowError(AdminRejectException)
         })
 
         it('정상적인 요청이면 성공한다', async () => {
-            const admin = await AdminModel.findByEmail(testAdminEmail)
+            const admin = new AdminDTO(await AdminModel.findByEmail(testAdminEmail))
             const targetTestAdminEmail = testAdminEmail + '2'
             await new AdminModel({
                 email: targetTestAdminEmail,

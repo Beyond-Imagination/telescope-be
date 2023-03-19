@@ -73,9 +73,9 @@ export class SpaceClient {
     }
 
     @Cached({ keyParams: ['$[1]'], prefix: 'requestProfiles' })
-    requestProfiles(token: string, serverUrl: string) {
+    async requestProfiles(token: string, serverUrl: string) {
         const requestUrl = `${serverUrl}/api/http/team-directory/profiles`
-        return axios
+        return await axios
             .get(requestUrl, {
                 headers: {
                     Authorization: `${token}`,

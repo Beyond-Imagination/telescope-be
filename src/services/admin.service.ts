@@ -32,11 +32,7 @@ export class AdminService {
             await AdminModel.findByEmail(registerDTO.email)
             throw new AdminExistException()
         } catch (e) {
-            if (e instanceof AdminNotFoundException) {
-                // 아래 코드가 없으면 AdminNotFoundException를 던지는 promise가 캐싱되어
-                // 이후 findByEmail 호출시 AdminNotFoundException가 throw된다.
-                deleteCache(`findAdminByEmail_${registerDTO.email}`)
-            } else {
+            if (!(e instanceof AdminNotFoundException)) {
                 throw e
             }
         }
@@ -67,9 +63,9 @@ export class AdminService {
         deleteCache('findAdminById_' + id)
     }
 
-    async reject(admin: Admin, id: string) {
+    async reject(admin: AdminDTO, id: string) {
         const targetAdmin = await AdminModel.findByIdCached(id)
-        if (targetAdmin._id.toString() === admin._id.toString()) {
+        if (targetAdmin._id.toString() === admin.id.toString()) {
             throw new AdminRejectException()
         }
         await AdminModel.updateOne(
