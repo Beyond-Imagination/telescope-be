@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
-import { WebHookInfo } from '@dtos/WebHookInfo'
-import { CLIENT_URL, SERVER_URL } from '@config'
 import { Cached } from '@utils/cache.util'
+import { space } from '@/types/space.type'
 
 export class SpaceClient {
     // public key는 일정기간이 지나면 갱신된다고 하는데 갱신 기간을 명시 안해놨고 아마 꽤 길것으로 예상되어 캐싱기간은 1일로 잡아둔다
@@ -17,21 +16,21 @@ export class SpaceClient {
         return publicKeyResponse.keys
     }
 
-    requestPermissions(url: string, clientId: string, axiosOption: any, rightCodes: string[]) {
+    requestPermissions(url: string, clientId: string, axiosOption: any, installInfo: space.installInfo) {
         return axios.patch(
             `${url}/api/http/applications/clientId:${clientId}/authorizations/authorized-rights/request-rights`,
-            { contextIdentifier: 'global', rightCodes: rightCodes },
+            { contextIdentifier: 'global', rightCodes: installInfo.right.codes },
             axiosOption,
         )
     }
 
-    registerWebHook(url: string, webHookInfo: WebHookInfo, axiosOption: any) {
+    registerWebHook(url: string, webHookInfo: space.webhookInfo, axiosOption: any) {
         return axios.post(
             url,
             {
-                name: webHookInfo.webHookName,
+                name: webHookInfo.name,
                 endpoint: {
-                    url: `${SERVER_URL}/webhooks${webHookInfo.url}`,
+                    url: webHookInfo.url,
                     sslVerification: false,
                 },
                 acceptedHttpResponseCodes: [],
@@ -41,38 +40,27 @@ export class SpaceClient {
         )
     }
 
-    registerSubscription(url: string, webHookInfo: WebHookInfo, webHookId: string, axiosOption: any) {
+    registerSubscription(url: string, webHookInfo: space.webhookInfo, webHookId: string, axiosOption: any) {
         return axios.post(
             `${url}/${webHookId}/subscriptions`,
             {
-                name: webHookInfo.subscriptionName,
+                name: webHookInfo.subscription.name,
                 subscription: {
-                    subjectCode: webHookInfo.subjectCode,
+                    subjectCode: webHookInfo.subscription.subjectCode,
                     filters: [],
-                    eventTypeCodes: [webHookInfo.eventTypeCode],
+                    eventTypeCodes: [webHookInfo.subscription.eventTypeCode],
                 },
             },
             axiosOption,
         )
     }
 
-    registerUIExtension(url: string, axiosOption: any) {
+    registerUIExtension(url: string, installInfo: space.installInfo, axiosOption: any) {
         return axios.patch(
             `${url}/api/http/applications/ui-extensions`,
             {
-                contextIdentifier: 'global',
-                extensions: [
-                    {
-                        className: 'ApplicationHomepageUiExtensionIn',
-                        iframeUrl: CLIENT_URL,
-                    },
-                    {
-                        className: 'TopLevelPageUiExtensionIn',
-                        displayName: 'Telescope',
-                        uniqueCode: 'Telescope',
-                        iframeUrl: CLIENT_URL,
-                    },
-                ],
+                contextIdentifier: installInfo.uiExtension.contextIdentifier,
+                extensions: installInfo.uiExtension.extension,
             },
             axiosOption,
         )

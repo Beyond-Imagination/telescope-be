@@ -1,6 +1,5 @@
 import { Organization, OrganizationModel } from '@models/organization'
 import { InstallAndUninstallDTO, LogDto } from '@dtos/index.dtos'
-import { WebHookInfo } from '@dtos/WebHookInfo'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
@@ -9,49 +8,12 @@ import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundE
 import { deleteAllCacheByKeyPattern } from '@utils/cache.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { logger } from '@utils/logger'
+import { Space } from '@/libs/space/space.lib'
+import { space } from '@/types/space.type'
 
 export class IndexService {
-    webHookInfos = [
-        new WebHookInfo(
-            'create_issue',
-            '/issue/create',
-            'create_issue',
-            'Issue',
-            'Issue.Created',
-            'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id))',
-        ),
-        new WebHookInfo(
-            'update_issue_status',
-            '/issue/update/status',
-            'update_issue_status',
-            'Issue',
-            'Issue.StatusUpdated',
-            'clientId,verificationToken,webhookId,payload(issue(id,assignee(id)),status(new(resolved),old(resolved)))',
-        ),
-        new WebHookInfo(
-            'update_issue_assignee',
-            '/issue/update/assignee',
-            'update_issue_assignee',
-            'Issue',
-            'Issue.AssigneeUpdated',
-            'clientId,verificationToken,webhookId,payload(assignee(old(id),new(id)),issue(id,status(resolved)))',
-        ),
-        new WebHookInfo(
-            'delete_issue',
-            '/issue/delete',
-            'delete_issue',
-            'Issue',
-            'Issue.Deleted',
-            'clientId,verificationToken,webhookId,payload(issue(id,assignee(id),status(resolved)),deleted(new))',
-        ),
-        new WebHookInfo('create_code_review', '/code-review/create', 'create_code_review', 'CodeReview', 'CodeReview.Created'),
-        new WebHookInfo('close_code_review', '/code-review/close', 'close_code_review', 'CodeReview', 'CodeReview.Closed'),
-    ]
-
     spaceClient = new SpaceClient()
-
-    // API 실행에 필요한 권한은 여기에 넣어주시면 application 설치시에 자동으로 신청됩니다.
-    rightCodes = ['Project.CodeReview.View', 'Profile.View', 'Project.Issues.View']
+    spaceLib = new Space()
 
     async handelInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
         let logType
@@ -74,15 +36,16 @@ export class IndexService {
         // 요 함수는 없어도 되지만 혹시 스페이스가 삭제시 에러가 발생해 스페이스가 지워지지 않았을 경우를 대비해 남겨둡니다
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
+        const installInfo = this.spaceLib.getInstallInfo()
         const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
             // Transaction이 필요한 operation들은 요 메소드 안에 넣는다
             await this.insertDBData(dto, session)
 
             await Promise.all([
                 // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
-                this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, this.rightCodes),
-                this.addWebhooks(dto.serverUrl, dto.clientId, axiosOption),
-                this.spaceClient.registerUIExtension(dto.serverUrl, axiosOption),
+                this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
+                this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
+                this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
             ])
         }
 
@@ -122,14 +85,14 @@ export class IndexService {
         await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, session)
     }
 
-    private addWebhooks(url: string, clientId: string, axiosOption: any) {
+    private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, axiosOption: any) {
         const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
-        return this.webHookInfos.map(webHookInfo => {
+        return installInfo.webhooks.map(webHookInfo => {
             return this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
         })
     }
 
-    private async addWebhook(url: string, webHookInfo: WebHookInfo, axiosOption: any) {
+    private async addWebhook(url: string, webHookInfo: space.webhookInfo, axiosOption: any) {
         const response = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
         const webHookId = response.data.id
         await this.spaceClient.registerSubscription(url, webHookInfo, webHookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
