@@ -20,18 +20,24 @@ export class Achievement extends Document {
     @prop()
     public issueId?: string
 
+    @prop()
+    public projectId?: string
+
+    @prop()
+    public reviewId?: string
+
+    @prop()
+    public repository?: string
+
     @prop({ enum: AchievementType, type: String })
     public type: AchievementType
 
     @prop()
     public achievedAt: Date
 
-    public static async saveAchievement(clientId: string, user: string, issueId: string, type: AchievementType): Promise<any> {
+    public static async saveAchievement(achievement): Promise<any> {
         return new AchievementModel({
-            clientId,
-            user,
-            issueId,
-            type,
+            ...achievement,
             achievedAt: new Date(),
         }).save()
     }

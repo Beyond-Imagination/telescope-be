@@ -13,6 +13,7 @@ class WebhookPayload {
     }
     issue: {
         id: string
+        projectId: string
         assignee: {
             id: string
         }
@@ -58,6 +59,7 @@ export class IssueDTO {
     }
 }
 
+// todo: should not use deprecated fields
 export class CodeReviewDTO {
     @IsNotEmpty()
     clientId: string
@@ -65,16 +67,29 @@ export class CodeReviewDTO {
     @IsNotEmpty()
     payload: {
         className: string
-        isMergeRequest: boolean
+        isMergeRequest: boolean // deprecated
         projectKey: {
-            key: string
+            key: string // deprecated
+        }
+        review: {
+            id: string
+            project: {
+                key: string
+            }
+            projectId: string
+            branchPairs: {
+                isMerged: string
+            }[]
+            createdBy: {
+                id: string
+            }
         }
         repository: string
-        reviewId: string
-        title: string
+        reviewId: string // deprecated
+        title: string // deprecated
     }
 
-    verificationToken: string
+    verificationToken: string // deprecated
 
     @IsNotEmpty()
     webhookId: string

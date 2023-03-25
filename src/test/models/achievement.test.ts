@@ -3,12 +3,25 @@ import { AchievementModel, AchievementType } from '@models/achievement'
 import { getDaysBefore } from '@utils/date'
 
 describe('Achievement 클래스', () => {
-    setTestDB(async () => await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview))
+    setTestDB(
+        async () =>
+            await AchievementModel.saveAchievement({
+                clientId: testClientId,
+                user: testOrganizationAdmin,
+                issueId: testIssueId,
+                type: AchievementType.CreateCodeReview,
+            }),
+    )
 
     describe('saveAchievement 메소드에서', () => {
         it('항상 성공한다', async () => {
             await expect(
-                AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, 'testIssueId2', AchievementType.CreateCodeReview),
+                AchievementModel.saveAchievement({
+                    clientId: testClientId,
+                    user: testOrganizationAdmin,
+                    issueId: 'testIssueId2',
+                    type: AchievementType.CreateCodeReview,
+                }),
             ).resolves.not.toThrow()
         })
     })

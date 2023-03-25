@@ -10,12 +10,13 @@ export class WebhookService {
 
     public async createIssue(issueDTO: IssueDTO) {
         if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user.id && issueDTO.payload.issue.id) {
-            await AchievementModel.saveAchievement(
-                issueDTO.clientId,
-                issueDTO.payload.meta.principal.details.user.id,
-                issueDTO.payload.issue.id,
-                AchievementType.CreateIssue,
-            )
+            await AchievementModel.saveAchievement({
+                clientId: issueDTO.clientId,
+                user: issueDTO.payload.meta.principal.details.user.id,
+                projectId: issueDTO.payload.issue.projectId,
+                issueId: issueDTO.payload.issue.id,
+                type: AchievementType.CreateIssue,
+            })
         } else {
             throw new InvalidRequestException()
         }
@@ -27,7 +28,13 @@ export class WebhookService {
         if (assignee) {
             if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
                 if (issueDTO.isResolved()) {
-                    await AchievementModel.saveAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+                    await AchievementModel.saveAchievement({
+                        clientId: issueDTO.clientId,
+                        user: assignee.id,
+                        projectId: issueDTO.payload.issue.projectId,
+                        issueId: issueDTO.payload.issue.id,
+                        type: AchievementType.ResolveIssue,
+                    })
                 } else if (issueDTO.isUnresolved()) {
                     await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
                 }
@@ -45,7 +52,13 @@ export class WebhookService {
             if (newAssignee) {
                 // issue가 unassigned되는 케이스를 방어한다
                 if (issueDTO.clientId && newAssignee.id && issueDTO.payload.issue.id) {
-                    await AchievementModel.saveAchievement(issueDTO.clientId, newAssignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
+                    await AchievementModel.saveAchievement({
+                        clientId: issueDTO.clientId,
+                        user: newAssignee.id,
+                        projectId: issueDTO.payload.issue.projectId,
+                        issueId: issueDTO.payload.issue.id,
+                        type: AchievementType.ResolveIssue,
+                    })
                 } else {
                     throw new InvalidRequestException()
                 }
@@ -93,10 +106,24 @@ export class WebhookService {
         if (createdBy) {
             // 특정 사용자가 생성한 MR이 아니면 점수는 누구에게도 할당되지 않도록한다.
             if (isOpen) {
-                await Achievement.saveAchievement(codeReviewDTO.clientId, createdBy.id, null, AchievementType.CreateCodeReview)
+                await Achievement.saveAchievement({
+                    clientId: codeReviewDTO.clientId,
+                    user: createdBy.id,
+                    projectId: codeReviewDTO.payload.review?.projectId,
+                    reviewId: codeReviewDTO.payload.reviewId,
+                    repository: codeReviewDTO.payload.repository,
+                    type: AchievementType.CreateCodeReview,
+                })
             } else if (codeReviewDTO.payload.isMergeRequest && reviewInfo.branchPairs[0].isMerged) {
                 // MR이면서 머지가 됐을때만 저장한다
-                await Achievement.saveAchievement(codeReviewDTO.clientId, createdBy.id, null, AchievementType.MergeMr)
+                await Achievement.saveAchievement({
+                    clientId: codeReviewDTO.clientId,
+                    user: createdBy.id,
+                    projectId: codeReviewDTO.payload.review?.projectId,
+                    reviewId: codeReviewDTO.payload.reviewId,
+                    repository: codeReviewDTO.payload.repository,
+                    type: AchievementType.MergeMr,
+                })
             }
         }
     }

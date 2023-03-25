@@ -61,7 +61,12 @@ describe('IndexService 클래스', () => {
         // 요 테스트는 트랜잭션 에러로 가끔 실패 하는것 같은데 이유는 파악 못했습니다 ㅠㅠ 실패하면 30초정도 기다렸다가 다시 실행해주세요!
         it('재설치여도 정상적인 요청이면 성공한다', async () => {
             await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
-            await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview)
+            await AchievementModel.saveAchievement({
+                clientId: testClientId,
+                user: testOrganizationAdmin,
+                issueId: testIssueId,
+                type: AchievementType.CreateCodeReview,
+            })
             await expect(
                 sut.handelInstallAndUninstall(
                     {
@@ -79,7 +84,12 @@ describe('IndexService 클래스', () => {
 
         it('정상적인 삭제 요청이면 성공한다', async () => {
             await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
-            await AchievementModel.saveAchievement(testClientId, testOrganizationAdmin, testIssueId, AchievementType.CreateCodeReview)
+            await AchievementModel.saveAchievement({
+                clientId: testClientId,
+                user: testOrganizationAdmin,
+                issueId: testIssueId,
+                type: AchievementType.CreateCodeReview,
+            })
             await expect(
                 sut.handelInstallAndUninstall(
                     {
