@@ -28,7 +28,7 @@ describe('IndexService 클래스', () => {
     describe('handelInstallAndUninstall 메소드에서', () => {
         it('className이 InitPayload혹은 ApplicationUninstalledPayload가 아니면 에러가 발생한다', async () => {
             await expect(
-                sut.handelInstallAndUninstall(
+                sut.handleInstallAndUninstall(
                     {
                         className: 'whatever',
                         clientSecret: testClientSecret,
@@ -44,7 +44,7 @@ describe('IndexService 클래스', () => {
 
         it('최초 설치시에 정상적인 요청이면 성공한다', async () => {
             await expect(
-                sut.handelInstallAndUninstall(
+                sut.handleInstallAndUninstall(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -68,7 +68,7 @@ describe('IndexService 클래스', () => {
                 type: AchievementType.CreateCodeReview,
             })
             await expect(
-                sut.handelInstallAndUninstall(
+                sut.handleInstallAndUninstall(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -91,7 +91,7 @@ describe('IndexService 클래스', () => {
                 type: AchievementType.CreateCodeReview,
             })
             await expect(
-                sut.handelInstallAndUninstall(
+                sut.handleInstallAndUninstall(
                     {
                         className: 'InitPayload',
                         clientSecret: undefined,

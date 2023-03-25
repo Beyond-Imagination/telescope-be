@@ -1,4 +1,4 @@
-import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO } from '@dtos/admin.dtos'
+import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
 import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { deleteCache, revokeToken } from '@utils/cache.util'
@@ -11,8 +11,12 @@ import bcrypt from 'bcrypt'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
 import { v4 } from 'uuid'
+import { getBearerToken } from '@utils/verify.util'
+import { OrganizationModel } from '@models/organization'
+import { SpaceClient } from '@/client/space.client'
 
 export class AdminService {
+    private client = new SpaceClient()
     async list(query: AdminListQueryDTO) {
         const options = {
             page: query.page,
@@ -80,6 +84,26 @@ export class AdminService {
 
     logout(token: string) {
         revokeToken(token)
+    }
+
+    private async getCredentials(serverUrl: string) {
+        const info = await OrganizationModel.findByServerUrl(serverUrl)
+        return getBearerToken(serverUrl, info.clientId, info.clientSecret)
+    }
+
+
+    private async getWebhookAndSubscriptionInfo(updateDTO: VersionUpdateDTO) {
+        const appToken = await this.getCredentials(updateDTO.serverUrl)
+        const info = await OrganizationModel.findByServerUrl(updateDTO.serverUrl)
+        return await this.client.getAllWebhooksAndSubscriptions(updateDTO.serverUrl, info.clientId, appToken)
+    }
+
+    async update(updateDTO: VersionUpdateDTO) {
+        // info의 내용을 순회하며 업데이트 과정을 수행해야합니다.
+        // requestedAuthentication이 업데이트 될 경우, 추가적으로 권한을 요청하는 logic이 필요합니다.
+        // 버전에 따라 관리되는 subscription과 webhook info를 외부 파일로 구성하면 좋을 것 같습니다.
+        // ex) client.updateWebhooks(...).then(데이터베이스에 버전 정보 기입).catch(에러 처리)
+        return await this.getWebhookAndSubscriptionInfo(updateDTO)
     }
 }
 

@@ -94,3 +94,40 @@ export class CodeReviewDTO {
     @IsNotEmpty()
     webhookId: string
 }
+
+export class UpdateWebhookDTO {
+    // https://bit.ly/4006B0b
+    @IsNotEmpty()
+    applicationId: string
+
+    @IsNotEmpty()
+    webhookId: string
+
+    @IsNotEmpty()
+    name: string
+
+    description: string | undefined
+
+    enabled = true
+
+    endpoint: {
+        url: string | undefined
+        sslVerification: boolean
+    }
+}
+
+export class UpdateSubscriptionDTO {
+    @IsNotEmpty()
+    applicationId: string
+
+    @IsNotEmpty()
+    webhookId: string
+
+    @IsNotEmpty()
+    subscriptionId: string
+
+    name: string
+    enabled: boolean
+    subjectCode: string
+    eventTypeCodes: string[]
+}

@@ -1,6 +1,6 @@
-import { Authorized, Body, BodyParam, Controller, Get, OnUndefined, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
+import { Authorized, Body, BodyParam, Controller, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
-import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO } from '@dtos/admin.dtos'
+import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
 import { Request } from 'express'
 
@@ -45,5 +45,12 @@ export class AdminController {
     @OnUndefined(204)
     logout(@Req() req: Request) {
         this.service.logout(req.jti)
+    }
+
+    // @Authorized()
+    @Patch('/organization/version')
+    @OnUndefined(204)
+    async version(@Body() dto: VersionUpdateDTO) {
+        return await this.service.update(dto)
     }
 }

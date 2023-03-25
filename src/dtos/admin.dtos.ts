@@ -57,3 +57,8 @@ export class AdminDTO {
         this.lastLoggedInAt = admin.lastLoggedInAt
     }
 }
+
+export class VersionUpdateDTO {
+    serverUrl: string
+    targetVersion: string | undefined
+}

@@ -17,7 +17,7 @@ export class IndexController {
     @Post('/')
     @UseBefore(webhookValidation)
     @OnUndefined(204)
-    async handelInstallAndUninstall(@Body() dto: InstallAndUninstallDTO, @Req() request: Request) {
-        await this.service.handelInstallAndUninstall(dto, request.axiosOption)
+    async handleInstallAndUninstall(@Body() dto: InstallAndUninstallDTO, @Req() request: Request) {
+        await this.service.handleInstallAndUninstall(dto, request.axiosOption)
     }
 }

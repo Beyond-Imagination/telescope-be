@@ -15,7 +15,7 @@ export class IndexService {
     spaceClient = new SpaceClient()
     spaceLib = new Space()
 
-    async handelInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
+    async handleInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
         let logType
         switch (dto.className) {
             case 'InitPayload':

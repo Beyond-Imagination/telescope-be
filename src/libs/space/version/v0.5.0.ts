@@ -6,7 +6,8 @@ export default {
         {
             name: 'create_issue',
             url: `${SERVER_URL}/webhooks/issue/create`,
-            payloadFields: 'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id))',
+            payloadFields:
+                'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id))',
             subscription: {
                 name: 'create_issue',
                 subjectCode: 'Issue',
