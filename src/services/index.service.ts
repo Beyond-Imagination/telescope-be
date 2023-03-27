@@ -13,7 +13,6 @@ import { space } from '@/types/space.type'
 
 export class IndexService {
     spaceClient = new SpaceClient()
-    spaceLib = new Space()
 
     async handleInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
         let logType
@@ -36,7 +35,7 @@ export class IndexService {
         // 요 함수는 없어도 되지만 혹시 스페이스가 삭제시 에러가 발생해 스페이스가 지워지지 않았을 경우를 대비해 남겨둡니다
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
-        const installInfo = this.spaceLib.getInstallInfo()
+        const installInfo = Space.getInstallInfo()
         const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
             // Transaction이 필요한 operation들은 요 메소드 안에 넣는다
             await this.insertDBData(dto, session)

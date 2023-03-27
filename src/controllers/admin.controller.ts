@@ -51,6 +51,6 @@ export class AdminController {
     @Patch('/organization/version')
     @OnUndefined(204)
     async version(@Body() dto: VersionUpdateDTO) {
-        return await this.service.update(dto)
+        await this.service.update(dto)
     }
 }

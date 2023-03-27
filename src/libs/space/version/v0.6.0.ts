@@ -5,7 +5,8 @@ export default {
         {
             name: 'create_issue',
             url: `${SERVER_URL}/webhooks/issue/create`,
-            payloadFields: 'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id,projectId))',
+            payloadFields:
+                'clientId,webhookId,verificationToken,payload(assignee(new(id)),meta(principal(details(user(id)))),status(new(resolved)),issue(id,projectId))',
             subscription: {
                 name: 'create_issue',
                 subjectCode: 'Issue',
@@ -45,7 +46,8 @@ export default {
         {
             name: 'create_code_review',
             url: `${SERVER_URL}/webhooks/code-review/create`,
-            payloadFields: 'payload(projectKey(key),isMergeRequest,repository,reviewId,title,review(id,projectId,project(key),branchPairs(isMerged),createdBy(id))),clientId,webhookId,verificationToken',
+            payloadFields:
+                'payload(projectKey(key),isMergeRequest,repository,reviewId,title,review(id,projectId,project(key),branchPairs(isMerged),createdBy(id))),clientId,webhookId,verificationToken',
             subscription: {
                 name: 'create_code_review',
                 subjectCode: 'CodeReview',
@@ -55,7 +57,8 @@ export default {
         {
             name: 'close_code_review',
             url: `${SERVER_URL}/webhooks/code-review/close`,
-            payloadFields: 'payload(projectKey(key),isMergeRequest,repository,reviewId,title,review(id,projectId,project(key),branchPairs(isMerged),createdBy(id))),clientId,webhookId,verificationToken',
+            payloadFields:
+                'payload(projectKey(key),isMergeRequest,repository,reviewId,title,review(id,projectId,project(key),branchPairs(isMerged),createdBy(id))),clientId,webhookId,verificationToken',
             subscription: {
                 name: 'close_code_review',
                 subjectCode: 'CodeReview',

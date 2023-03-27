@@ -24,4 +24,13 @@ export namespace space {
             codes: string[]
         }
     }
+    export interface subscriptionsInfo {
+        id: string
+        name: string
+        subscription: {
+            eventTypeCodes: string[]
+            subjectCode: string
+            filters: string[]
+        }
+    }
 }

@@ -3,10 +3,13 @@ import { InvalidVersionException } from '@exceptions/InvalidVersionException'
 import version from './version'
 
 export class Space {
-    getInstallInfo(targetVersion = 'latest'): space.installInfo {
+    static getInstallInfo(targetVersion = 'latest'): space.installInfo {
         if (targetVersion in version) {
             return version[targetVersion]
         }
         throw new InvalidVersionException()
+    }
+    static getLatestVersion(): string {
+        return version['latest_version']
     }
 }

@@ -1,4 +1,6 @@
 import { IsNotEmpty } from 'class-validator'
+import { space } from '@/types/space.type'
+import webhookInfo = space.webhookInfo
 
 class WebhookPayload {
     className: string
@@ -96,15 +98,16 @@ export class CodeReviewDTO {
 }
 
 export class UpdateWebhookDTO {
-    // https://bit.ly/4006B0b
     @IsNotEmpty()
-    applicationId: string
+    clientId: string
 
     @IsNotEmpty()
     webhookId: string
 
     @IsNotEmpty()
     name: string
+
+    payloadFields: string[]
 
     description: string | undefined
 
@@ -114,12 +117,31 @@ export class UpdateWebhookDTO {
         url: string | undefined
         sslVerification: boolean
     }
+
+    constructor(
+        clientId: string,
+        webhookId: string,
+        name: string,
+        payloadFields: string[],
+        description: string | undefined,
+        enabled: boolean,
+        endpoint: { url: string | undefined; sslVerification: boolean },
+    ) {
+        this.clientId = clientId
+        this.webhookId = webhookId
+        this.name = name
+        this.payloadFields = payloadFields
+        this.description = description
+        this.enabled = enabled
+        this.endpoint = endpoint
+    }
+
+    static of(clientId: string, webhookId: string, info: webhookInfo): UpdateWebhookDTO {
+        return new UpdateWebhookDTO(clientId, webhookId, info.name, info.payloadFields, undefined, true, { url: info.url, sslVerification: false })
+    }
 }
 
 export class UpdateSubscriptionDTO {
-    @IsNotEmpty()
-    applicationId: string
-
     @IsNotEmpty()
     webhookId: string
 
@@ -130,4 +152,23 @@ export class UpdateSubscriptionDTO {
     enabled: boolean
     subjectCode: string
     eventTypeCodes: string[]
+    filters: string[]
+
+    constructor(
+        webhookId: string,
+        subscriptionId: string,
+        name: string,
+        enabled: boolean,
+        subjectCode: string,
+        eventTypeCodes: string[],
+        filters: string[],
+    ) {
+        this.webhookId = webhookId
+        this.subscriptionId = subscriptionId
+        this.name = name
+        this.enabled = enabled
+        this.subjectCode = subjectCode
+        this.eventTypeCodes = eventTypeCodes
+        this.filters = filters
+    }
 }

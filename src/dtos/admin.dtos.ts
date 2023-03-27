@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import { Admin } from '@models/admin'
+import { Space } from '@/libs/space/space.lib'
 
 export class AdminRegisterDTO {
     @IsEmail()
@@ -60,5 +61,5 @@ export class AdminDTO {
 
 export class VersionUpdateDTO {
     serverUrl: string
-    targetVersion: string | undefined
+    targetVersion: string = Space.getLatestVersion()
 }

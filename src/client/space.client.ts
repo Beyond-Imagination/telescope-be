@@ -4,6 +4,9 @@ import { Cached } from '@utils/cache.util'
 import { space } from '@/types/space.type'
 import { UpdateSubscriptionDTO, UpdateWebhookDTO } from '@dtos/webhooks.dtos'
 import { logger } from '@utils/logger'
+import { Space } from '@/libs/space/space.lib'
+import webhookInfo = space.webhookInfo
+import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
 
 export class SpaceClient {
     // public key는 일정기간이 지나면 갱신된다고 하는데 갱신 기간을 명시 안해놨고 아마 꽤 길것으로 예상되어 캐싱기간은 1일로 잡아둔다
@@ -81,7 +84,7 @@ export class SpaceClient {
                     $fields: 'data(profilePicture,id,name),totalCount',
                 },
             })
-            .catch(function (error) {
+            .catch(function () {
                 throw new InvalidRequestException()
             })
     }
@@ -107,68 +110,140 @@ export class SpaceClient {
                         Accept: 'application/json',
                     },
                     params: {
-                        $fields: `totalCount,data(webhook(id,name,subscriptions(id,name,subscription(eventTypeCodes,subjectCodes),requestedAuthentication(rightCodes))))`,
+                        $fields: `totalCount,data(webhook(id,name,subscriptions(id,name,subscription(eventTypeCodes,subjectCode),requestedAuthentication(rightCodes))))`,
                     },
                 })
                 .catch(function (e) {
                     logger.error("[Space API] 'getAllWebhooksAndSubscriptions' has been failed")
-                    logger.error(`error: ${e.response}`)
+                    logger.error(`error: ${JSON.stringify(e.response)}`)
                 })
         ).data
     }
-    async updateWebhooks(serverUrl: string, info, version: string | undefined, token: string) {
-        // version정보에 맞는 webhook UpdateWebhookDTO를 따로 관리해야합니다.
-        // version이 undefined 일 경우에는 최신 버전으로 업데이트 합니다.
-        // 관련 feature는 아직 구현하지 않았습니다.
+    async updateWebhooks(
+        serverUrl: string,
+        clientId: string,
+        webhookAndSubscriptionInfo: WebhookAndSubscriptionsInfo,
+        version: string | undefined,
+        token: string,
+    ) {
+        const updateWebhookInfos: webhookInfo[] = Space.getInstallInfo(version).webhooks
+        const mappedId = new Map()
+
+        webhookAndSubscriptionInfo.data.map(server => {
+            mappedId.set(server.webhook.name, server.webhook.id)
+        })
+
+        // name 기반의 mapping strategy
+        const updateDtos: UpdateWebhookDTO[] = updateWebhookInfos
+            .map(info => {
+                const webhookId: string = mappedId.get(info.name)
+                return UpdateWebhookDTO.of(clientId, webhookId, info)
+            })
+            .filter(info => {
+                return typeof info.webhookId != undefined
+            })
+
+        const promises = updateDtos.map(dto => {
+            return this.updateWebhook(serverUrl, token, dto)
+        })
+
+        try {
+            await Promise.all(promises)
+        } catch (e) {
+            logger.error(`'updateWebhooks' has been failed ${JSON.stringify(e.response)}`)
+        }
     }
+
     private async updateWebhook(serverUrl: string, token: string, dto: UpdateWebhookDTO) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}
-        const url = `${serverUrl}/api/http/applications/${dto.applicationId}/webhooks/${dto.webhookId}`
-        return axios
+        const url = `${serverUrl}/api/http/applications/clientId:${dto.clientId}/webhooks/${dto.webhookId}`
+        return await axios
             .patch(
                 url,
                 {
-                    applicationId: dto.applicationId,
-                    webhookId: dto.webhookId,
                     name: dto.name,
                     description: dto.description,
                     enabled: dto.enabled,
                     endpoint: dto.endpoint,
+                    payloadFields: dto.payloadFields,
                 },
                 {
                     headers: {
                         Authorization: `${token}`,
+                        Accept: 'application/json',
                     },
                 },
             )
             .catch(function (e) {
                 logger.error("[Space API] 'updateWebhook' has been failed")
-                logger.error(`error: ${e.response}`)
+                logger.error(`error: ${JSON.stringify(e.response)}`)
             })
     }
-    private async updateSubscription(serverUrl: string, token: string, dto: UpdateSubscriptionDTO) {
+
+    public async updateSubscriptions(
+        serverUrl: string,
+        clientId: string,
+        token: string,
+        info: WebhookAndSubscriptionsInfo,
+        targetVersion: string | undefined,
+    ) {
+        const versionInfo: space.installInfo = Space.getInstallInfo(targetVersion)
+
+        // webhook, subscription의 이름을 이용한 매핑전략이기 때문에, 새로운 version 정보에서 target name이 변한다면 기존 코드를 수정해야한다.
+        // webhook name => webhookId
+        // subscription name => subscriptionId
+        const webhookMapper: Map<string, string> = new Map<string, string>()
+        const subscriptionMapper: Map<string, string> = new Map<string, string>()
+        info.data.map(webhookInfo => {
+            const webhookId = webhookInfo.webhook.id
+            const webhookName = webhookInfo.webhook.name
+            webhookMapper.set(webhookName, webhookId)
+            webhookInfo.webhook.subscriptions.map(subscriptionInfo => {
+                const subscriptionId = subscriptionInfo.id
+                const subscriptionName = subscriptionInfo.name
+                subscriptionMapper.set(subscriptionName, subscriptionId)
+            })
+        })
+
+        const promises: Promise<any>[] = versionInfo.webhooks.map((info: webhookInfo) => {
+            const webhookName = info.name
+            const subscriptionName = info.subscription.name
+            const webhookId = webhookMapper.get(webhookName)
+            const subscriptionId = subscriptionMapper.get(subscriptionName)
+            const subjectCode = info.subscription.subjectCode
+            const eventTypeCodes: string[] = [info.subscription.eventTypeCode]
+            const dto = new UpdateSubscriptionDTO(webhookId, subscriptionId, subscriptionName, true, subjectCode, eventTypeCodes, [])
+            return this.updateSubscription(serverUrl, clientId, token, dto)
+        })
+
+        return await Promise.all(promises)
+    }
+
+    private async updateSubscription(serverUrl: string, clientId: string, token: string, dto: UpdateSubscriptionDTO) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}/subscriptions/{subscriptionId}
-        const url = `${serverUrl}/api/http/applications/${dto.applicationId}/webhooks/${dto.webhookId}/subscriptions/${dto.subscriptionId}`
+        const url = `${serverUrl}/api/http/applications/clientId:${clientId}/webhooks/${dto.webhookId}/subscriptions/${dto.subscriptionId}`
         return axios
             .patch(
                 url,
                 {
                     name: dto.name,
-                    enabled: true,
+                    enabled: dto.enabled,
                     subscription: {
-                        subjectCode: `${dto.subjectCode}`,
-                        eventTypeCodes: `${dto.eventTypeCodes}`,
+                        subjectCode: dto.subjectCode,
+                        eventTypeCodes: dto.eventTypeCodes,
+                        filters: dto.filters,
                     },
                 },
                 {
                     headers: {
                         Authorization: `${token}`,
+                        Accept: 'application/json',
                     },
                 },
             )
             .catch(function (e) {
                 logger.error("[Space API] 'updateSubscription' has been failed")
-                logger.error(`error: ${e.response}`)
+                logger.error(`error: ${JSON.stringify(e)}`)
             })
     }
 }

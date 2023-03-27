@@ -69,6 +69,10 @@ export class Organization extends Document {
         return OrganizationModel.deleteMany({ clientId: clientId }).session(session)
     }
 
+    public static async updateVersionByClientId(this: ReturnModelType<typeof Organization>, clientId: string, newVersion: string) {
+        await OrganizationModel.findOneAndUpdate({ clientId: `${clientId}` }, { version: `${newVersion}` })
+    }
+
     public static async saveOrganization(
         clientId: string,
         clientSecret: string,

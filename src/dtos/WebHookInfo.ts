@@ -1,3 +1,5 @@
+import { space } from '@/types/space.type'
+
 export class WebHookInfo {
     constructor(
         public webHookName: string,
@@ -12,20 +14,11 @@ export class WebHookInfo {
 }
 export class WebhookAndSubscriptionsInfo {
     totalCount: number | undefined
-    data: [
-        {
-            webhook: {
-                id: string
-                name: string
-                subscriptions: {
-                    name: string
-                    subscription: {
-                        eventTypeCodes: string
-                        subjectCode: string
-                        filters: [string]
-                    }
-                }
-            }
-        },
-    ]
+    data: {
+        webhook: {
+            id: string
+            name: string
+            subscriptions: space.subscriptionsInfo[]
+        }
+    }[]
 }

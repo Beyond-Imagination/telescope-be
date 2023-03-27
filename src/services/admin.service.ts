@@ -14,6 +14,12 @@ import { v4 } from 'uuid'
 import { getBearerToken } from '@utils/verify.util'
 import { OrganizationModel } from '@models/organization'
 import { SpaceClient } from '@/client/space.client'
+import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
+import { VersionUpdateFailedException } from '@exceptions/VersionUpdateFailedException'
+import { logger } from '@utils/logger'
+import { Space } from '@/libs/space/space.lib'
+import { space } from '@/types/space.type'
+import version from '@/libs/space/version'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -91,19 +97,69 @@ export class AdminService {
         return getBearerToken(serverUrl, info.clientId, info.clientSecret)
     }
 
-
     private async getWebhookAndSubscriptionInfo(updateDTO: VersionUpdateDTO) {
         const appToken = await this.getCredentials(updateDTO.serverUrl)
         const info = await OrganizationModel.findByServerUrl(updateDTO.serverUrl)
         return await this.client.getAllWebhooksAndSubscriptions(updateDTO.serverUrl, info.clientId, appToken)
     }
 
-    async update(updateDTO: VersionUpdateDTO) {
-        // info의 내용을 순회하며 업데이트 과정을 수행해야합니다.
-        // requestedAuthentication이 업데이트 될 경우, 추가적으로 권한을 요청하는 logic이 필요합니다.
-        // 버전에 따라 관리되는 subscription과 webhook info를 외부 파일로 구성하면 좋을 것 같습니다.
-        // ex) client.updateWebhooks(...).then(데이터베이스에 버전 정보 기입).catch(에러 처리)
-        return await this.getWebhookAndSubscriptionInfo(updateDTO)
+    private async updateWebhooks(
+        serverUrl: string,
+        clientId: string,
+        token: string,
+        info: WebhookAndSubscriptionsInfo,
+        targetVersion: string | undefined,
+    ) {
+        try {
+            await this.client.updateWebhooks(serverUrl, clientId, info, targetVersion, token)
+        } catch (error) {
+            logger.error(`'updateWebhooks' has been failed`)
+            throw new VersionUpdateFailedException(error)
+        }
+    }
+
+    private async updateSubscriptions(serverUrl: string, clientId: string, token: string, info: WebhookAndSubscriptionsInfo, targetVersion: string) {
+        try {
+            return await this.client.updateSubscriptions(serverUrl, clientId, token, info, targetVersion)
+        } catch (error) {
+            logger.error(`'updateSubscriptions' has been failed ${JSON.stringify(error)}`)
+        }
+    }
+
+    private async updateUIExtension(serverUrl: string, token: string, targetVersion: string | undefined) {
+        if (typeof targetVersion == 'undefined') targetVersion = version['latest_version']
+
+        const updateInfo: space.installInfo = Space.getInstallInfo(targetVersion)
+        const axiosOption = {
+            headers: {
+                Authorization: token,
+                Accept: 'application/json',
+            },
+        }
+
+        try {
+            await this.client.registerUIExtension(serverUrl, updateInfo, axiosOption)
+        } catch (error) {
+            logger.error(`'updateUIExtension' failed ${JSON.stringify(error)}`)
+        }
+    }
+
+    public async update(updateDTO: VersionUpdateDTO) {
+        const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(updateDTO)
+        const clientId = (await OrganizationModel.findByServerUrl(updateDTO.serverUrl)).clientId
+        const token = await this.getCredentials(updateDTO.serverUrl)
+        // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
+        try {
+            await Promise.all([
+                this.updateWebhooks(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, updateDTO.targetVersion),
+                this.updateSubscriptions(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, updateDTO.targetVersion),
+                this.updateUIExtension(updateDTO.serverUrl, token, updateDTO.targetVersion),
+            ])
+            await OrganizationModel.updateVersionByClientId(clientId, updateDTO.targetVersion)
+        } catch (e) {
+            logger.error(JSON.stringify(e))
+            throw new VersionUpdateFailedException(e)
+        }
     }
 }
 
