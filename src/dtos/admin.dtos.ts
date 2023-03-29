@@ -1,6 +1,7 @@
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import { Admin } from '@models/admin'
 import { Space } from '@/libs/space/space.lib'
+import { Organization, Point } from '@models/organization'
 
 export class AdminRegisterDTO {
     @IsEmail()
@@ -56,6 +57,52 @@ export class AdminDTO {
         this.approved = admin.approved
         this.registeredAt = admin.registeredAt
         this.lastLoggedInAt = admin.lastLoggedInAt
+    }
+}
+export class OrganizaionListQueryDTO {
+    page = 1
+    size = 15
+    sort: AdminSortType = AdminSortType.Newest
+
+    getSort() {
+        switch (this.sort) {
+            case AdminSortType.Newest:
+                return {
+                    createdAt: 'desc',
+                }
+
+            default:
+                return undefined
+        }
+    }
+}
+
+export class OrganizaionDTO {
+    id: string
+    clientId: string
+    clientSecret: string
+    serverUrl: string
+    points = {
+        createCodeReview: 0,
+        createIssue: 0,
+        mergeMr: 0,
+        resolveIssue: 0
+    }
+    admin: string[]
+    version: string
+    createdAt: Date
+
+    constructor(organizaion: Organization) {
+        this.id = organizaion._id.toString()
+        this.clientId = organizaion.clientId
+        this.serverUrl = organizaion.serverUrl
+        this.points.createCodeReview = organizaion.points.createCodeReview
+        this.points.createIssue = organizaion.points.createIssue
+        this.points.mergeMr = organizaion.points.mergeMr
+        this.points.resolveIssue = organizaion.points.resolveIssue
+        this.admin = organizaion.admin
+        this.version = organizaion.version
+        this.createdAt = organizaion.createdAt
     }
 }
 

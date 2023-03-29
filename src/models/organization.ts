@@ -1,10 +1,12 @@
 import { ClientSession } from 'mongoose'
-import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typegoose'
+import { getModelForClass, index, prop, ReturnModelType, plugin } from '@typegoose/typegoose'
 
 import { Document } from './document'
 import { VERSION } from '@config'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
+import mongoosePaginate from 'mongoose-paginate-v2'
 import { Cached } from '@utils/cache.util'
+import { PaginateMethod } from './Paginator'
 
 export class Point {
     @prop({ default: 1 })
@@ -20,9 +22,11 @@ export class Point {
     public mergeMr: number
 }
 
+@plugin(mongoosePaginate)
 @index({ clientId: 1 })
 @index({ serverUrl: 1 })
 export class Organization extends Document {
+    static paginate: PaginateMethod<Organization>
     @prop()
     public clientId: string
 
@@ -40,6 +44,9 @@ export class Organization extends Document {
 
     @prop()
     public version: string
+
+    @prop()
+    public createdAt: Date        
 
     // 서버 정보는 24시간동안 캐싱합니다
     // 요 함수의 경우 keyParams이 조금 예외적인데 this의 경우 파라메터로 들어가는게 아니라서 serverUrl의 인덱스가 0입니다

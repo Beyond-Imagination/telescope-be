@@ -1,4 +1,4 @@
-import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
+import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizaionDTO, OrganizaionListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
 import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { deleteCache, revokeToken } from '@utils/cache.util'
@@ -12,7 +12,7 @@ import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
 import { v4 } from 'uuid'
 import { getBearerToken } from '@utils/verify.util'
-import { OrganizationModel } from '@models/organization'
+import { Organization, OrganizationModel } from '@models/organization'
 import { SpaceClient } from '@/client/space.client'
 import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
 import { VersionUpdateFailedException } from '@exceptions/VersionUpdateFailedException'
@@ -36,6 +36,20 @@ export class AdminService {
             page: new PageInfoDTO(paginated),
         }
     }
+
+    async organizaionList(query: OrganizaionListQueryDTO) {
+        const options = {
+            page: query.page,
+            limit: query.size,
+            sort: query.getSort(),
+        }
+        const paginated = await OrganizationModel.paginate({}, options)
+        const result = paginated.docs.map(x => new OrganizaionDTO(x as Organization))
+        return {
+            result: result,
+            page: new PageInfoDTO(paginated),
+        }
+    }    
 
     async register(registerDTO: AdminRegisterDTO) {
         try {

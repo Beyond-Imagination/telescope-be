@@ -1,6 +1,6 @@
 import { Authorized, Body, BodyParam, Controller, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
-import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
+import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO, VersionUpdateDTO, OrganizaionListQueryDTO } from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
 import { Request } from 'express'
 
@@ -14,6 +14,11 @@ export class AdminController {
     async list(@QueryParams() query: AdminListQueryDTO) {
         return await this.service.list(query)
     }
+
+    @Get('/organization')
+    async organizaionList(@QueryParams() query: OrganizaionListQueryDTO) {
+        return await this.service.organizaionList(query)
+    }    
 
     @Post('/register')
     @OnUndefined(204)
