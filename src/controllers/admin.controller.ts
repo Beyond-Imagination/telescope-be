@@ -15,10 +15,11 @@ export class AdminController {
         return await this.service.list(query)
     }
 
+    @Authorized()
     @Get('/organization')
     async organizaionList(@QueryParams() query: OrganizaionListQueryDTO) {
         return await this.service.organizaionList(query)
-    }    
+    }
 
     @Post('/register')
     @OnUndefined(204)
@@ -52,7 +53,7 @@ export class AdminController {
         this.service.logout(req.jti)
     }
 
-    // @Authorized()
+    @Authorized()
     @Patch('/organization/version')
     @OnUndefined(204)
     async version(@Body() dto: VersionUpdateDTO) {
