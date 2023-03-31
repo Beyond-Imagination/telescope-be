@@ -73,6 +73,12 @@ export default {
                 className: 'ApplicationHomepageUiExtensionIn',
                 iframeUrl: CLIENT_URL,
             },
+            {
+                className: 'TopLevelPageUiExtensionIn',
+                displayName: 'Telescope',
+                uniqueCode: 'Telescope',
+                iframeUrl: CLIENT_URL,
+            },
         ],
     },
     right: {
