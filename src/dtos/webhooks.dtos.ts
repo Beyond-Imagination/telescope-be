@@ -107,7 +107,7 @@ export class UpdateWebhookDTO {
     @IsNotEmpty()
     name: string
 
-    payloadFields: string[]
+    payloadFields: string
 
     description: string | undefined
 
@@ -122,7 +122,7 @@ export class UpdateWebhookDTO {
         clientId: string,
         webhookId: string,
         name: string,
-        payloadFields: string[],
+        payloadFields: string,
         description: string | undefined,
         enabled: boolean,
         endpoint: { url: string | undefined; sslVerification: boolean },
