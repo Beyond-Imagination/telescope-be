@@ -9,7 +9,4 @@ export class Space {
         }
         throw new InvalidVersionException()
     }
-    static getLatestVersion(): string {
-        return version['latest_version']
-    }
 }

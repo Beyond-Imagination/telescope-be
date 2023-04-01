@@ -1,6 +1,8 @@
+import { space } from '@/types/space.type'
 import { CLIENT_URL, SERVER_URL } from '@config'
 
-export default {
+const data: space.installInfo = {
+    version: '0.6.0',
     webhooks: [
         {
             name: 'create_issue',
@@ -85,3 +87,5 @@ export default {
         codes: ['Project.CodeReview.View', 'Profile.View', 'Project.Issues.View'],
     },
 }
+
+export default data

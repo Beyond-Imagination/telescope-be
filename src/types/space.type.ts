@@ -10,6 +10,7 @@ export namespace space {
         }
     }
     export interface installInfo {
+        version: string
         webhooks: webhookInfo[]
         uiExtension: {
             contextIdentifier: string

@@ -123,10 +123,9 @@ export class SpaceClient {
         serverUrl: string,
         clientId: string,
         webhookAndSubscriptionInfo: WebhookAndSubscriptionsInfo,
-        version: string | undefined,
+        installInfo: space.installInfo,
         token: string,
     ) {
-        const updateWebhookInfos: webhookInfo[] = Space.getInstallInfo(version).webhooks
         const mappedId = new Map()
 
         webhookAndSubscriptionInfo.data.map(server => {
@@ -134,7 +133,7 @@ export class SpaceClient {
         })
 
         // name 기반의 mapping strategy
-        const updateDtos: UpdateWebhookDTO[] = updateWebhookInfos
+        const updateDtos: UpdateWebhookDTO[] = installInfo.webhooks
             .map(info => {
                 const webhookId: string = mappedId.get(info.name)
                 return UpdateWebhookDTO.of(clientId, webhookId, info)
@@ -185,10 +184,8 @@ export class SpaceClient {
         clientId: string,
         token: string,
         info: WebhookAndSubscriptionsInfo,
-        targetVersion: string | undefined,
+        installInfo: space.installInfo,
     ) {
-        const versionInfo: space.installInfo = Space.getInstallInfo(targetVersion)
-
         // webhook, subscription의 이름을 이용한 매핑전략이기 때문에, 새로운 version 정보에서 target name이 변한다면 기존 코드를 수정해야한다.
         // webhook name => webhookId
         // subscription name => subscriptionId
@@ -205,7 +202,7 @@ export class SpaceClient {
             })
         })
 
-        const promises: Promise<any>[] = versionInfo.webhooks.map((info: webhookInfo) => {
+        const promises: Promise<any>[] = installInfo.webhooks.map((info: webhookInfo) => {
             const webhookName = info.name
             const subscriptionName = info.subscription.name
             const webhookId = webhookMapper.get(webhookName)

@@ -108,5 +108,5 @@ export class OrganizaionDTO {
 
 export class VersionUpdateDTO {
     serverUrl: string
-    targetVersion: string = Space.getLatestVersion()
+    targetVersion: string
 }
