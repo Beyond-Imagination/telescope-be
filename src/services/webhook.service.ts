@@ -17,6 +17,16 @@ export class WebhookService {
                 issueId: issueDTO.payload.issue.id,
                 type: AchievementType.CreateIssue,
             })
+            if (issueDTO.payload.status.new.resolved && issueDTO.payload.assignee) {
+                // 이슈를 생성하면서 동시에 Done처리도 가능한데 이경우를 확인한다
+                await AchievementModel.saveAchievement({
+                    clientId: issueDTO.clientId,
+                    user: issueDTO.payload.assignee.new.id,
+                    projectId: issueDTO.payload.issue.projectId,
+                    issueId: issueDTO.payload.issue.id,
+                    type: AchievementType.ResolveIssue,
+                })
+            }
         } else {
             throw new InvalidRequestException()
         }
