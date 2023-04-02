@@ -164,7 +164,7 @@ describe('AdminService 클래스', () => {
     describe('organizaionList 메소드에서', () => {
         it('항상 성공한다', async () => {
             await expect(
-                sut.organizaionList({
+                sut.organizationList({
                     page: 1,
                     size: 15,
                     sort: AdminSortType.Newest,
@@ -172,8 +172,8 @@ describe('AdminService 클래스', () => {
                 }),
             ).resolves.not.toThrowError()
         })
-    })  
-    
+    })
+
     describe('logout 메소드에서', () => {
         it('항상 성공한다', async () => {
             sut.logout('whatever')

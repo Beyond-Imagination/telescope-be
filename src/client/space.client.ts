@@ -4,8 +4,6 @@ import { Cached } from '@utils/cache.util'
 import { space } from '@/types/space.type'
 import { UpdateSubscriptionDTO, UpdateWebhookDTO } from '@dtos/webhooks.dtos'
 import { logger } from '@utils/logger'
-import { Space } from '@/libs/space/space.lib'
-import webhookInfo = space.webhookInfo
 import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
 
 export class SpaceClient {
@@ -202,7 +200,7 @@ export class SpaceClient {
             })
         })
 
-        const promises: Promise<any>[] = installInfo.webhooks.map((info: webhookInfo) => {
+        const promises: Promise<any>[] = installInfo.webhooks.map((info: space.webhookInfo) => {
             const webhookName = info.name
             const subscriptionName = info.subscription.name
             const webhookId = webhookMapper.get(webhookName)

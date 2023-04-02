@@ -1,7 +1,6 @@
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import { Admin } from '@models/admin'
-import { Space } from '@/libs/space/space.lib'
-import { Organization, Point } from '@models/organization'
+import { Organization } from '@models/organization'
 
 export class AdminRegisterDTO {
     @IsEmail()
@@ -59,7 +58,7 @@ export class AdminDTO {
         this.lastLoggedInAt = admin.lastLoggedInAt
     }
 }
-export class OrganizaionListQueryDTO {
+export class OrganizationListQueryDTO {
     page = 1
     size = 15
     sort: AdminSortType = AdminSortType.Newest
@@ -86,7 +85,7 @@ export class OrganizaionDTO {
         createCodeReview: 0,
         createIssue: 0,
         mergeMr: 0,
-        resolveIssue: 0
+        resolveIssue: 0,
     }
     admin: string[]
     version: string

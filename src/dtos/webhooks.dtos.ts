@@ -1,6 +1,5 @@
 import { IsNotEmpty } from 'class-validator'
 import { space } from '@/types/space.type'
-import webhookInfo = space.webhookInfo
 
 class WebhookPayload {
     className: string
@@ -136,7 +135,7 @@ export class UpdateWebhookDTO {
         this.endpoint = endpoint
     }
 
-    static of(clientId: string, webhookId: string, info: webhookInfo): UpdateWebhookDTO {
+    static of(clientId: string, webhookId: string, info: space.webhookInfo): UpdateWebhookDTO {
         return new UpdateWebhookDTO(clientId, webhookId, info.name, info.payloadFields, undefined, true, { url: info.url, sslVerification: false })
     }
 }

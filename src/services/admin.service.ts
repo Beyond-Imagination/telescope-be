@@ -1,4 +1,4 @@
-import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizaionDTO, OrganizaionListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
+import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizaionDTO, OrganizationListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
 import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { deleteCache, revokeToken } from '@utils/cache.util'
@@ -19,7 +19,6 @@ import { VersionUpdateFailedException } from '@exceptions/VersionUpdateFailedExc
 import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
-import version from '@/libs/space/version'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -37,7 +36,7 @@ export class AdminService {
         }
     }
 
-    async organizaionList(query: OrganizaionListQueryDTO) {
+    async organizationList(query: OrganizationListQueryDTO) {
         const options = {
             page: query.page,
             limit: query.size,
