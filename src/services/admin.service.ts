@@ -139,7 +139,8 @@ export class AdminService {
         try {
             return await this.client.updateSubscriptions(serverUrl, clientId, token, info, installInfo)
         } catch (error) {
-            logger.error(`'updateSubscriptions' has been failed ${JSON.stringify(error)}`)
+            logger.error(`'updateSubscriptions' has been failed ${error.message}`)
+            throw error
         }
     }
 
@@ -154,17 +155,18 @@ export class AdminService {
         try {
             await this.client.registerUIExtension(serverUrl, installInfo, axiosOption)
         } catch (error) {
-            logger.error(`'updateUIExtension' failed ${JSON.stringify(error)}`)
+            logger.error(`'updateUIExtension' failed ${error.message}`)
+            throw error
         }
     }
 
     public async update(updateDTO: VersionUpdateDTO) {
-        const installInfo: space.installInfo = Space.getInstallInfo(updateDTO.targetVersion)
-        const clientId = (await OrganizationModel.findByServerUrl(updateDTO.serverUrl)).clientId
-        const token = await this.getCredentials(updateDTO.serverUrl)
-        const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(updateDTO, token, clientId)
-        // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
         try {
+            const installInfo: space.installInfo = Space.getInstallInfo(updateDTO.targetVersion)
+            const clientId = (await OrganizationModel.findByServerUrl(updateDTO.serverUrl)).clientId
+            const token = await this.getCredentials(updateDTO.serverUrl)
+            const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(updateDTO, token, clientId)
+            // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await Promise.all([
                 this.updateWebhooks(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, installInfo),
                 this.updateSubscriptions(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, installInfo),
@@ -172,7 +174,7 @@ export class AdminService {
             ])
             await OrganizationModel.updateVersionByClientId(clientId, installInfo.version)
         } catch (e) {
-            logger.error(JSON.stringify(e))
+            logger.error(e.message)
             throw new VersionUpdateFailedException(e)
         }
     }

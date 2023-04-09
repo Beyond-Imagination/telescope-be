@@ -113,7 +113,8 @@ export class SpaceClient {
                 })
                 .catch(function (e) {
                     logger.error("[Space API] 'getAllWebhooksAndSubscriptions' has been failed")
-                    logger.error(`error: ${JSON.stringify(e.response)}`)
+                    logger.error(`error: ${e.message}`)
+                    throw e
                 })
         ).data
     }
@@ -147,7 +148,8 @@ export class SpaceClient {
         try {
             await Promise.all(promises)
         } catch (e) {
-            logger.error(`'updateWebhooks' has been failed ${JSON.stringify(e.response)}`)
+            logger.error(`'updateWebhooks' has been failed ${e.message}`)
+            throw e
         }
     }
 
@@ -173,7 +175,8 @@ export class SpaceClient {
             )
             .catch(function (e) {
                 logger.error("[Space API] 'updateWebhook' has been failed")
-                logger.error(`error: ${JSON.stringify(e.response)}`)
+                logger.error(`error: ${e.message}`)
+                throw e
             })
     }
 
@@ -238,7 +241,8 @@ export class SpaceClient {
             )
             .catch(function (e) {
                 logger.error("[Space API] 'updateSubscription' has been failed")
-                logger.error(`error: ${JSON.stringify(e)}`)
+                logger.error(`error: ${e.message}`)
+                throw e
             })
     }
 }
