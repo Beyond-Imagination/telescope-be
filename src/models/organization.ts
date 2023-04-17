@@ -77,7 +77,7 @@ export class Organization extends Document {
     }
 
     public static async updateVersionByClientId(this: ReturnModelType<typeof Organization>, clientId: string, newVersion: string) {
-        await OrganizationModel.findOneAndUpdate({ clientId: `${clientId}` }, { version: `${newVersion}` })
+        await OrganizationModel.findOneAndUpdate({ clientId: clientId }, { version: newVersion })
     }
 
     public static async saveOrganization(

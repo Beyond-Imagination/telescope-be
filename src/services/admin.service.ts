@@ -105,46 +105,33 @@ export class AdminService {
         revokeToken(token)
     }
 
-    private async getCredentials(serverUrl: string) {
-        const info = await OrganizationModel.findByServerUrl(serverUrl)
-        return getBearerToken(serverUrl, info.clientId, info.clientSecret)
+    private async getCredentials(organization: Organization) {
+        return getBearerToken(organization.serverUrl, organization.clientId, organization.clientSecret)
     }
 
     private async getWebhookAndSubscriptionInfo(updateDTO: VersionUpdateDTO, accessToken: string, clientId: string) {
         return await this.client.getAllWebhooksAndSubscriptions(updateDTO.serverUrl, clientId, accessToken)
     }
 
-    private async updateWebhooks(
-        serverUrl: string,
-        clientId: string,
-        token: string,
-        info: WebhookAndSubscriptionsInfo,
-        installInfo: space.installInfo,
-    ) {
+    private async updateWebhooks(organization: Organization, token: string, info: WebhookAndSubscriptionsInfo, installInfo: space.installInfo) {
         try {
-            await this.client.updateWebhooks(serverUrl, clientId, info, installInfo, token)
+            await this.client.updateWebhooks(organization.serverUrl, organization.clientId, info, installInfo, token)
         } catch (error) {
             logger.error(`'updateWebhooks' has been failed`)
             throw new VersionUpdateFailedException(error)
         }
     }
 
-    private async updateSubscriptions(
-        serverUrl: string,
-        clientId: string,
-        token: string,
-        info: WebhookAndSubscriptionsInfo,
-        installInfo: space.installInfo,
-    ) {
+    private async updateSubscriptions(organization: Organization, token: string, info: WebhookAndSubscriptionsInfo, installInfo: space.installInfo) {
         try {
-            return await this.client.updateSubscriptions(serverUrl, clientId, token, info, installInfo)
+            return await this.client.updateSubscriptions(organization.serverUrl, organization.clientId, token, info, installInfo)
         } catch (error) {
             logger.error(`'updateSubscriptions' has been failed ${error.message}`)
             throw error
         }
     }
 
-    private async updateUIExtension(serverUrl: string, token: string, installInfo: space.installInfo) {
+    private async updateUIExtension(organization: Organization, token: string, installInfo: space.installInfo) {
         const axiosOption = {
             headers: {
                 Authorization: token,
@@ -153,7 +140,7 @@ export class AdminService {
         }
 
         try {
-            await this.client.registerUIExtension(serverUrl, installInfo, axiosOption)
+            await this.client.registerUIExtension(organization.serverUrl, installInfo, axiosOption)
         } catch (error) {
             logger.error(`'updateUIExtension' failed ${error.message}`)
             throw error
@@ -163,16 +150,20 @@ export class AdminService {
     public async update(updateDTO: VersionUpdateDTO) {
         try {
             const installInfo: space.installInfo = Space.getInstallInfo(updateDTO.targetVersion)
-            const clientId = (await OrganizationModel.findByServerUrl(updateDTO.serverUrl)).clientId
-            const token = await this.getCredentials(updateDTO.serverUrl)
-            const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(updateDTO, token, clientId)
+            const organization = await OrganizationModel.findByServerUrl(updateDTO.serverUrl)
+            const token = await this.getCredentials(organization)
+            const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(
+                updateDTO,
+                token,
+                organization.clientId,
+            )
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await Promise.all([
-                this.updateWebhooks(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, installInfo),
-                this.updateSubscriptions(updateDTO.serverUrl, clientId, token, webhookAndSubscriptionsInfo, installInfo),
-                this.updateUIExtension(updateDTO.serverUrl, token, installInfo),
+                this.updateWebhooks(organization, token, webhookAndSubscriptionsInfo, installInfo),
+                this.updateSubscriptions(organization, token, webhookAndSubscriptionsInfo, installInfo),
+                this.updateUIExtension(organization, token, installInfo),
             ])
-            await OrganizationModel.updateVersionByClientId(clientId, installInfo.version)
+            await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)
         } catch (e) {
             logger.error(e.message)
             throw new VersionUpdateFailedException(e)
