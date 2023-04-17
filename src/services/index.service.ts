@@ -36,19 +36,13 @@ export class IndexService {
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
         const installInfo = Space.getInstallInfo()
-        const transactionHandlerMethod = async (session: ClientSession): Promise<void> => {
-            // Transaction이 필요한 operation들은 요 메소드 안에 넣는다
-            await this.insertDBData(dto, session)
-
-            await Promise.all([
-                // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
-                this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
-                this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
-                this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
-            ])
-        }
-
-        await mongooseTransactionHandler(transactionHandlerMethod)
+        await Promise.all([
+            // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
+            this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
+            this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
+            this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
+        ])
+        await this.insertDBData(dto, null)
     }
 
     private async uninstall(dto: InstallAndUninstallDTO) {
