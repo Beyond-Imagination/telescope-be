@@ -10,6 +10,7 @@ import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
+import Bottleneck from 'bottleneck'
 
 export class IndexService {
     spaceClient = new SpaceClient()
@@ -36,11 +37,14 @@ export class IndexService {
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
         const installInfo = Space.getInstallInfo()
+        const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
         await Promise.all([
             // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
-            this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
-            this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
-            this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
+            limiter.schedule(() => this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo)),
+            this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption).map(fn => {
+                limiter.schedule(() => fn())
+            }),
+            limiter.schedule(() => this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption)),
         ])
         await this.insertDBData(dto, null)
     }
@@ -81,7 +85,9 @@ export class IndexService {
     private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, axiosOption: any) {
         const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
         return installInfo.webhooks.map(webHookInfo => {
-            return this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
+            return async () => {
+                await this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
+            }
         })
     }
 

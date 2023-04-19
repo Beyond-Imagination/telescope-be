@@ -19,6 +19,7 @@ import { VersionUpdateFailedException } from '@exceptions/VersionUpdateFailedExc
 import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
+import Bottleneck from 'bottleneck'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -157,11 +158,12 @@ export class AdminService {
                 token,
                 organization.clientId,
             )
+            const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await Promise.all([
-                this.updateWebhooks(organization, token, webhookAndSubscriptionsInfo, installInfo),
-                this.updateSubscriptions(organization, token, webhookAndSubscriptionsInfo, installInfo),
-                this.updateUIExtension(organization, token, installInfo),
+                limiter.schedule(() => this.updateWebhooks(organization, token, webhookAndSubscriptionsInfo, installInfo)),
+                limiter.schedule(() => this.updateSubscriptions(organization, token, webhookAndSubscriptionsInfo, installInfo)),
+                limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
             ])
             await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)
         } catch (e) {
