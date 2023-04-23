@@ -1,9 +1,10 @@
-import { issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
+import { changeServerUrlValidation, issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { mockingAxios, setTestDB, testClientId, testClientSecret, testOrganizationAdmin, testSpaceURL } from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
+import { WrongServerUrlException } from '@exceptions/WrongServerUrlException'
 
 describe('validation.middleware 모듈', () => {
     let body
@@ -91,6 +92,7 @@ describe('validation.middleware 모듈', () => {
                         'khXVxzytjnPUHklP1YvJlT4WtTAzivvVg6kjIt35QRVsvPx8ViJF3dofP4P+r+ajoh8OkfNDMQb7Rhs/xub/V7rH0E9tv6Bcqww6ajO20vvXAtWvGtrc1WYiRZf1BCS/CC8glijJbxnKkp+Dv3XqyNa0BtV5vsTSyiyhdLOu2rxeg5ayQtAOYYp6yJHVQEXyixriNtGODl76sm4+zG0ghvn+nWp7l2ZyWkVIxVj+7PnL5j+lFSmSppPELYe80w1vTJ3y0l/Wxqo3o2BXH1PVwm49lHwtAU/zLtrydB2jY88CqyBtY5UEG3CzOJB4kBB9OY0Pk/br1N2EBeHOKvG1lA==',
                     ),
                 ).resolves.not.toThrow()
+                await OrganizationModel.deleteAllByClientId(testClientId, null) // 추후 테스트를 위해서 삭제 작업을 추가하였습니다.
             })
         })
 
@@ -128,6 +130,35 @@ describe('validation.middleware 모듈', () => {
             })
         })
 
+        describe('className이 ChangeServerUrlPayload 일때', () => {
+            let request
+            beforeEach(() => {
+                request = {
+                    body: {
+                        className: 'ChangeServerUrlPayload',
+                        newServerUrl: 'https://valid.jetbrains.space',
+                        clientId: '3ae692db-600d-4e74-97ef-e54423c641ac', // 실제 test용 id
+                    },
+                }
+            })
+
+            it('newServerUrl이 {host}.jetbrains.space 형식이 아니라면, WrongServerUrlException을 던진다', () => {
+                request.body.newServerUrl = 'https://somethingWrong.jetbrains.com'
+                expect(testChangeServerUrlValidation(request)).rejects.toThrowError(WrongServerUrlException)
+            })
+
+            it('clientId에 해당하는 조직이 존재하지 않는다면, OrganizationNotFoundException를 던진다', () => {
+                request.body.clientId = 'invalid-client-id'
+                expect(testChangeServerUrlValidation(request)).rejects.toThrowError(OrganizationNotFoundException)
+            })
+
+            it('정당한 newServerUrl과 clientId에 대해서, 성공한다', async () => {
+                const org = await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
+                request.body.clientId = org.clientId
+                await expect(testChangeServerUrlValidation(request)).resolves.not.toThrow()
+            })
+        })
+
         async function testWebHookValidation(publicKeySignature: string) {
             const res: any = {
                 locals: {},
@@ -149,6 +180,17 @@ describe('validation.middleware 모듈', () => {
                 if (e) throw e
             }
             await issueWebhookValidation(req, res, next)
+        }
+
+        async function testChangeServerUrlValidation(request) {
+            const res: any = {
+                locals: {},
+                status: jest.fn().mockReturnValue({ end: jest.fn() }),
+            }
+            const next = e => {
+                if (e) throw e
+            }
+            await changeServerUrlValidation(request, res, next)
         }
     })
 })

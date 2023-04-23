@@ -23,10 +23,18 @@ export class InstallAndUninstallDTO {
 
 export class LogDto {
     logType: string
-    serverUrl: string
+    clientId: string
 
-    constructor(logType, serverUrl) {
+    constructor(logType, clientId) {
         this.logType = logType
-        this.serverUrl = serverUrl
+        this.clientId = clientId
     }
+}
+
+export class ChangeServerUrlDto {
+    className: string
+    newServerUrl: string
+    clientId: string
+    userId: string | undefined // 기본값: null
+    verificationToken: string | undefined // 기본값: null
 }

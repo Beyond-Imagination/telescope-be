@@ -11,6 +11,7 @@ import crypto from 'crypto'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import jwkToPem from 'jwk-to-pem'
 import { deleteCache } from '@utils/cache.util'
+import { WrongServerUrlException } from '@exceptions/WrongServerUrlException'
 
 const client = new SpaceClient()
 
@@ -138,4 +139,46 @@ export const issueWebhookValidation = (request: Request, response: Response, nex
     } catch (error) {
         next(error)
     }
+}
+
+function checkClassName(className: string, expectValue: string) {
+    if (className !== expectValue) throw new WrongClassNameException()
+}
+function checkServerUrl(serverUrl: string) {
+    if (!new URL(serverUrl).hostname.endsWith('.jetbrains.space')) throw new WrongServerUrlException()
+}
+async function checkOrganizationExist(clientId: string) {
+    return OrganizationModel.findByClientId(clientId)
+}
+export const changeServerUrlValidation = async (request: Request, response: Response, next: NextFunction) => {
+    const payload = request.body
+    try {
+        checkClassName(payload.className, 'ChangeServerUrlPayload')
+        checkServerUrl(payload.newServerUrl)
+        await checkOrganizationExist(payload.clientId)
+        next()
+    } catch (error) {
+        next(error) // error를 propagate
+    }
+}
+
+export const spacePayloadValidation = (request: Request, response: Response, next: NextFunction) => {
+    let validator
+    switch (request.body.className) {
+        case 'ChangeServerUrlPayload':
+            validator = changeServerUrlValidation
+            break
+
+        case 'IssueWebhookEvent':
+            validator = issueWebhookValidation
+            break
+
+        case 'AppPublicationCheckPayload':
+        case 'InitPayload':
+            validator = webhookValidation
+            break
+        default:
+            throw new WrongClassNameException()
+    }
+    validator(request, response, next)
 }

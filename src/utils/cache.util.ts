@@ -93,7 +93,7 @@ export async function deleteAllCacheByKeyPattern(pattern: RegExp) {
     let curr = keys.next()
     while (!curr.done) {
         const value = curr.value
-        if (value.match(pattern)) {
+        if (typeof value === 'string' && value.match(pattern)) {
             cache.delete(value)
         }
         curr = keys.next()

@@ -80,6 +80,10 @@ export class Organization extends Document {
         await OrganizationModel.findOneAndUpdate({ clientId: clientId }, { version: newVersion })
     }
 
+    public static async updateServerUrlByClientId(this: ReturnModelType<typeof Organization>, clientId: string, newServerUrl: string) {
+        await OrganizationModel.findOneAndUpdate({ clientId: clientId }, { serverUrl: newServerUrl })
+    }
+
     public static async saveOrganization(
         clientId: string,
         clientSecret: string,

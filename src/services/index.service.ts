@@ -1,38 +1,18 @@
 import { Organization, OrganizationModel } from '@models/organization'
-import { InstallAndUninstallDTO, LogDto } from '@dtos/index.dtos'
+import { InstallAndUninstallDTO } from '@dtos/index.dtos'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
 import { ClientSession } from 'mongoose'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { deleteAllCacheByKeyPattern } from '@utils/cache.util'
-import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
 
 export class IndexService {
     spaceClient = new SpaceClient()
-
-    async handleInstallAndUninstall(dto: InstallAndUninstallDTO, axiosOption: any) {
-        let logType
-        switch (dto.className) {
-            case 'InitPayload':
-                await this.install(dto, axiosOption)
-                logType = 'Install'
-                break
-            case 'ApplicationUninstalledPayload':
-                await this.uninstall(dto)
-                logType = 'Uninstall'
-                break
-            default:
-                throw new WrongClassNameException()
-        }
-        logger.info(JSON.stringify(new LogDto(logType, dto.serverUrl)))
-    }
-
-    private async install(dto: InstallAndUninstallDTO, axiosOption: any) {
+    async install(dto: InstallAndUninstallDTO, axiosOption: any) {
         // 요 함수는 없어도 되지만 혹시 스페이스가 삭제시 에러가 발생해 스페이스가 지워지지 않았을 경우를 대비해 남겨둡니다
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
@@ -49,7 +29,7 @@ export class IndexService {
         await this.insertDBData(dto, null)
     }
 
-    private async uninstall(dto: InstallAndUninstallDTO) {
+    async uninstall(dto: InstallAndUninstallDTO) {
         await this.deleteOrganizationIfExist(dto.serverUrl)
     }
 
@@ -95,5 +75,10 @@ export class IndexService {
         const response = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
         const webHookId = response.data.id
         await this.spaceClient.registerSubscription(url, webHookInfo, webHookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
+    }
+
+    async handleChangeServerUrl(dto: ChangeServerUrlDto) {
+        // Prereq. controller에서 validation이 끝난 dto만 전달됩니다.
+        await OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl)
     }
 }
