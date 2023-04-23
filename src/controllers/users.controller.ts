@@ -1,6 +1,7 @@
-import { Controller, Get, Param, QueryParams } from 'routing-controllers'
+import { Controller, Get, HeaderParam, Param, QueryParams } from 'routing-controllers'
 import { UserService } from '@services/user.service'
 import { getDaysBefore } from '@utils/date'
+import { SpaceClient } from '@/client/space.client'
 
 class UserQuery {
     serverUrl: string
@@ -8,9 +9,21 @@ class UserQuery {
     to: Date | null
 }
 
+class PictureQuery {
+    serverUrl: string
+    profilePicture: string
+}
+
 @Controller('/api/users')
 export class UsersController {
     service: UserService = new UserService()
+    spaceClient = new SpaceClient()
+
+    @Get('/picture')
+    async picture(@HeaderParam('Authorization') token: string, @QueryParams() query: PictureQuery) {
+        const response = await this.spaceClient.requestProfileImage(token, query.serverUrl, query.profilePicture)
+        return response.data
+    }
 
     @Get('/:userId/score')
     scoreByUserId(@Param('userId') id: string, @QueryParams() query: UserQuery) {

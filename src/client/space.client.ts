@@ -69,6 +69,18 @@ export class SpaceClient {
         )
     }
 
+    async requestProfileImage(token: string, serverUrl: string, profilePicture: string) {
+        const requestUrl = `${serverUrl}/d/${profilePicture}`
+        return await axios({
+            method: 'get',
+            url: requestUrl,
+            headers: {
+                Authorization: `${token}`,
+            },
+            responseType: 'arraybuffer',
+        })
+    }
+
     @Cached({ keyParams: ['$[1]'], prefix: 'requestProfiles' })
     async requestProfiles(token: string, serverUrl: string) {
         const requestUrl = `${serverUrl}/api/http/team-directory/profiles`
