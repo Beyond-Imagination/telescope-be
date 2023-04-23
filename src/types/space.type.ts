@@ -11,7 +11,14 @@ export namespace space {
     }
     export interface installInfo {
         version: string
-        webhooks: webhookInfo[]
+        webhooks: {
+            create_issue: webhookInfo
+            update_issue_status: webhookInfo
+            update_issue_assignee: webhookInfo
+            delete_issue: webhookInfo
+            create_code_review: webhookInfo
+            close_code_review: webhookInfo
+        }
         uiExtension: {
             contextIdentifier: string
             extension: {

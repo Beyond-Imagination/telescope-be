@@ -20,6 +20,7 @@ import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
+import { UpdateSubscriptionDTO, UpdateWebhookDTO } from '@dtos/webhooks.dtos'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -114,22 +115,40 @@ export class AdminService {
         return await this.client.getAllWebhooksAndSubscriptions(updateDTO.serverUrl, clientId, accessToken)
     }
 
-    private async updateWebhooks(organization: Organization, token: string, info: WebhookAndSubscriptionsInfo, installInfo: space.installInfo) {
-        try {
-            await this.client.updateWebhooks(organization.serverUrl, organization.clientId, info, installInfo, token)
-        } catch (error) {
-            logger.error(`'updateWebhooks' has been failed`)
-            throw new VersionUpdateFailedException(error)
-        }
-    }
-
-    private async updateSubscriptions(organization: Organization, token: string, info: WebhookAndSubscriptionsInfo, installInfo: space.installInfo) {
-        try {
-            return await this.client.updateSubscriptions(organization.serverUrl, organization.clientId, token, info, installInfo)
-        } catch (error) {
-            logger.error(`'updateSubscriptions' has been failed ${error.message}`)
-            throw error
-        }
+    private updateWebhooksAndSubscription(
+        organization: Organization,
+        token: string,
+        info: WebhookAndSubscriptionsInfo,
+        installInfo: space.installInfo,
+    ) {
+        return info.data
+            .filter(info => {
+                return typeof info.webhook.id != undefined
+            })
+            .map(info => {
+                return async () => {
+                    const webhook = installInfo.webhooks[info.webhook.name]
+                    await this.client.updateWebhook(
+                        organization.serverUrl,
+                        token,
+                        UpdateWebhookDTO.of(organization.clientId, info.webhook.id, webhook),
+                    )
+                    await this.client.updateSubscription(
+                        organization.serverUrl,
+                        organization.clientId,
+                        token,
+                        new UpdateSubscriptionDTO(
+                            info.webhook.id,
+                            info.webhook.subscriptions[0].id,
+                            webhook.subscription.name,
+                            true,
+                            webhook.subscription.subjectCode,
+                            [webhook.subscription.eventTypeCode],
+                            [],
+                        ),
+                    )
+                }
+            })
     }
 
     private async updateUIExtension(organization: Organization, token: string, installInfo: space.installInfo) {
@@ -161,8 +180,9 @@ export class AdminService {
             const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await Promise.all([
-                limiter.schedule(() => this.updateWebhooks(organization, token, webhookAndSubscriptionsInfo, installInfo)),
-                limiter.schedule(() => this.updateSubscriptions(organization, token, webhookAndSubscriptionsInfo, installInfo)),
+                this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo).map(fn =>
+                    limiter.schedule(() => fn()),
+                ),
                 limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
             ])
             await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)

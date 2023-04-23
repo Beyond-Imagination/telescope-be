@@ -118,42 +118,8 @@ export class SpaceClient {
                 })
         ).data
     }
-    async updateWebhooks(
-        serverUrl: string,
-        clientId: string,
-        webhookAndSubscriptionInfo: WebhookAndSubscriptionsInfo,
-        installInfo: space.installInfo,
-        token: string,
-    ) {
-        const mappedId = new Map()
 
-        webhookAndSubscriptionInfo.data.map(server => {
-            mappedId.set(server.webhook.name, server.webhook.id)
-        })
-
-        // name 기반의 mapping strategy
-        const updateDtos: UpdateWebhookDTO[] = installInfo.webhooks
-            .map(info => {
-                const webhookId: string = mappedId.get(info.name)
-                return UpdateWebhookDTO.of(clientId, webhookId, info)
-            })
-            .filter(info => {
-                return typeof info.webhookId != undefined
-            })
-
-        const promises = updateDtos.map(dto => {
-            return this.updateWebhook(serverUrl, token, dto)
-        })
-
-        try {
-            await Promise.all(promises)
-        } catch (e) {
-            logger.error(`'updateWebhooks' has been failed ${e.message}`)
-            throw e
-        }
-    }
-
-    private async updateWebhook(serverUrl: string, token: string, dto: UpdateWebhookDTO) {
+    async updateWebhook(serverUrl: string, token: string, dto: UpdateWebhookDTO) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}
         const url = `${serverUrl}/api/http/applications/clientId:${dto.clientId}/webhooks/${dto.webhookId}`
         return await axios
@@ -180,44 +146,7 @@ export class SpaceClient {
             })
     }
 
-    public async updateSubscriptions(
-        serverUrl: string,
-        clientId: string,
-        token: string,
-        info: WebhookAndSubscriptionsInfo,
-        installInfo: space.installInfo,
-    ) {
-        // webhook, subscription의 이름을 이용한 매핑전략이기 때문에, 새로운 version 정보에서 target name이 변한다면 기존 코드를 수정해야한다.
-        // webhook name => webhookId
-        // subscription name => subscriptionId
-        const webhookMapper: Map<string, string> = new Map<string, string>()
-        const subscriptionMapper: Map<string, string> = new Map<string, string>()
-        info.data.map(webhookInfo => {
-            const webhookId = webhookInfo.webhook.id
-            const webhookName = webhookInfo.webhook.name
-            webhookMapper.set(webhookName, webhookId)
-            webhookInfo.webhook.subscriptions.map(subscriptionInfo => {
-                const subscriptionId = subscriptionInfo.id
-                const subscriptionName = subscriptionInfo.name
-                subscriptionMapper.set(subscriptionName, subscriptionId)
-            })
-        })
-
-        const promises: Promise<any>[] = installInfo.webhooks.map((info: space.webhookInfo) => {
-            const webhookName = info.name
-            const subscriptionName = info.subscription.name
-            const webhookId = webhookMapper.get(webhookName)
-            const subscriptionId = subscriptionMapper.get(subscriptionName)
-            const subjectCode = info.subscription.subjectCode
-            const eventTypeCodes: string[] = [info.subscription.eventTypeCode]
-            const dto = new UpdateSubscriptionDTO(webhookId, subscriptionId, subscriptionName, true, subjectCode, eventTypeCodes, [])
-            return this.updateSubscription(serverUrl, clientId, token, dto)
-        })
-
-        return await Promise.all(promises)
-    }
-
-    private async updateSubscription(serverUrl: string, clientId: string, token: string, dto: UpdateSubscriptionDTO) {
+    async updateSubscription(serverUrl: string, clientId: string, token: string, dto: UpdateSubscriptionDTO) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}/subscriptions/{subscriptionId}
         const url = `${serverUrl}/api/http/applications/clientId:${clientId}/webhooks/${dto.webhookId}/subscriptions/${dto.subscriptionId}`
         return axios

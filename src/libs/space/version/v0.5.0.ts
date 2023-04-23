@@ -3,8 +3,8 @@ import { CLIENT_URL, SERVER_URL } from '@config'
 
 const data: space.installInfo = {
     version: '0.5.0',
-    webhooks: [
-        {
+    webhooks: {
+        create_issue: {
             name: 'create_issue',
             url: `${SERVER_URL}/webhooks/issue/create`,
             payloadFields:
@@ -15,7 +15,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'Issue.Created',
             },
         },
-        {
+        update_issue_status: {
             name: 'update_issue_status',
             url: `${SERVER_URL}/webhooks/issue/update/status`,
             payloadFields: 'clientId,verificationToken,webhookId,payload(issue(id,assignee(id)),status(new(resolved),old(resolved)))',
@@ -25,7 +25,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'Issue.StatusUpdated',
             },
         },
-        {
+        update_issue_assignee: {
             name: 'update_issue_assignee',
             url: `${SERVER_URL}/webhooks/issue/update/assignee`,
             payloadFields: 'clientId,verificationToken,webhookId,payload(assignee(old(id),new(id)),issue(id,status(resolved)))',
@@ -35,7 +35,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'Issue.AssigneeUpdated',
             },
         },
-        {
+        delete_issue: {
             name: 'delete_issue',
             url: `${SERVER_URL}/webhooks/issue/delete`,
             payloadFields: 'clientId,verificationToken,webhookId,payload(issue(id,assignee(id),status(resolved)),deleted(new))',
@@ -45,7 +45,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'Issue.Deleted',
             },
         },
-        {
+        create_code_review: {
             name: 'create_code_review',
             url: `${SERVER_URL}/webhooks/code-review/create`,
             subscription: {
@@ -54,7 +54,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'CodeReview.Created',
             },
         },
-        {
+        close_code_review: {
             name: 'close_code_review',
             url: `${SERVER_URL}/webhooks/code-review/close`,
             subscription: {
@@ -63,7 +63,7 @@ const data: space.installInfo = {
                 eventTypeCode: 'CodeReview.Closed',
             },
         },
-    ],
+    },
     uiExtension: {
         contextIdentifier: 'global',
         extension: [

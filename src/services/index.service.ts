@@ -64,7 +64,7 @@ export class IndexService {
 
     private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, axiosOption: any) {
         const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
-        return installInfo.webhooks.map(webHookInfo => {
+        return Object.values(installInfo.webhooks).map(webHookInfo => {
             return async () => {
                 await this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
             }
