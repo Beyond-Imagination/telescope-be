@@ -1,3 +1,4 @@
+import '@/config'
 import App from '@/app'
 import { IndexController } from '@controllers/index.controller'
 import { WebhooksController } from '@controllers/webhooks.controller'

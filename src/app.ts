@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import newrelic from 'newrelic'
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage'
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema'
 import compression from 'compression'
@@ -28,6 +29,8 @@ class App {
         this.app = express()
         this.env = NODE_ENV || 'development'
         this.port = PORT || 3000
+
+        this.app.locals.newrelic = newrelic
 
         this.initializeMiddlewares()
         this.initializeRoutes(Controllers)
