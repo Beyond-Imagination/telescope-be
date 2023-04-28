@@ -54,7 +54,13 @@ const winstonOption = {
 const loggerMiddleware = expressWinston.logger({
     ...winstonOption,
     requestWhitelist: ['headers.origin', 'body', 'query'],
-    responseWhitelist: ['body'],
+    responseWhitelist: ['body', 'statusCode'],
+    ignoreRoute: function (req, res) {
+        if (req.url.startsWith('/api/users/picture')) {
+            return res.statusCode < 300
+        }
+        return false
+    },
 })
 
 const logger = winston.createLogger(winstonOption)
