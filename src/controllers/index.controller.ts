@@ -28,7 +28,7 @@ export class IndexController {
                 await this.service.uninstall(dto)
                 break
             case 'ChangeServerUrlPayload':
-                await this.service.handleChangeServerUrl(dto)
+                await this.service.changeServerUrl(dto)
                 break
             default:
                 throw new WrongClassNameException()

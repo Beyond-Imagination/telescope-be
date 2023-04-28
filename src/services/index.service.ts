@@ -1,5 +1,5 @@
 import { Organization, OrganizationModel } from '@models/organization'
-import { InstallAndUninstallDTO } from '@dtos/index.dtos'
+import { ChangeServerUrlDto, InstallAndUninstallDTO } from '@dtos/index.dtos'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
@@ -31,6 +31,11 @@ export class IndexService {
 
     async uninstall(dto: InstallAndUninstallDTO) {
         await this.deleteOrganizationIfExist(dto.serverUrl)
+    }
+
+    async changeServerUrl(dto: ChangeServerUrlDto) {
+        // Prereq. controller에서 validation이 끝난 dto만 전달됩니다.
+        await OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl)
     }
 
     private async deleteOrganizationIfExist(serverUrl: string) {
@@ -75,10 +80,5 @@ export class IndexService {
         const response = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
         const webHookId = response.data.id
         await this.spaceClient.registerSubscription(url, webHookInfo, webHookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
-    }
-
-    async handleChangeServerUrl(dto: ChangeServerUrlDto) {
-        // Prereq. controller에서 validation이 끝난 dto만 전달됩니다.
-        await OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl)
     }
 }
