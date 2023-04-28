@@ -2,9 +2,8 @@ import axios from 'axios'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
 import { Cached } from '@utils/cache.util'
 import { space } from '@/types/space.type'
-import { UpdateSubscriptionDTO, UpdateWebhookDTO } from '@dtos/webhooks.dtos'
 import { logger } from '@utils/logger'
-import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
+import { Organization } from '@models/organization'
 
 export class SpaceClient {
     // public key는 일정기간이 지나면 갱신된다고 하는데 갱신 기간을 명시 안해놨고 아마 꽤 길것으로 예상되어 캐싱기간은 1일로 잡아둔다
@@ -131,59 +130,72 @@ export class SpaceClient {
         ).data
     }
 
-    async updateWebhook(serverUrl: string, token: string, dto: UpdateWebhookDTO) {
+    async updateWebhook(organization: Organization, token: string, webhookId: string, info: space.webhookInfo) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}
-        const url = `${serverUrl}/api/http/applications/clientId:${dto.clientId}/webhooks/${dto.webhookId}`
+        const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks/${webhookId}`
         return await axios
             .patch(
                 url,
                 {
-                    name: dto.name,
-                    description: dto.description,
-                    enabled: dto.enabled,
-                    endpoint: dto.endpoint,
-                    payloadFields: dto.payloadFields,
+                    name: info.name,
+                    endpoint: { url: info.url, sslVerification: false },
+                    payloadFields: info.payloadFields,
                 },
                 {
                     headers: {
-                        Authorization: `${token}`,
+                        Authorization: token,
                         Accept: 'application/json',
                     },
                 },
             )
             .catch(function (e) {
-                logger.error("[Space API] 'updateWebhook' has been failed")
-                logger.error(`error: ${e.message}`)
+                logger.error(`[Space API] 'updateWebhook' has been failed. error: ${JSON.stringify(e.response.data)}`)
                 throw e
             })
     }
 
-    async updateSubscription(serverUrl: string, clientId: string, token: string, dto: UpdateSubscriptionDTO) {
+    async updateSubscription(
+        organization: Organization,
+        token: string,
+        webhookId: string,
+        subscriptionId: string,
+        version: string,
+        info: space.webhookInfo,
+    ) {
         // PATCH /api/http/applications/{application}/webhooks/{webhookId}/subscriptions/{subscriptionId}
-        const url = `${serverUrl}/api/http/applications/clientId:${clientId}/webhooks/${dto.webhookId}/subscriptions/${dto.subscriptionId}`
+        const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks/${webhookId}/subscriptions/${subscriptionId}`
         return axios
             .patch(
                 url,
                 {
-                    name: dto.name,
-                    enabled: dto.enabled,
+                    name: `${version}_${info.subscription.name}`,
                     subscription: {
-                        subjectCode: dto.subjectCode,
-                        eventTypeCodes: dto.eventTypeCodes,
-                        filters: dto.filters,
+                        subjectCode: info.subscription.subjectCode,
+                        eventTypeCodes: [info.subscription.eventTypeCode],
+                        filters: [],
                     },
                 },
                 {
                     headers: {
-                        Authorization: `${token}`,
+                        Authorization: token,
                         Accept: 'application/json',
                     },
                 },
             )
             .catch(function (e) {
-                logger.error("[Space API] 'updateSubscription' has been failed")
-                logger.error(`error: ${e.message}`)
+                logger.error(`[Space API] 'updateSubscription' has been failed. error: ${JSON.stringify(e.response.data)}`)
                 throw e
             })
+    }
+
+    async deleteWebhook(organization: Organization, token: string, webhookId: string, subscriptionId: string) {
+        //DELETE /api/http/applications/{application}/webhooks/{webhookId}
+        const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks/${webhookId}`
+        return axios.delete(url, {
+            headers: {
+                Authorization: token,
+                Accept: 'application/json',
+            },
+        })
     }
 }

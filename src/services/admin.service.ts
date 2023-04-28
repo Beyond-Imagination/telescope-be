@@ -11,7 +11,7 @@ import bcrypt from 'bcrypt'
 import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
 import { v4 } from 'uuid'
-import { getBearerToken } from '@utils/verify.util'
+import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { Organization, OrganizationModel } from '@models/organization'
 import { SpaceClient } from '@/client/space.client'
 import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
@@ -20,7 +20,6 @@ import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
-import { UpdateSubscriptionDTO, UpdateWebhookDTO } from '@dtos/webhooks.dtos'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -118,37 +117,66 @@ export class AdminService {
     private updateWebhooksAndSubscription(
         organization: Organization,
         token: string,
-        info: WebhookAndSubscriptionsInfo,
-        installInfo: space.installInfo,
+        current: WebhookAndSubscriptionsInfo,
+        target: space.installInfo,
     ) {
-        return info.data
-            .filter(info => {
-                return typeof info.webhook.id != undefined
+        const keys = new Set<string>()
+        Object.keys(target.webhooks).forEach(key => {
+            keys.add(key)
+        })
+
+        const create = []
+        const update = []
+        const remove = []
+
+        current.data.forEach(info => {
+            if (!info.webhook.id) {
+                return
+            }
+            if (keys.has(info.webhook.name)) {
+                update.push({
+                    ...target.webhooks[info.webhook.name],
+                    webhookId: info.webhook.id,
+                    subscriptionId: info.webhook.subscriptions[0].id,
+                })
+                keys.delete(info.webhook.name)
+            } else {
+                remove.push({
+                    webhookId: info.webhook.id,
+                    subscriptionId: info.webhook.subscriptions[0].id,
+                })
+            }
+        })
+        keys.forEach(key => {
+            create.push(target.webhooks[key])
+        })
+
+        const promises = []
+
+        create.forEach(info => {
+            promises.push(async () => {
+                const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks`
+                const option = getAxiosOption(token)
+                const response = await this.client.registerWebHook(url, info, option)
+                const webHookId = response.data.id
+                await this.client.registerSubscription(url, info, webHookId, option)
             })
-            .map(info => {
-                return async () => {
-                    const webhook = installInfo.webhooks[info.webhook.name]
-                    await this.client.updateWebhook(
-                        organization.serverUrl,
-                        token,
-                        UpdateWebhookDTO.of(organization.clientId, info.webhook.id, webhook),
-                    )
-                    await this.client.updateSubscription(
-                        organization.serverUrl,
-                        organization.clientId,
-                        token,
-                        new UpdateSubscriptionDTO(
-                            info.webhook.id,
-                            info.webhook.subscriptions[0].id,
-                            webhook.subscription.name,
-                            true,
-                            webhook.subscription.subjectCode,
-                            [webhook.subscription.eventTypeCode],
-                            [],
-                        ),
-                    )
-                }
+        })
+
+        update.forEach(info => {
+            promises.push(async () => {
+                await this.client.updateWebhook(organization, token, info.webhookId, info)
+                await this.client.updateSubscription(organization, token, info.webhookId, info.subscriptionId, target.version, info)
             })
+        })
+
+        remove.forEach(info => {
+            promises.push(async () => {
+                await this.client.deleteWebhook(organization, token, info.webhookId, info.subscriptionId)
+            })
+        })
+
+        return promises
     }
 
     private async updateUIExtension(organization: Organization, token: string, installInfo: space.installInfo) {
