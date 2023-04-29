@@ -68,6 +68,7 @@ export class SpaceClient {
         )
     }
 
+    @Cached({ keyParams: ['$[1,2]'], prefix: 'profilePicture', ttl: 1000 * 60 * 60 * 24 * 7 })
     async requestProfileImage(token: string, serverUrl: string, profilePicture: string) {
         const requestUrl = `${serverUrl}/d/${profilePicture}`
         return await axios({
