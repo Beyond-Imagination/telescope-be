@@ -38,7 +38,10 @@ export class IndexService {
 
     async changeServerUrl(dto: ChangeServerUrlDto) {
         // Prereq. controller에서 validation이 끝난 dto만 전달됩니다.
-        await OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl)
+        await Promise.all([
+            OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl),
+            deleteAllCacheByKeyPattern(new RegExp(`.*${dto.clientId}.*`)),
+        ])
     }
 
     private async deleteOrganizationIfExist(serverUrl: string) {
