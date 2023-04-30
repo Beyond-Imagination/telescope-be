@@ -165,7 +165,7 @@ export const changeServerUrlValidation = async (request: Request, response: Resp
 
 export const spacePayloadValidation = (request: Request, response: Response, next: NextFunction) => {
     let validator
-    const payloadType = payload.typeFactory.of(request.body.className)
+    const payloadType: payload.className = payload.typeFactory.of(request.body.className)
     switch (payloadType) {
         case payload.className.CHANGE_URL:
             validator = changeServerUrlValidation
@@ -177,8 +177,10 @@ export const spacePayloadValidation = (request: Request, response: Response, nex
 
         case payload.className.APP_PUBLICATION_CHECK:
         case payload.className.INSTALL:
+        case payload.className.UNINSTALL:
             validator = webhookValidation
             break
+
         default:
             throw new WrongClassNameException()
     }
