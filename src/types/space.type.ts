@@ -42,3 +42,19 @@ export namespace space {
         }
     }
 }
+
+export namespace payload {
+    export enum className {
+        INSTALL = 'InitPayload',
+        UNINSTALL = 'ApplicationUninstalledPayload',
+        CHANGE_URL = 'ChangeServerUrlPayload',
+        ISSUE_WEBHOOK = 'IssueWebhookEvent',
+        APP_PUBLICATION_CHECK = 'AppPublicationCheckPayload',
+        WEBHOOK_REQUEST = 'WebhookRequestPayload',
+    }
+    export const typeFactory = {
+        of: (typeParam: string): className | undefined => {
+            return Object.values(className).find(elem => elem === typeParam)
+        },
+    }
+}

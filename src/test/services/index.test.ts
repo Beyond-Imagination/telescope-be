@@ -25,26 +25,10 @@ describe('IndexService 클래스', () => {
 
     setTestDB()
 
-    describe('handelInstallAndUninstall 메소드에서', () => {
-        it('className이 InitPayload혹은 ApplicationUninstalledPayload가 아니면 에러가 발생한다', async () => {
-            await expect(
-                sut.handleInstallAndUninstall(
-                    {
-                        className: 'whatever',
-                        clientSecret: testClientSecret,
-                        serverUrl: testSpaceURL,
-                        state: 'test',
-                        clientId: testClientId,
-                        userId: testOrganizationAdmin,
-                    },
-                    getAxiosOption(await getBearerToken(testSpaceURL, testClientId, testClientSecret)),
-                ),
-            ).rejects.toThrowError(WrongClassNameException)
-        })
-
+    describe('install 메소드에서', () => {
         it('최초 설치시에 정상적인 요청이면 성공한다', async () => {
             await expect(
-                sut.handleInstallAndUninstall(
+                sut.install(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -68,7 +52,7 @@ describe('IndexService 클래스', () => {
                 type: AchievementType.CreateCodeReview,
             })
             await expect(
-                sut.handleInstallAndUninstall(
+                sut.install(
                     {
                         className: 'InitPayload',
                         clientSecret: testClientSecret,
@@ -81,6 +65,10 @@ describe('IndexService 클래스', () => {
                 ),
             ).resolves.not.toThrowError()
         })
+    })
+
+    describe('uninstall 메소드에서', () => {
+        const sut = new IndexService()
 
         it('정상적인 삭제 요청이면 성공한다', async () => {
             await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
@@ -91,18 +79,57 @@ describe('IndexService 클래스', () => {
                 type: AchievementType.CreateCodeReview,
             })
             await expect(
-                sut.handleInstallAndUninstall(
-                    {
-                        className: 'InitPayload',
-                        clientSecret: undefined,
-                        serverUrl: testSpaceURL,
-                        state: undefined,
-                        clientId: testClientId,
-                        userId: undefined,
-                    },
-                    getTestAxiosOption(),
-                ),
+                sut.uninstall({
+                    className: 'ApplicationUninstalledPayload',
+                    clientSecret: undefined,
+                    serverUrl: testSpaceURL,
+                    state: undefined,
+                    clientId: testClientId,
+                    userId: undefined,
+                }),
             ).resolves.not.toThrowError()
+        })
+        it('payload type이 payload.type.UNINSTALL가 아니면 에러가 발생한다', async () => {
+            await expect(
+                sut.uninstall({
+                    className: 'whatever',
+                    clientSecret: testClientSecret,
+                    serverUrl: testSpaceURL,
+                    state: 'test',
+                    clientId: testClientId,
+                    userId: testOrganizationAdmin,
+                }),
+            ).rejects.toThrowError(WrongClassNameException)
+        })
+        it('payload type이 payload.type.UNINSTALL가 아니면 에러가 발생한다', async () => {
+            await expect(
+                sut.uninstall({
+                    className: 'InitPayload',
+                    clientSecret: testClientSecret,
+                    serverUrl: testSpaceURL,
+                    state: 'test',
+                    clientId: testClientId,
+                    userId: testOrganizationAdmin,
+                }),
+            ).rejects.toThrowError(WrongClassNameException)
+        })
+    })
+
+    describe('handleChangeServerUrl 메소드에서', () => {
+        const sut = new IndexService()
+
+        it('정상적인 요청이라면, 기존 serverUrl을 newServerUrl로 변경한다', async () => {
+            await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
+            const newTestUrl = 'https://joonamin44.jetbrains.space'
+            await sut.changeServerUrl({
+                className: 'ChangeServerUrlPayload',
+                newServerUrl: testSpaceURL,
+                clientId: testClientId,
+                userId: undefined,
+                verificationToken: undefined,
+            })
+            const target = await OrganizationModel.findByClientId(testClientId)
+            expect(target.serverUrl === newTestUrl)
         })
     })
 })
