@@ -61,6 +61,15 @@ const loggerMiddleware = expressWinston.logger({
         }
         return false
     },
+    level: function (req, res) {
+        if (req.url === '/' && !req.body.className) {
+            return 'debug'
+        }
+        if (res.statusCode >= 500) {
+            return 'error'
+        }
+        return 'info'
+    },
 })
 
 const logger = winston.createLogger(winstonOption)
