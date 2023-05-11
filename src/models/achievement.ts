@@ -7,6 +7,7 @@ export enum AchievementType {
     ResolveIssue = 'resolve_issue',
     CreateCodeReview = 'create_code_review',
     MergeMr = 'merge_mr',
+    ReceiveStar = 'receive_star',
 }
 
 @index({ clientId: 1, achievedAt: -1 })
@@ -28,6 +29,12 @@ export class Achievement extends Document {
 
     @prop()
     public repository?: string
+
+    @prop()
+    public starGiver?: string
+
+    @prop()
+    public messageId?: string
 
     @prop({ enum: AchievementType, type: String })
     public type: AchievementType
@@ -64,6 +71,25 @@ export class Achievement extends Document {
     public static async getRankingsByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
         return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
+    }
+
+    public static async insertStar(clientId: string, starReceiver: string, starGiver: string, messageId: string): Promise<any> {
+        return new AchievementModel({
+            clientId: clientId,
+            user: starReceiver,
+            starGiver: starGiver,
+            messageId: messageId,
+            type: AchievementType.ReceiveStar,
+            achievedAt: new Date(),
+        }).save()
+    }
+
+    public static async deleteStar(clientId: string, starGiver: string, messageId: string): Promise<any> {
+        return AchievementModel.deleteOne({
+            clientId,
+            starGiver,
+            messageId,
+        })
     }
 
     public static async getUserScoreByClientId(
