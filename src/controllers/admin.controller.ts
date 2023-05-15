@@ -1,8 +1,9 @@
-import { Authorized, Body, BodyParam, Controller, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
+import { Authorized, Body, BodyParam, Controller, Delete, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
 import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizationListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
 import { Request } from 'express'
+import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
 
 @UseBefore(adminLog)
 @Controller('/admin')
@@ -58,5 +59,13 @@ export class AdminController {
     @OnUndefined(204)
     async version(@Body() dto: VersionUpdateDTO) {
         await this.service.update(dto)
+    }
+
+    @Authorized()
+    @Delete('/organization')
+    @UseBefore(setOrganizationByServerUrl)
+    @OnUndefined(204)
+    async delete(@Req() req: Request) {
+        await this.service.deleteOrganization(req.organization)
     }
 }

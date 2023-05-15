@@ -20,6 +20,9 @@ import { logger } from '@utils/logger'
 import { Space } from '@/libs/space/space.lib'
 import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
+import { ClientSession } from 'mongoose'
+import { Achievement } from '@models/achievement'
+import { mongooseTransactionHandler } from '@utils/util'
 
 export class AdminService {
     private client = new SpaceClient()
@@ -104,6 +107,15 @@ export class AdminService {
 
     logout(token: string) {
         revokeToken(token)
+    }
+
+    async deleteOrganization(organization: Organization) {
+        await mongooseTransactionHandler(async (session: ClientSession): Promise<void> => {
+            await Promise.all([
+                Achievement.deleteAllByClientId(organization.clientId, session),
+                Organization.deleteAllByClientId(organization.clientId, session),
+            ])
+        })
     }
 
     private async getCredentials(organization: Organization) {
@@ -228,5 +240,6 @@ declare module 'express' {
         jti: string
         _routeWhitelists: any
         _routeBlacklists: any
+        organization: Organization
     }
 }
