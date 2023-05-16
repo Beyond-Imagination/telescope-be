@@ -70,6 +70,10 @@ const loggerMiddleware = expressWinston.logger({
         }
         return 'info'
     },
+    meta: true,
+    dynamicMeta: function (req, res) {
+        return res.error ? { error: res.error } : {}
+    },
 })
 
 const logger = winston.createLogger(winstonOption)
