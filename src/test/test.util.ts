@@ -15,6 +15,8 @@ export const testOrganizationAdmin = 'testAdmin'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
 export const testUserId = 'testUserId'
+export const testMessageId = 'testMessageId'
+export const testChannelId = 'testChannelId'
 
 export const testAdminEmail = 'testAdmin@email.com'
 export const testAdminPassword = 'testAdminPassword'
@@ -70,6 +72,21 @@ export function mockingAxios() {
     mockAxios
         .onGet(new RegExp(`${testSpaceURL}/api/http/projects/key:.*`))
         .reply(200, { createdBy: { id: testOrganizationAdmin }, branchPairs: [{ isMerged: true }] })
+
+    // 사용자에게 메시지 보내는 부분을 mocking
+    mockAxios.onPost(`${testSpaceURL}/api/http/chats/messages/send-message`).reply(200)
+
+    // 메지지 정보를 가져오는 부분을 mocking
+    mockAxios.onGet(`${testSpaceURL}/api/http/chats/messages/id:${testMessageId}`).reply(200, {
+        author: {
+            details: {
+                user: {
+                    id: testUserId,
+                },
+            },
+            name: testUserId,
+        },
+    })
 }
 
 export function setTestDB(beforeEachFun: ProvidesHookCallback = null) {

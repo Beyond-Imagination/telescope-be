@@ -3,9 +3,11 @@ import {
     getTestAxiosOption,
     mockingAxios,
     setTestDB,
+    testChannelId,
     testClientId,
     testClientSecret,
     testIssueId,
+    testMessageId,
     testOrganizationAdmin,
     testSpaceURL,
     testUserId,
@@ -14,10 +16,16 @@ import {
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
+import { ReactionDTO } from '@dtos/webhooks.dtos'
+import { Achievement } from '@models/achievement'
 
 describe('WebhookService 클래스', () => {
     const sut = new WebhookService()
     let codeReviewDto, issueDto
+    let reactionDto: ReactionDTO
+    const starGiver = 'starGiver'
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
 
     mockingAxios()
 
@@ -91,6 +99,24 @@ describe('WebhookService 클래스', () => {
 
             checkResolved(): boolean {
                 return this.payload.issue.status.resolved
+            },
+        }
+
+        reactionDto = {
+            className: 'WebhookRequestPayload',
+
+            clientId: testClientId,
+
+            payload: {
+                className: 'ChatMessageReactionAddedEvent',
+                emoji: 'star',
+                messageId: testMessageId,
+                channelId: testChannelId,
+                actor: {
+                    details: {
+                        user: { id: starGiver },
+                    },
+                },
             },
         }
     })
@@ -182,6 +208,43 @@ describe('WebhookService 클래스', () => {
                 issueDto.payload.issue.status.resolved = true
                 await expect(sut.deleteIssue(issueDto)).resolves.not.toThrowError()
             })
+        })
+    })
+
+    describe('handleAddMessageReactionWebhook 메소드에서', () => {
+        it('클래스명이 잘못되어 있으면 에러가 발생한다', async () => {
+            reactionDto.className = 'whatever'
+            await expect(sut.handleAddMessageReactionWebhook(reactionDto, getTestAxiosOption())).rejects.toThrowError(WrongClassNameException)
+            reactionDto.className = 'WebhookRequestPayload'
+            reactionDto.payload.className = 'whatever'
+            await expect(sut.handleAddMessageReactionWebhook(reactionDto, getTestAxiosOption())).rejects.toThrowError(WrongClassNameException)
+        })
+
+        it('유효한 요청이 들어오면 점수가 추가된다 않는다', async () => {
+            await sut.handleAddMessageReactionWebhook(reactionDto, getTestAxiosOption())
+            const now = new Date()
+            await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(1)
+        })
+    })
+    describe('handleRemoveMessageReactionWebhook 메소드에서', () => {
+        beforeEach(async () => {
+            reactionDto.payload.className = 'ChatMessageReactionRemovedEvent'
+        })
+
+        it('클래스명이 잘못되어 있으면 에러가 발생한다', async () => {
+            reactionDto.className = 'whatever'
+            await expect(sut.handleRemoveMessageReactionWebhook(reactionDto, getTestAxiosOption())).rejects.toThrowError(WrongClassNameException)
+            reactionDto.className = 'WebhookRequestPayload'
+            reactionDto.payload.className = 'whatever'
+            await expect(sut.handleRemoveMessageReactionWebhook(reactionDto, getTestAxiosOption())).rejects.toThrowError(WrongClassNameException)
+        })
+
+        it('정상적으로 별을 취소하면 점수가 줄어든다', async () => {
+            await Achievement.insertStar(testClientId, testUserId, starGiver, testMessageId)
+            const now = new Date()
+            await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(1)
+            await sut.handleRemoveMessageReactionWebhook(reactionDto, getTestAxiosOption())
+            await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(0)
         })
     })
 })

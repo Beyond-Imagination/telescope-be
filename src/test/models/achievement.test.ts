@@ -28,7 +28,7 @@ describe('Achievement 클래스', () => {
 
     describe('getOrganizationScoreByClientId 메소드에서', () => {
         it('존재하지 않는 ClientId 검색하면 0개의 자료가 반환된다', async () => {
-            expect((await AchievementModel.getOrganizationScoreByClientId('not exist clienID', getDaysBefore(7), new Date())).length).toEqual(0)
+            expect((await AchievementModel.getOrganizationScoreByClientId('not exist clientID', getDaysBefore(7), new Date())).length).toEqual(0)
         })
 
         it('존재하는 ClientId 검색하면 1개 이상의 자료가 반환된다', async () => {
@@ -40,7 +40,7 @@ describe('Achievement 클래스', () => {
 
     describe('getRankingsByClientId 메소드에서', () => {
         it('존재하지 않는 ClientId 검색하면 0개의 자료가 반환된다', async () => {
-            expect((await AchievementModel.getRankingsByClientId('not exist clienID', getDaysBefore(7), new Date())).length).toEqual(0)
+            expect((await AchievementModel.getRankingsByClientId('not exist clientID', getDaysBefore(7), new Date())).length).toEqual(0)
         })
 
         it('존재하는 ClientId 검색하면 1개 이상의 자료가 반환된다', async () => {

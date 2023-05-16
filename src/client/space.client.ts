@@ -6,6 +6,19 @@ import { logger } from '@utils/logger'
 import { Organization } from '@models/organization'
 
 export class SpaceClient {
+    private static instance: SpaceClient
+
+    private constructor() {
+        // private constructor
+    }
+
+    static getInstance() {
+        if (!SpaceClient.instance) {
+            SpaceClient.instance = new SpaceClient()
+        }
+        return SpaceClient.instance
+    }
+
     // public key는 일정기간이 지나면 갱신된다고 하는데 갱신 기간을 명시 안해놨고 아마 꽤 길것으로 예상되어 캐싱기간은 1일로 잡아둔다
     @Cached({ keyParams: ['$[0].clientId'], prefix: 'getPublicKeys', ttl: 1000 * 60 * 60 * 24 })
     async getPublicKeys(verifyInfo: any) {
@@ -22,6 +35,17 @@ export class SpaceClient {
         return axios.patch(
             `${url}/api/http/applications/clientId:${clientId}/authorizations/authorized-rights/request-rights`,
             { contextIdentifier: 'global', rightCodes: installInfo.right.codes },
+            axiosOption,
+        )
+    }
+
+    sendMessage(url: string, axiosOption: any, memberId: string, message: string) {
+        return axios.post(
+            `${url}/api/http/chats/messages/send-message`,
+            {
+                channel: `member:id:${memberId}`,
+                content: { className: 'ChatMessage.Text', text: message },
+            },
             axiosOption,
         )
     }
@@ -49,7 +73,7 @@ export class SpaceClient {
                 name: webHookInfo.subscription.name,
                 subscription: {
                     subjectCode: webHookInfo.subscription.subjectCode,
-                    filters: [],
+                    filters: webHookInfo.subscription.filters,
                     eventTypeCodes: [webHookInfo.subscription.eventTypeCode],
                 },
             },
@@ -173,7 +197,7 @@ export class SpaceClient {
                     subscription: {
                         subjectCode: info.subscription.subjectCode,
                         eventTypeCodes: [info.subscription.eventTypeCode],
-                        filters: [],
+                        filters: info.subscription.filters,
                     },
                 },
                 {
@@ -196,6 +220,16 @@ export class SpaceClient {
             headers: {
                 Authorization: token,
                 Accept: 'application/json',
+            },
+        })
+    }
+
+    @Cached({ keyParams: ['$[:-1]'], prefix: 'getMessageInfo' })
+    async getMessageInfo(serverUrl: string, messageId: string, channelId: string, axiosOption: any) {
+        return await axios.get(`${serverUrl}/api/http/chats/messages/id:${messageId}`, {
+            headers: axiosOption.headers,
+            params: {
+                channel: `id:${channelId}`,
             },
         })
     }

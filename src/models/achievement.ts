@@ -11,6 +11,8 @@ export enum AchievementType {
 }
 
 @index({ clientId: 1, achievedAt: -1 })
+@index({ clientId: 1, starGiver: 1, achievedAt: -1, type: 1 })
+@index({ clientId: 1, user: 1, achievedAt: -1, type: 1 })
 export class Achievement extends Document {
     @prop()
     public clientId: string
@@ -74,7 +76,17 @@ export class Achievement extends Document {
     }
 
     public static async insertStar(clientId: string, starReceiver: string, starGiver: string, messageId: string): Promise<any> {
-        return new AchievementModel({
+        if (
+            // 중복을 거른다
+            await AchievementModel.findOne({
+                clientId,
+                starGiver,
+                messageId,
+            })
+        ) {
+            return
+        }
+        await new AchievementModel({
             clientId: clientId,
             user: starReceiver,
             starGiver: starGiver,
@@ -84,12 +96,34 @@ export class Achievement extends Document {
         }).save()
     }
 
-    public static async deleteStar(clientId: string, starGiver: string, messageId: string): Promise<any> {
+    public static deleteStar(clientId: string, starGiver: string, messageId: string) {
         return AchievementModel.deleteOne({
             clientId,
             starGiver,
             messageId,
+            type: AchievementType.ReceiveStar,
         })
+    }
+
+    public static getStarCountByUserId(clientId: string, fromDate: Date, toDate: Date, userId: string) {
+        return AchievementModel.count({
+            clientId: clientId,
+            user: userId,
+            type: AchievementType.ReceiveStar,
+            achievedAt: { $gte: fromDate, $lte: toDate },
+        })
+    }
+
+    public static async getRemainStarCountByUserId(clientId: string, fromDate: Date, toDate: Date, userId: string): Promise<number> {
+        return (
+            5 -
+            (await AchievementModel.count({
+                clientId: clientId,
+                starGiver: userId,
+                achievedAt: { $gte: fromDate, $lte: toDate },
+                type: AchievementType.ReceiveStar,
+            }))
+        )
     }
 
     public static async getUserScoreByClientId(

@@ -1,12 +1,14 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
-import { CodeReviewDTO, IssueDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
 import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
+import { StarService } from '@services/star.service'
 
 export class WebhookService {
-    spaceClient = new SpaceClient()
+    spaceClient = SpaceClient.getInstance()
+    starService: StarService = StarService.getInstance()
 
     public async createIssue(issueDTO: IssueDTO) {
         if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user.id && issueDTO.payload.issue.id) {
@@ -102,7 +104,7 @@ export class WebhookService {
     }
 
     public async handleCodeReviewWebHook(codeReviewDTO: CodeReviewDTO, axiosOption: any, isOpen: boolean) {
-        if (codeReviewDTO.payload.className != 'CodeReviewWebhookEvent') {
+        if (codeReviewDTO.payload.className !== 'CodeReviewWebhookEvent') {
             throw new WrongClassNameException()
         }
         const organization = await OrganizationModel.findByClientId(codeReviewDTO.clientId)
@@ -136,5 +138,38 @@ export class WebhookService {
                 })
             }
         }
+    }
+
+    async handleAddMessageReactionWebhook(payload: ReactionDTO, axiosOption: any) {
+        if (payload.className !== 'WebhookRequestPayload' || payload.payload.className !== 'ChatMessageReactionAddedEvent') {
+            throw new WrongClassNameException()
+        }
+
+        const author = (
+            await this.spaceClient.getMessageInfo(
+                (
+                    await OrganizationModel.findByClientId(payload.clientId)
+                ).serverUrl,
+                payload.payload.messageId,
+                payload.payload.channelId,
+                axiosOption,
+            )
+        ).data.author
+
+        return await this.starService.addPointToAuthor(
+            payload.clientId,
+            payload.payload.actor.details.user.id,
+            payload.payload.messageId,
+            author,
+            axiosOption,
+        )
+    }
+
+    async handleRemoveMessageReactionWebhook(payload: ReactionDTO, axiosOption: any) {
+        if (payload.className !== 'WebhookRequestPayload' || payload.payload.className !== 'ChatMessageReactionRemovedEvent') {
+            throw new WrongClassNameException()
+        }
+
+        return await this.starService.deletePoint(payload.clientId, payload.payload.messageId, payload.payload.actor.details.user.id, axiosOption)
     }
 }

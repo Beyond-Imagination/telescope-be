@@ -12,7 +12,7 @@ import Bottleneck from 'bottleneck'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 export class IndexService {
-    spaceClient = new SpaceClient()
+    spaceClient = SpaceClient.getInstance()
 
     async install(dto: InstallAndUninstallDTO, axiosOption: any) {
         // 요 함수는 없어도 되지만 혹시 스페이스가 삭제시 에러가 발생해 스페이스가 지워지지 않았을 경우를 대비해 남겨둡니다

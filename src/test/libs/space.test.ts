@@ -2,6 +2,7 @@ import { Space } from '@/libs/space/space.lib'
 import v0_5_0 from '@/libs/space/version/v0.5.0'
 import v0_6_0 from '@/libs/space/version/v0.6.0'
 import v0_7_0 from '@/libs/space/version/v0.7.0'
+import v0_8_0 from '@/libs/space/version/v0.8.0'
 import { InvalidVersionException } from '@exceptions/InvalidVersionException'
 
 describe('space install version', () => {
@@ -17,8 +18,12 @@ describe('space install version', () => {
         expect(Space.getInstallInfo('0.7.0')).toBe(v0_7_0)
     })
 
+    it('should get v0.8.0', () => {
+        expect(Space.getInstallInfo('0.8.0')).toBe(v0_8_0)
+    })
+
     it('should get latest', () => {
-        expect(Space.getInstallInfo('latest')).toBe(v0_7_0)
+        expect(Space.getInstallInfo('latest')).toBe(v0_8_0)
     })
 
     it('should throw error with unknown version', () => {

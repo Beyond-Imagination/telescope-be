@@ -136,7 +136,10 @@ export class UpdateWebhookDTO {
     }
 
     static of(clientId: string, webhookId: string, info: space.webhookInfo): UpdateWebhookDTO {
-        return new UpdateWebhookDTO(clientId, webhookId, info.name, info.payloadFields, undefined, true, { url: info.url, sslVerification: false })
+        return new UpdateWebhookDTO(clientId, webhookId, info.name, info.payloadFields, undefined, true, {
+            url: info.url,
+            sslVerification: false,
+        })
     }
 }
 
@@ -169,5 +172,25 @@ export class UpdateSubscriptionDTO {
         this.subjectCode = subjectCode
         this.eventTypeCodes = eventTypeCodes
         this.filters = filters
+    }
+}
+
+export class ReactionDTO {
+    @IsNotEmpty()
+    className: string
+
+    @IsNotEmpty()
+    clientId: string
+
+    payload: {
+        className: string
+        emoji: string
+        messageId: string
+        channelId: string
+        actor: {
+            details: {
+                user: { id: string }
+            }
+        }
     }
 }

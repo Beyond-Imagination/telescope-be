@@ -7,8 +7,10 @@ export namespace space {
             name: string
             subjectCode: string
             eventTypeCode: string
+            filters?: [object]
         }
     }
+
     export interface installInfo {
         version: string
         webhooks: {
@@ -18,6 +20,8 @@ export namespace space {
             delete_issue: webhookInfo
             create_code_review: webhookInfo
             close_code_review: webhookInfo
+            add_chat_message_reaction: webhookInfo
+            remove_chat_message_reaction: webhookInfo
         }
         uiExtension: {
             contextIdentifier: string
@@ -32,6 +36,7 @@ export namespace space {
             codes: string[]
         }
     }
+
     export interface subscriptionsInfo {
         id: string
         name: string
@@ -52,6 +57,7 @@ export namespace payload {
         APP_PUBLICATION_CHECK = 'AppPublicationCheckPayload',
         WEBHOOK_REQUEST = 'WebhookRequestPayload',
     }
+
     export const typeFactory = {
         of: (typeParam: string): className | undefined => {
             return Object.values(className).find(elem => elem === typeParam)

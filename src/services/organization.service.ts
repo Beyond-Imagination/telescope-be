@@ -7,7 +7,7 @@ import { getBearerToken } from '@utils/verify.util'
 import { SpaceClient } from '@/client/space.client'
 
 export class OrganizationService {
-    spaceClient = new SpaceClient()
+    spaceClient = SpaceClient.getInstance()
 
     // serverUrl에 해당하는 조직의 점수를 반환한다.
     public async getOrganizationScore(serverUrl: string, from: Date, to: Date) {

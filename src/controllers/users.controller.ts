@@ -17,7 +17,7 @@ class PictureQuery {
 @Controller('/api/users')
 export class UsersController {
     service: UserService = new UserService()
-    spaceClient = new SpaceClient()
+    spaceClient = SpaceClient.getInstance()
 
     @Get('/picture')
     async picture(@HeaderParam('Authorization') token: string, @QueryParams() query: PictureQuery) {

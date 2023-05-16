@@ -14,7 +14,7 @@ import { deleteCache } from '@utils/cache.util'
 import { WrongServerUrlException } from '@exceptions/WrongServerUrlException'
 import { payload } from '@/types/space.type'
 
-const client = new SpaceClient()
+const client = SpaceClient.getInstance()
 
 const getAllNestedErrors = (error: ValidationError) => {
     if (error.constraints) {
@@ -145,12 +145,15 @@ export const issueWebhookValidation = (request: Request, response: Response, nex
 function checkClassName(className: string, expectValue: string) {
     if (className !== expectValue) throw new WrongClassNameException()
 }
+
 function checkServerUrl(serverUrl: string) {
     if (!new URL(serverUrl).hostname.endsWith('.jetbrains.space')) throw new WrongServerUrlException()
 }
+
 async function checkOrganizationExist(clientId: string) {
     return OrganizationModel.findByClientId(clientId)
 }
+
 export const changeServerUrlValidation = async (request: Request, response: Response, next: NextFunction) => {
     const payload = request.body
     try {

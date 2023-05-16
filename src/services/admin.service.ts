@@ -25,7 +25,8 @@ import { Achievement } from '@models/achievement'
 import { mongooseTransactionHandler } from '@utils/util'
 
 export class AdminService {
-    private client = new SpaceClient()
+    private client = SpaceClient.getInstance()
+
     async list(query: AdminListQueryDTO) {
         const options = {
             page: query.page,
@@ -118,6 +119,31 @@ export class AdminService {
         })
     }
 
+    public async update(updateDTO: VersionUpdateDTO) {
+        try {
+            const installInfo: space.installInfo = Space.getInstallInfo(updateDTO.targetVersion)
+            const organization = await OrganizationModel.findByServerUrl(updateDTO.serverUrl)
+            const token = await this.getCredentials(organization)
+            const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(
+                updateDTO,
+                token,
+                organization.clientId,
+            )
+            const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
+            // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
+            await Promise.all([
+                this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo).map(fn =>
+                    limiter.schedule(() => fn()),
+                ),
+                limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
+            ])
+            await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)
+        } catch (e) {
+            logger.error(e.message)
+            throw new VersionUpdateFailedException(e)
+        }
+    }
+
     private async getCredentials(organization: Organization) {
         return getBearerToken(organization.serverUrl, organization.clientId, organization.clientSecret)
     }
@@ -204,31 +230,6 @@ export class AdminService {
         } catch (error) {
             logger.error(`'updateUIExtension' failed ${error.message}`)
             throw error
-        }
-    }
-
-    public async update(updateDTO: VersionUpdateDTO) {
-        try {
-            const installInfo: space.installInfo = Space.getInstallInfo(updateDTO.targetVersion)
-            const organization = await OrganizationModel.findByServerUrl(updateDTO.serverUrl)
-            const token = await this.getCredentials(organization)
-            const webhookAndSubscriptionsInfo: WebhookAndSubscriptionsInfo = await this.getWebhookAndSubscriptionInfo(
-                updateDTO,
-                token,
-                organization.clientId,
-            )
-            const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
-            // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
-            await Promise.all([
-                this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo).map(fn =>
-                    limiter.schedule(() => fn()),
-                ),
-                limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
-            ])
-            await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)
-        } catch (e) {
-            logger.error(e.message)
-            throw new VersionUpdateFailedException(e)
         }
     }
 }

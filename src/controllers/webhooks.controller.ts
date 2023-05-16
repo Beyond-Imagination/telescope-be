@@ -1,6 +1,6 @@
 import { Body, Controller, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
 import { issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
-import { CodeReviewDTO, IssueDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Request } from 'express'
 
@@ -47,5 +47,19 @@ export class WebhooksController {
     @OnUndefined(204)
     async closeCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
         await this.service.handleCodeReviewWebHook(payload, request.axiosOption, false)
+    }
+
+    @Post('/message/reaction/add')
+    @UseBefore(webhookValidation)
+    @OnUndefined(204)
+    async addMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
+        await this.service.handleAddMessageReactionWebhook(payload, request.axiosOption)
+    }
+
+    @Post('/message/reaction/remove')
+    @UseBefore(webhookValidation)
+    @OnUndefined(204)
+    async removeMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
+        await this.service.handleRemoveMessageReactionWebhook(payload, request.axiosOption)
     }
 }
