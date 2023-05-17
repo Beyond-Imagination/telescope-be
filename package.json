@@ -54,6 +54,8 @@
         "winston-daily-rotate-file": "^4.7.1"
     },
     "devDependencies": {
+        "@faker-js/faker": "^8.0.1",
+        "@jest-mock/express": "^2.0.1",
         "@swc/cli": "^0.1.57",
         "@swc/core": "^1.2.220",
         "@types/compression": "^1.7.2",
