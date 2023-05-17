@@ -156,6 +156,7 @@ export class Achievement extends Document {
                     resolveIssue: { $sum: { $cond: [{ $eq: ['$type', AchievementType.ResolveIssue] }, 1, 0] } },
                     createCodeReview: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateCodeReview] }, 1, 0] } },
                     mergeMr: { $sum: { $cond: [{ $eq: ['$type', AchievementType.MergeMr] }, 1, 0] } },
+                    receiveStar: { $sum: { $cond: [{ $eq: ['$type', AchievementType.ReceiveStar] }, 1, 0] } },
                 },
             },
         ]

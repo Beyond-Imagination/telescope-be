@@ -58,6 +58,7 @@ export class AdminDTO {
         this.lastLoggedInAt = admin.lastLoggedInAt
     }
 }
+
 export class OrganizationListQueryDTO {
     page = 1
     size = 15
@@ -82,10 +83,11 @@ export class OrganizaionDTO {
     clientSecret: string
     serverUrl: string
     points = {
-        createCodeReview: 0,
         createIssue: 0,
-        mergeMr: 0,
         resolveIssue: 0,
+        createCodeReview: 0,
+        mergeMr: 0,
+        receiveStar: 0,
     }
     admin: string[]
     version: string
@@ -99,6 +101,7 @@ export class OrganizaionDTO {
         this.points.createIssue = organizaion.points.createIssue
         this.points.mergeMr = organizaion.points.mergeMr
         this.points.resolveIssue = organizaion.points.resolveIssue
+        this.points.receiveStar = organizaion.points.receiveStar
         this.admin = organizaion.admin
         this.version = organizaion.version
         this.createdAt = organizaion.createdAt

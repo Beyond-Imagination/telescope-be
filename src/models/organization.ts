@@ -1,5 +1,5 @@
 import { ClientSession } from 'mongoose'
-import { getModelForClass, index, prop, ReturnModelType, plugin } from '@typegoose/typegoose'
+import { getModelForClass, index, plugin, prop, ReturnModelType } from '@typegoose/typegoose'
 
 import { Document } from './document'
 import { VERSION } from '@config'
@@ -20,6 +20,9 @@ export class Point {
 
     @prop({ default: 1 })
     public mergeMr: number
+
+    @prop({ default: 1 })
+    public receiveStar: number
 }
 
 @plugin(mongoosePaginate)
