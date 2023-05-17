@@ -233,14 +233,3 @@ export class AdminService {
         }
     }
 }
-
-declare module 'express' {
-    interface Request {
-        user: any
-        axiosOption: any
-        jti: string
-        _routeWhitelists: any
-        _routeBlacklists: any
-        organization: Organization
-    }
-}

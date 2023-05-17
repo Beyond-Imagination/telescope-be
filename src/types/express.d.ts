@@ -1,5 +1,17 @@
-declare namespace Express {
-    interface Response {
-        error: Error[]
+import { Organization } from '@models/organization'
+
+declare global {
+    namespace Express {
+        interface Request {
+            user: any
+            axiosOption: any
+            jti: string
+            _routeWhitelists: any
+            _routeBlacklists: any
+            organization: Organization
+        }
+        interface Response {
+            error: Error[]
+        }
     }
 }
