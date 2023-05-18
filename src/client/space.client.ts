@@ -73,7 +73,7 @@ export class SpaceClient {
                 name: webHookInfo.subscription.name,
                 subscription: {
                     subjectCode: webHookInfo.subscription.subjectCode,
-                    filters: webHookInfo.subscription.filters,
+                    filters: webHookInfo.subscription.filters || [],
                     eventTypeCodes: [webHookInfo.subscription.eventTypeCode],
                 },
             },
@@ -197,7 +197,7 @@ export class SpaceClient {
                     subscription: {
                         subjectCode: info.subscription.subjectCode,
                         eventTypeCodes: [info.subscription.eventTypeCode],
-                        filters: info.subscription.filters,
+                        filters: info.subscription.filters || [],
                     },
                 },
                 {
