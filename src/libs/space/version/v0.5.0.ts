@@ -63,8 +63,6 @@ const data: space.installInfo = {
                 eventTypeCode: 'CodeReview.Closed',
             },
         },
-        add_chat_message_reaction: null,
-        remove_chat_message_reaction: null,
     },
     uiExtension: {
         contextIdentifier: 'global',

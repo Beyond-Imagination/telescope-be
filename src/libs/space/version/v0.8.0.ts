@@ -5,12 +5,7 @@ import v0_7_0 from '@/libs/space/version/v0.7.0'
 const data: space.installInfo = {
     version: '0.8.0',
     webhooks: {
-        create_issue: v0_7_0.webhooks.create_issue,
-        update_issue_status: v0_7_0.webhooks.update_issue_status,
-        update_issue_assignee: v0_7_0.webhooks.update_issue_assignee,
-        delete_issue: v0_7_0.webhooks.delete_issue,
-        create_code_review: v0_7_0.webhooks.create_code_review,
-        close_code_review: v0_7_0.webhooks.close_code_review,
+        ...v0_7_0.webhooks,
         add_chat_message_reaction: {
             name: 'add_chat_message_reaction',
             url: `${SERVER_URL}/webhooks/message/reaction/add`,
@@ -44,7 +39,6 @@ const data: space.installInfo = {
             },
         },
     },
-
     uiExtension: v0_7_0.uiExtension,
     right: v0_7_0.right,
 }

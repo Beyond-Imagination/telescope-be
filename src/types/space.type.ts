@@ -20,8 +20,8 @@ export namespace space {
             delete_issue: webhookInfo
             create_code_review: webhookInfo
             close_code_review: webhookInfo
-            add_chat_message_reaction: webhookInfo
-            remove_chat_message_reaction: webhookInfo
+            add_chat_message_reaction?: webhookInfo
+            remove_chat_message_reaction?: webhookInfo
         }
         uiExtension: {
             contextIdentifier: string
