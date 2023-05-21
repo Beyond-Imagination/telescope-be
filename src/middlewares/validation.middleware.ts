@@ -181,6 +181,8 @@ export const spacePayloadValidation = (request: Request, response: Response, nex
         case payload.className.APP_PUBLICATION_CHECK:
         case payload.className.INSTALL:
         case payload.className.UNINSTALL:
+        case payload.className.MESSAGE:
+        case payload.className.LIST_COMMAND:
             validator = webhookValidation
             break
 

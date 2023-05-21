@@ -54,7 +54,15 @@ const data: space.installInfo = {
             },
         },
     },
-    uiExtension: v0_7_0.uiExtension,
+    uiExtension: {
+        contextIdentifier: v0_7_0.uiExtension.contextIdentifier,
+        extension: [
+            ...v0_7_0.uiExtension.extension,
+            {
+                className: 'ChatBotUiExtensionIn',
+            },
+        ],
+    },
     right: v0_7_0.right,
 }
 

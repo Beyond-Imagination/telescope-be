@@ -29,7 +29,7 @@ export namespace space {
                 className: string
                 displayName?: string
                 uniqueCode?: string
-                iframeUrl: string
+                iframeUrl?: string
             }[]
         }
         right: {
@@ -56,6 +56,8 @@ export namespace payload {
         ISSUE_WEBHOOK = 'IssueWebhookEvent',
         APP_PUBLICATION_CHECK = 'AppPublicationCheckPayload',
         WEBHOOK_REQUEST = 'WebhookRequestPayload',
+        LIST_COMMAND = 'ListCommandsPayload',
+        MESSAGE = 'MessagePayload',
     }
 
     export const typeFactory = {

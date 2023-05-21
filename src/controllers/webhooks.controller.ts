@@ -3,6 +3,7 @@ import { issueWebhookValidation, webhookValidation } from '@middlewares/validati
 import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Request } from 'express'
+import { setOrganizationByClientId } from '@middlewares/organization.middleware'
 
 @Controller('/webhooks')
 @UseBefore(webhookValidation)
@@ -51,15 +52,17 @@ export class WebhooksController {
 
     @Post('/message/reaction/add')
     @UseBefore(webhookValidation)
+    @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async addMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
-        await this.service.handleAddMessageReactionWebhook(payload, request.axiosOption)
+        await this.service.handleAddMessageReactionWebhook(payload, request.organization, request.axiosOption)
     }
 
     @Post('/message/reaction/remove')
     @UseBefore(webhookValidation)
+    @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async removeMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
-        await this.service.handleRemoveMessageReactionWebhook(payload, request.axiosOption)
+        await this.service.handleRemoveMessageReactionWebhook(payload, request.organization, request.axiosOption)
     }
 }

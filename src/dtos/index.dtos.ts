@@ -38,3 +38,13 @@ export class ChangeServerUrlDto {
     userId: string | undefined // 기본값: null
     verificationToken: string | undefined // 기본값: null
 }
+
+export class MessagePayloadDto {
+    message: {
+        body: {
+            text: string
+        }
+    }
+    clientId: string
+    userId: string
+}

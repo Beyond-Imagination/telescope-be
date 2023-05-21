@@ -30,6 +30,9 @@ export const mockOrganization = {
     admin: [testOrganizationAdmin],
     points: new Point(),
     version: VERSION,
+    createdAt: new Date(),
+    __v: 0,
+    _id: '000000000000',
 }
 
 // mocking이 필요한 axios 요청 들을 정의한 함수

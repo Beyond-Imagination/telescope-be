@@ -32,6 +32,11 @@ export class IndexController {
             case payload.className.CHANGE_URL:
                 await this.service.changeServerUrl(dto)
                 break
+            case payload.className.LIST_COMMAND:
+                return this.service.listCommand()
+            case payload.className.MESSAGE:
+                await this.service.message(dto, request.axiosOption)
+                break
             default:
                 throw new WrongClassNameException()
         }

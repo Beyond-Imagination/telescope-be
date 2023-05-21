@@ -1,5 +1,5 @@
 import { Organization, OrganizationModel } from '@models/organization'
-import { ChangeServerUrlDto, InstallAndUninstallDTO } from '@dtos/index.dtos'
+import { ChangeServerUrlDto, InstallAndUninstallDTO, MessagePayloadDto } from '@dtos/index.dtos'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
 import { SpaceClient } from '@/client/space.client'
@@ -10,9 +10,11 @@ import { Space } from '@/libs/space/space.lib'
 import { payload, space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
+import { StarService } from '@services/star.service'
 
 export class IndexService {
     spaceClient = SpaceClient.getInstance()
+    starService = StarService.getInstance()
 
     async install(dto: InstallAndUninstallDTO, axiosOption: any) {
         // 요 함수는 없어도 되지만 혹시 스페이스가 삭제시 에러가 발생해 스페이스가 지워지지 않았을 경우를 대비해 남겨둡니다
@@ -43,6 +45,30 @@ export class IndexService {
             OrganizationModel.updateServerUrlByClientId(dto.clientId, dto.newServerUrl),
             deleteAllCacheByKeyPattern(new RegExp(`.*${dto.clientId}.*`)),
         ])
+    }
+
+    async message(dto: MessagePayloadDto, axiosOption: any) {
+        const list = dto.message.body.text.split(' ')
+        const organization = await OrganizationModel.findByClientId(dto.clientId)
+        switch (list[0]) {
+            case 'remainStars':
+                await this.starService.notifyRemainStar(organization.serverUrl, organization.clientId, dto.userId, axiosOption)
+                break
+            default:
+                await this.spaceClient.sendMessage(organization.serverUrl, axiosOption, dto.userId, 'Invalid Command')
+                break
+        }
+    }
+
+    listCommand() {
+        return {
+            commands: [
+                {
+                    name: 'remainStars',
+                    description: 'Gets the number of remaining sendable stars.',
+                },
+            ],
+        }
     }
 
     private async deleteOrganizationIfExist(serverUrl: string) {
