@@ -107,32 +107,24 @@ export class WebhookService {
         if (codeReviewDTO.payload.className !== 'CodeReviewWebhookEvent') {
             throw new WrongClassNameException()
         }
-        const organization = await OrganizationModel.findByClientId(codeReviewDTO.clientId)
-        const reviewInfo = await this.spaceClient.getCodeReviewInfo(
-            organization.serverUrl,
-            codeReviewDTO.payload.projectKey.key,
-            codeReviewDTO.payload.reviewId,
-            axiosOption.headers,
-        )
-        const createdBy = reviewInfo.createdBy
-        if (createdBy) {
+        if (codeReviewDTO.payload.review.createdBy.id) {
             // 특정 사용자가 생성한 MR이 아니면 점수는 누구에게도 할당되지 않도록한다.
             if (isOpen) {
                 await Achievement.saveAchievement({
                     clientId: codeReviewDTO.clientId,
-                    user: createdBy.id,
+                    user: codeReviewDTO.payload.review.createdBy.id,
                     projectId: codeReviewDTO.payload.review?.projectId,
-                    reviewId: codeReviewDTO.payload.reviewId,
+                    reviewId: codeReviewDTO.payload.review.id,
                     repository: codeReviewDTO.payload.repository,
                     type: AchievementType.CreateCodeReview,
                 })
-            } else if (codeReviewDTO.payload.isMergeRequest && reviewInfo.branchPairs[0].isMerged) {
+            } else if (codeReviewDTO.payload.review.branchPairs && codeReviewDTO.payload.review.branchPairs[0].isMerged) {
                 // MR이면서 머지가 됐을때만 저장한다
                 await Achievement.saveAchievement({
                     clientId: codeReviewDTO.clientId,
-                    user: createdBy.id,
+                    user: codeReviewDTO.payload.review.createdBy.id,
                     projectId: codeReviewDTO.payload.review?.projectId,
-                    reviewId: codeReviewDTO.payload.reviewId,
+                    reviewId: codeReviewDTO.payload.review.id,
                     repository: codeReviewDTO.payload.repository,
                     type: AchievementType.MergeMr,
                 })

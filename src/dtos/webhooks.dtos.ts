@@ -60,7 +60,6 @@ export class IssueDTO {
     }
 }
 
-// todo: should not use deprecated fields
 export class CodeReviewDTO {
     @IsNotEmpty()
     clientId: string
@@ -68,10 +67,6 @@ export class CodeReviewDTO {
     @IsNotEmpty()
     payload: {
         className: string
-        isMergeRequest: boolean // deprecated
-        projectKey: {
-            key: string // deprecated
-        }
         review: {
             id: string
             project: {
@@ -79,21 +74,14 @@ export class CodeReviewDTO {
             }
             projectId: string
             branchPairs: {
-                isMerged: string
+                isMerged: boolean
             }[]
             createdBy: {
                 id: string
             }
         }
         repository: string
-        reviewId: string // deprecated
-        title: string // deprecated
     }
-
-    verificationToken: string // deprecated
-
-    @IsNotEmpty()
-    webhookId: string
 }
 
 export class UpdateWebhookDTO {
