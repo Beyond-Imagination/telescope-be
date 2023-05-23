@@ -1,6 +1,13 @@
 import { Authorized, Body, BodyParam, Controller, Delete, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
-import { AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizationListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
+import {
+    AdminListQueryDTO,
+    AdminRegisterDTO,
+    LoginDTO,
+    OrganizationListQueryDTO,
+    OrganizationWebhookQueryDto,
+    VersionUpdateDTO,
+} from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
 import { Request } from 'express'
 import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
@@ -20,6 +27,12 @@ export class AdminController {
     @Get('/organization')
     async organizationList(@QueryParams() query: OrganizationListQueryDTO) {
         return await this.service.organizationList(query)
+    }
+
+    @Authorized()
+    @Get('/organization/webhooks')
+    async organizationWebhooks(@QueryParams() params: OrganizationWebhookQueryDto) {
+        return await this.service.organizationWebhooks(params)
     }
 
     @Post('/register')

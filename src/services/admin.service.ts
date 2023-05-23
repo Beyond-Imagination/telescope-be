@@ -1,4 +1,13 @@
-import { AdminDTO, AdminListQueryDTO, AdminRegisterDTO, LoginDTO, OrganizaionDTO, OrganizationListQueryDTO, VersionUpdateDTO } from '@dtos/admin.dtos'
+import {
+    AdminDTO,
+    AdminListQueryDTO,
+    AdminRegisterDTO,
+    LoginDTO,
+    OrganizaionDTO,
+    OrganizationListQueryDTO,
+    OrganizationWebhookQueryDto,
+    VersionUpdateDTO,
+} from '@dtos/admin.dtos'
 import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { deleteCache, revokeToken } from '@utils/cache.util'
@@ -53,6 +62,14 @@ export class AdminService {
             result: result,
             page: new PageInfoDTO(paginated),
         }
+    }
+
+    async organizationWebhooks(params: OrganizationWebhookQueryDto) {
+        const serverUrl: string = params.serverUrl
+        const { clientId, clientSecret } = await OrganizationModel.findByServerUrl(serverUrl)
+        const token = await getBearerToken(serverUrl, clientId, clientSecret)
+        const { totalCount, data } = await this.client.getAllWebhooksAndSubscriptions(serverUrl, clientId, token)
+        return { totalCount, data }
     }
 
     async register(registerDTO: AdminRegisterDTO) {

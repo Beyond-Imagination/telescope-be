@@ -15,7 +15,6 @@ import {
     testWebhookId,
 } from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
 import { ReactionDTO } from '@dtos/webhooks.dtos'
 import { Achievement } from '@models/achievement'

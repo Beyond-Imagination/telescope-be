@@ -112,3 +112,8 @@ export class VersionUpdateDTO {
     serverUrl: string
     targetVersion: string
 }
+
+export class OrganizationWebhookQueryDto {
+    @IsNotEmpty()
+    serverUrl: string
+}

@@ -1,6 +1,6 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
-import { Organization, OrganizationModel } from '@models/organization'
+import { Organization } from '@models/organization'
 import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
 import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
