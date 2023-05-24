@@ -62,11 +62,11 @@ const loggerMiddleware = expressWinston.logger({
         return false
     },
     level: function (req, res) {
-        if (req.url === '/' && !req.body.className) {
-            return 'debug'
-        }
         if (res.statusCode >= 500) {
             return 'error'
+        }
+        if (res.statusCode >= 400) {
+            return 'warn'
         }
         return 'info'
     },
