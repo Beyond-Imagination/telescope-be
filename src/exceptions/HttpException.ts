@@ -9,4 +9,12 @@ export class HttpException extends HttpError {
         this.status = status
         this.message = message
     }
+
+    toJSON() {
+        return {
+            status: this.status,
+            message: this.message,
+            stack: this.stack,
+        }
+    }
 }

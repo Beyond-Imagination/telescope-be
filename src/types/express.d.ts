@@ -11,7 +11,7 @@ declare global {
             organization: Organization
         }
         interface Response {
-            error: Error[]
+            error: Error
         }
     }
 }
