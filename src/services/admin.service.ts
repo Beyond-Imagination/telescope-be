@@ -154,7 +154,7 @@ export class AdminService {
                 ),
                 limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
             ])
-            await OrganizationModel.updateVersionByClientId(organization.clientId, installInfo.version)
+            await OrganizationModel.updateOrganization(organization, installInfo)
         } catch (e) {
             logger.error(e.message)
             throw new VersionUpdateFailedException(e)

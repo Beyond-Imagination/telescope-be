@@ -7,6 +7,7 @@ import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundE
 import mongoosePaginate from 'mongoose-paginate-v2'
 import { Cached } from '@utils/cache.util'
 import { PaginateMethod } from './Paginator'
+import { space } from '@/types/space.type'
 
 export class Point {
     @prop({ default: 1 })
@@ -79,8 +80,16 @@ export class Organization extends Document {
         return OrganizationModel.deleteMany({ clientId: clientId }).session(session)
     }
 
-    public static async updateVersionByClientId(this: ReturnModelType<typeof Organization>, clientId: string, newVersion: string) {
-        await OrganizationModel.findOneAndUpdate({ clientId: clientId }, { version: newVersion })
+    public static async updateOrganization(this: ReturnModelType<typeof Organization>, organization: Organization, installInfo: space.installInfo) {
+        await OrganizationModel.findOneAndUpdate(
+            { clientId: organization.clientId },
+            {
+                version: installInfo.version,
+                // @prop({ default: 1 }) 데코레이터로 DB에 값이 없어도 select 할때 값이 채워져 있다
+                // 따라서 해당 정보를 바로 저장하면 자연스럽게 마이그레이션이 된다
+                points: organization.points,
+            },
+        )
     }
 
     public static async updateServerUrlByClientId(this: ReturnModelType<typeof Organization>, clientId: string, newServerUrl: string) {
