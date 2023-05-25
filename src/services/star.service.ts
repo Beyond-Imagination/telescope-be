@@ -18,7 +18,7 @@ export class StarService {
 
     async addPointToAuthor(serverUrl, clientId, giverId, messageId, author, axiosOption) {
         if (giverId) {
-            if (author.details.user) {
+            if (author.details?.user) {
                 const receiverId = author.details.user.id
                 const receiverName = author.name
                 await this.addPoint(serverUrl, clientId, giverId, receiverId, receiverName, messageId, axiosOption)
