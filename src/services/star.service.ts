@@ -54,8 +54,7 @@ export class StarService {
 
         const startOfDay = new Date()
         startOfDay.setHours(0, 0, 0, 0)
-        const now = new Date()
-        const remainStar = await Achievement.getRemainStarCountByUserId(clientId, startOfDay, now, giverId)
+        const remainStar = await Achievement.getRemainStarCountByUserId(clientId, startOfDay, new Date(), giverId)
         if (remainStar > 0) {
             await Achievement.insertStar(clientId, receiverId, giverId, messageId)
 
@@ -63,7 +62,7 @@ export class StarService {
                 serverUrl,
                 axiosOption,
                 receiverId,
-                `${receiverName}님 현재 ${await Achievement.getStarCountByUserId(clientId, new Date(0), now, receiverId)}번 칭찬 받았습니다`,
+                `${receiverName}님 현재 ${await Achievement.getStarCountByUserId(clientId, new Date(0), new Date(), receiverId)}번 칭찬 받았습니다`,
             )
         }
         await this.notifyRemainStar(serverUrl, clientId, giverId, axiosOption)
