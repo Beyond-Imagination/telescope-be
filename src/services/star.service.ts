@@ -26,9 +26,7 @@ export class StarService {
     }
 
     async deletePoint(serverUrl, clientId, messageId, giverId, axiosOption) {
-        if (giverId) {
-            await Achievement.deleteStar(clientId, giverId, messageId)
-
+        if (giverId && (await Achievement.deleteStar(clientId, giverId, messageId)).deletedCount > 0) {
             await this.notifyRemainStar(serverUrl, clientId, giverId, axiosOption)
         }
     }
@@ -57,7 +55,7 @@ export class StarService {
                 serverUrl,
                 axiosOption,
                 receiverId,
-                `You received ${await Achievement.getStarCountByUserId(clientId, new Date(0), new Date(), receiverId)} stars today.`,
+                `You received ${await Achievement.getStarCountByUserId(clientId, new Date(0), new Date(), receiverId)} stars.`,
             )
             await this.notifyRemainStar(serverUrl, clientId, giverId, axiosOption)
         } else {
