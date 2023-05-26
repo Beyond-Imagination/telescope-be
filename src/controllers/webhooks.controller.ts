@@ -51,7 +51,6 @@ export class WebhooksController {
     }
 
     @Post('/message/reaction/add')
-    @UseBefore(webhookValidation)
     @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async addMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
@@ -59,7 +58,6 @@ export class WebhooksController {
     }
 
     @Post('/message/reaction/remove')
-    @UseBefore(webhookValidation)
     @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async removeMessageReaction(@Body() payload: ReactionDTO, @Req() request: Request) {
