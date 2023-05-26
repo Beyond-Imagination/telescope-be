@@ -18,7 +18,7 @@ export class StarService {
 
     async addPointToAuthor(serverUrl, clientId, giverId, messageId, author, axiosOption) {
         if (giverId) {
-            if (author.details?.user) {
+            if (author?.details?.user) {
                 const receiverId = author.details.user.id
                 await this.addPoint(serverUrl, clientId, giverId, receiverId, messageId, axiosOption)
             }
@@ -38,11 +38,7 @@ export class StarService {
         startOfDay.setHours(0, 0, 0, 0)
         const remainStar = await Achievement.getRemainStarCountByUserId(clientId, startOfDay, new Date(), userId)
 
-        if (remainStar > 0) {
-            await this.spaceClient.sendMessage(serverUrl, axiosOption, userId, `You can send ${remainStar} more star(s) today.`)
-        } else {
-            await this.spaceClient.sendMessage(serverUrl, axiosOption, userId, `You already sent all stars today.`)
-        }
+        await this.spaceClient.sendMessage(serverUrl, axiosOption, userId, `You can send ${remainStar} more star(s) today.`)
     }
 
     private async addPoint(serverUrl, clientId, giverId, receiverId, messageId, axiosOption) {
@@ -63,7 +59,9 @@ export class StarService {
                 receiverId,
                 `You received ${await Achievement.getStarCountByUserId(clientId, new Date(0), new Date(), receiverId)} stars today.`,
             )
+            await this.notifyRemainStar(serverUrl, clientId, giverId, axiosOption)
+        } else {
+            await this.spaceClient.sendMessage(serverUrl, axiosOption, giverId, `You already sent all stars today.`)
         }
-        await this.notifyRemainStar(serverUrl, clientId, giverId, axiosOption)
     }
 }
