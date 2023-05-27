@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { logger } from '@utils/logger'
-import { LogDto } from '@dtos/index.dtos'
-import { payload } from '@/types/space.type'
+import { space } from '@/types/space.type'
+import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 
 export const adminLog = (request: Request, response: Response, next: NextFunction) => {
     request._routeWhitelists.req = ['user']
@@ -10,12 +10,12 @@ export const adminLog = (request: Request, response: Response, next: NextFunctio
 }
 
 export const spacePayloadLogging = (request: Request, response: Response, next: NextFunction) => {
-    const logType = request.body.className
-    const clientId = request.body.clientId
+    const className = request.body.className
 
-    const testType = payload.typeFactory.of(logType)
-    if (!testType) {
-        logger.info(JSON.stringify(new LogDto(logType, clientId)))
+    if (className && !space.knownClassNameSet.has(className)) {
+        logger.error('unknown class name', { className })
+        next(new WrongClassNameException())
+    } else {
+        next()
     }
-    next()
 }

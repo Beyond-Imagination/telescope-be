@@ -12,7 +12,7 @@ import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import jwkToPem from 'jwk-to-pem'
 import { deleteCache } from '@utils/cache.util'
 import { WrongServerUrlException } from '@exceptions/WrongServerUrlException'
-import { payload } from '@/types/space.type'
+import { space } from '@/types/space.type'
 
 const client = SpaceClient.getInstance()
 
@@ -168,21 +168,20 @@ export const changeServerUrlValidation = async (request: Request, response: Resp
 
 export const spacePayloadValidation = (request: Request, response: Response, next: NextFunction) => {
     let validator
-    const payloadType: payload.className = payload.typeFactory.of(request.body.className)
-    switch (payloadType) {
-        case payload.className.CHANGE_URL:
+    switch (request.body.className) {
+        case space.className.CHANGE_URL:
             validator = changeServerUrlValidation
             break
 
-        case payload.className.ISSUE_WEBHOOK:
+        case space.className.ISSUE_WEBHOOK:
             validator = issueWebhookValidation
             break
 
-        case payload.className.APP_PUBLICATION_CHECK:
-        case payload.className.INSTALL:
-        case payload.className.UNINSTALL:
-        case payload.className.MESSAGE:
-        case payload.className.LIST_COMMAND:
+        case space.className.APP_PUBLICATION_CHECK:
+        case space.className.INSTALL:
+        case space.className.UNINSTALL:
+        case space.className.MESSAGE:
+        case space.className.LIST_COMMAND:
             validator = webhookValidation
             break
 

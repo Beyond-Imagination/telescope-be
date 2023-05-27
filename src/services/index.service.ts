@@ -7,7 +7,7 @@ import { ClientSession } from 'mongoose'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { deleteAllCacheByKeyPattern } from '@utils/cache.util'
 import { Space } from '@/libs/space/space.lib'
-import { payload, space } from '@/types/space.type'
+import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { StarService } from '@services/star.service'
@@ -35,7 +35,7 @@ export class IndexService {
 
     async uninstall(dto: InstallAndUninstallDTO) {
         // unit test를 위해서 validation을 한번 더 수행하였습니다.
-        if (payload.typeFactory.of(dto.className) !== payload.className.UNINSTALL) throw new WrongClassNameException()
+        if (dto.className !== space.className.UNINSTALL) throw new WrongClassNameException()
         await this.deleteOrganizationIfExist(dto.serverUrl)
     }
 

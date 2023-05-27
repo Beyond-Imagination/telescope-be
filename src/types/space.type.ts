@@ -46,9 +46,7 @@ export namespace space {
             filters: string[]
         }
     }
-}
 
-export namespace payload {
     export enum className {
         INSTALL = 'InitPayload',
         UNINSTALL = 'ApplicationUninstalledPayload',
@@ -60,9 +58,5 @@ export namespace payload {
         MESSAGE = 'MessagePayload',
     }
 
-    export const typeFactory = {
-        of: (typeParam: string): className | undefined => {
-            return Object.values(className).find(elem => elem === typeParam)
-        },
-    }
+    export const knownClassNameSet = new Set(Object.values(className))
 }
