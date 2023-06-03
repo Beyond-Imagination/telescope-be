@@ -11,7 +11,7 @@ export class WebhookService {
     starService: StarService = StarService.getInstance()
 
     public async createIssue(issueDTO: IssueDTO) {
-        if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user.id && issueDTO.payload.issue.id) {
+        if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user?.id && issueDTO.payload.issue.id) {
             await AchievementModel.saveAchievement({
                 clientId: issueDTO.clientId,
                 user: issueDTO.payload.meta.principal.details.user.id,
@@ -29,8 +29,6 @@ export class WebhookService {
                     type: AchievementType.ResolveIssue,
                 })
             }
-        } else {
-            throw new InvalidRequestException()
         }
     }
 
