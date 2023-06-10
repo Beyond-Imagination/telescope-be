@@ -68,6 +68,7 @@ export class CodeReviewDTO {
     payload: {
         className: string
         review: {
+            className: string
             id: string
             project: {
                 key: string
