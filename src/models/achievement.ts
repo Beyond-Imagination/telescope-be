@@ -70,6 +70,22 @@ export class Achievement extends Document {
         return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
     }
 
+    public static async getOrganizationScoreListByClientId(
+        this: ReturnModelType<typeof Achievement>,
+        clientId: string,
+        fromDate: Date,
+        toDate: Date,
+    ) {
+        const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, {
+            clientId: '$clientId',
+            year: { $year: '$achievedAt' }, // 날짜에서 년도 추출
+            month: { $month: '$achievedAt' }, // 날짜에서 월 추출
+            day: { $dayOfMonth: '$achievedAt' }, // 날짜에서 일 추출
+        })
+        pipeline.push({ $unset: '_id' })
+        return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
+    }
+
     public static async getRankingsByClientId(this: ReturnModelType<typeof Achievement>, clientId: string, fromDate: Date, toDate: Date) {
         const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
         return this.aggregate(pipeline, { hint: { clientId: 1, achievedAt: -1 } })
@@ -139,7 +155,7 @@ export class Achievement extends Document {
         return this.aggregate(pipeline)
     }
 
-    private static getAggregationPipeline(clientId: string, fromDate: Date, toDate: Date, groupKey: string): any[] {
+    private static getAggregationPipeline(clientId: string, fromDate: Date, toDate: Date, groupKey: any): any[] {
         return [
             {
                 $match: {
@@ -152,6 +168,7 @@ export class Achievement extends Document {
                 // user 의 각 type 별 횟수 계산
                 $group: {
                     _id: groupKey,
+                    achievedAt: { $max: '$achievedAt' },
                     createIssue: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateIssue] }, 1, 0] } },
                     resolveIssue: { $sum: { $cond: [{ $eq: ['$type', AchievementType.ResolveIssue] }, 1, 0] } },
                     createCodeReview: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateCodeReview] }, 1, 0] } },

@@ -19,6 +19,34 @@ export class OrganizationService {
         return { from: from, to: to, score: result }
     }
 
+    public async getOrganizationScoreList(serverUrl: string, from: Date, to: Date) {
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+        const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreListByClientId(organization.clientId, from, to)
+        const results = {}
+        let index = 0
+
+        function dateToFormatString(source): string {
+            const month = source.getMonth() + 1
+            const day = source.getDate()
+
+            return [month, day].join('.')
+        }
+
+        for (let date = from; date <= to; date.setDate(date.getDate() + 1)) {
+            const nextDate = new Date(date)
+            nextDate.setDate(nextDate.getDate() + 1)
+
+            if (achievementCounts[index] && achievementCounts[index].achievedAt < nextDate) {
+                results[dateToFormatString(date)] = new ScoreDtos(organization.points, achievementCounts[index])
+                index++
+            } else {
+                results[dateToFormatString(date)] = new ScoreDtos(organization.points)
+            }
+        }
+
+        return results
+    }
+
     public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
         const organization = await OrganizationModel.findByServerUrl(serverUrl)
         const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
