@@ -1,7 +1,9 @@
 import { Point } from '@models/organization'
 
 export class AchievementCount {
-    achievedAt: Date
+    _id: {
+        date: string
+    }
     createIssue = 0
     resolveIssue = 0
     createCodeReview = 0

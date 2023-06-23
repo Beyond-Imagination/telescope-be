@@ -36,7 +36,7 @@ export class OrganizationService {
             const nextDate = new Date(date)
             nextDate.setDate(nextDate.getDate() + 1)
 
-            if (achievementCounts[index] && achievementCounts[index].achievedAt < nextDate) {
+            if (achievementCounts[index] && new Date(achievementCounts[index]._id.date) < nextDate) {
                 results[dateToFormatString(date)] = new ScoreDtos(organization.points, achievementCounts[index])
                 index++
             } else {
