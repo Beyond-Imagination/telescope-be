@@ -116,7 +116,7 @@ export class WebhookService {
                     repository: codeReviewDTO.payload.repository,
                     type: AchievementType.CreateCodeReview,
                 })
-            } else if (codeReviewDTO.payload.review.className === 'MergeRequestRecord') {
+            } else if (codeReviewDTO.payload.review.className === 'MergeRequestRecord' && codeReviewDTO.payload.review.branchPairs[0]?.isMerged) {
                 // MR이면서 머지가 됐을때만 저장한다
                 await Achievement.saveAchievement({
                     clientId: codeReviewDTO.clientId,
