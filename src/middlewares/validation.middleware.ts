@@ -142,6 +142,25 @@ export const issueWebhookValidation = (request: Request, response: Response, nex
     }
 }
 
+export const codeReviewDiscussionValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+        if (requestBody.payload.className === 'CodeReviewDiscussionWebhookEvent') {
+            const userId = requestBody.payload.meta.principal.details.user?.id
+            const discussionId = requestBody.payload.discussion.discussion?.id
+            if (userId && discussionId) {
+                next()
+            } else {
+                response.status(204).end()
+            }
+        } else {
+            throw new WrongClassNameException()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
 function checkClassName(className: string, expectValue: string) {
     if (className !== expectValue) throw new WrongClassNameException()
 }

@@ -85,6 +85,33 @@ export class CodeReviewDTO {
     }
 }
 
+export class CodeReviewDiscussionDTO {
+    @IsNotEmpty()
+    clientId: string
+
+    @IsNotEmpty()
+    payload: {
+        className: string
+        discussion: {
+            discussion: {
+                id: string
+            }
+        }
+        meta: {
+            principal: {
+                details: {
+                    user: {
+                        id: string
+                    }
+                }
+            }
+        }
+        review: {
+            id: string
+        }
+    }
+}
+
 export class UpdateWebhookDTO {
     @IsNotEmpty()
     clientId: string

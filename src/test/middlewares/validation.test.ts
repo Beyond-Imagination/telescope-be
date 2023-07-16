@@ -1,6 +1,20 @@
-import { changeServerUrlValidation, issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
+import {
+    changeServerUrlValidation,
+    codeReviewDiscussionValidation,
+    issueWebhookValidation,
+    webhookValidation,
+} from '@middlewares/validation.middleware'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
-import { mockingAxios, setTestDB, testClientId, testClientSecret, testOrganizationAdmin, testSpaceURL } from '@/test/test.util'
+import {
+    mockingAxios,
+    setTestDB,
+    testClientId,
+    testClientSecret,
+    testDiscussionId,
+    testOrganizationAdmin,
+    testSpaceURL,
+    testUserId,
+} from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
@@ -159,6 +173,64 @@ describe('validation.middleware 모듈', () => {
             })
         })
 
+        describe('payload의 className이 CodeReviewDiscussionWebhookEvent 일때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'CodeReviewDiscussionWebhookEvent',
+                        meta: {
+                            principal: {
+                                details: {
+                                    user: {
+                                        id: testUserId,
+                                    },
+                                },
+                            },
+                        },
+                        discussion: {
+                            discussion: {
+                                id: testDiscussionId,
+                            },
+                        },
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('userId가 비어있어도 codeReviewDiscussionWebhookValidation가 성공한다', async () => {
+                body.payload.meta.principal.details.user.id = undefined
+                await expect(testCodeReviewDiscussionWebhookValidation()).resolves.not.toThrow()
+            })
+
+            it('discussionId가 비어있어도 codeReviewDiscussionWebhookValidation가 성공한다', async () => {
+                body.payload.discussion.discussion.id = undefined
+                await expect(testCodeReviewDiscussionWebhookValidation()).resolves.not.toThrow()
+            })
+
+            it('항상 codeReviewDiscussionWebhookValidation가 성공한다', async () => {
+                await expect(testCodeReviewDiscussionWebhookValidation()).resolves.not.toThrow()
+            })
+        })
+
+        describe('payload의 className이 CodeReviewDiscussionWebhookEvent가 아닐 때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'whatever',
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('WrongClassNameException 이 발생한다', async () => {
+                await expect(testCodeReviewDiscussionWebhookValidation()).rejects.toThrowError(WrongClassNameException)
+            })
+        })
+
         async function testWebHookValidation(publicKeySignature: string) {
             const res: any = {
                 locals: {},
@@ -191,6 +263,17 @@ describe('validation.middleware 모듈', () => {
                 if (e) throw e
             }
             await changeServerUrlValidation(request, res, next)
+        }
+
+        async function testCodeReviewDiscussionWebhookValidation() {
+            const res: any = {
+                locals: {},
+                status: jest.fn().mockReturnValue({ end: jest.fn() }),
+            }
+            const next = e => {
+                if (e) throw e
+            }
+            await codeReviewDiscussionValidation(req, res, next)
         }
     })
 })

@@ -7,22 +7,25 @@ import {
     testChannelId,
     testClientId,
     testClientSecret,
+    testDiscussionId,
     testIssueId,
     testMessageId,
     testOrganizationAdmin,
+    testReviewId,
     testSpaceURL,
     testUserId,
     testWebhookId,
 } from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
-import { ReactionDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDiscussionDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { Achievement } from '@models/achievement'
 
 describe('WebhookService 클래스', () => {
     const sut = new WebhookService()
     let codeReviewDto, issueDto
     let reactionDto: ReactionDTO
+    let codeReviewDiscussionDto: CodeReviewDiscussionDTO
     const starGiver = 'starGiver'
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
@@ -125,6 +128,29 @@ describe('WebhookService 클래스', () => {
                 },
             },
         }
+        codeReviewDiscussionDto = {
+            clientId: testClientId,
+            payload: {
+                className: 'CodeReviewDiscussionWebhookEvent',
+                discussion: {
+                    discussion: {
+                        id: testDiscussionId,
+                    },
+                },
+                meta: {
+                    principal: {
+                        details: {
+                            user: {
+                                id: testUserId,
+                            },
+                        },
+                    },
+                },
+                review: {
+                    id: testReviewId,
+                },
+            },
+        }
     })
 
     describe('handleCodeReviewWebHook 메소드에서', () => {
@@ -222,6 +248,7 @@ describe('WebhookService 클래스', () => {
             await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(1)
         })
     })
+
     describe('handleRemoveMessageReactionWebhook 메소드에서', () => {
         beforeEach(async () => {
             reactionDto.payload.className = 'ChatMessageReactionRemovedEvent'
@@ -245,6 +272,18 @@ describe('WebhookService 클래스', () => {
             await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(1)
             await sut.handleRemoveMessageReactionWebhook(reactionDto, mockOrganization, getTestAxiosOption())
             await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(0)
+        })
+    })
+
+    describe('createCodeReviewDiscussion 메소드에서', () => {
+        it('정상적인 요청이면 성공한다', async () => {
+            await expect(sut.createCodeReviewDiscussion(codeReviewDiscussionDto)).resolves.not.toThrowError()
+        })
+    })
+
+    describe('removeCodeReviewDiscussion 메소드에서', () => {
+        it('정상적인 요청이면 성공한다', async () => {
+            await expect(sut.removeCodeReviewDiscussion(codeReviewDiscussionDto)).resolves.not.toThrowError()
         })
     })
 })

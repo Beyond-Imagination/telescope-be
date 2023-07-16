@@ -8,6 +8,7 @@ export enum AchievementType {
     CreateCodeReview = 'create_code_review',
     MergeMr = 'merge_mr',
     ReceiveStar = 'receive_star',
+    CodeReviewDiscussion = 'code_review_discussion',
 }
 
 @index({ clientId: 1, achievedAt: -1 })
@@ -37,6 +38,9 @@ export class Achievement extends Document {
 
     @prop()
     public messageId?: string
+
+    @prop()
+    public discussionId?: string
 
     @prop({ enum: AchievementType, type: String })
     public type: AchievementType
@@ -120,6 +124,15 @@ export class Achievement extends Document {
             starGiver,
             messageId,
             type: AchievementType.ReceiveStar,
+        })
+    }
+
+    public static async deleteCodeReviewDiscussionAchievement(clientId: string, discussionId: string, reviewId: string): Promise<any> {
+        return AchievementModel.deleteOne({
+            clientId,
+            discussionId,
+            reviewId,
+            type: AchievementType.CodeReviewDiscussion,
         })
     }
 

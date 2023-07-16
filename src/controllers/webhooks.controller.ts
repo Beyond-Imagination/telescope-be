@@ -1,6 +1,6 @@
 import { Body, Controller, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
-import { issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
-import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
+import { codeReviewDiscussionValidation, issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
+import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Request } from 'express'
 import { setOrganizationByClientId } from '@middlewares/organization.middleware'
@@ -48,6 +48,20 @@ export class WebhooksController {
     @OnUndefined(204)
     async closeCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
         await this.service.handleCodeReviewWebHook(payload, request.axiosOption, false)
+    }
+
+    @Post('/code-review/discussion/create')
+    @OnUndefined(204)
+    @UseBefore(codeReviewDiscussionValidation)
+    async createCodeReviewDiscussion(@Body() payload: CodeReviewDiscussionDTO) {
+        await this.service.createCodeReviewDiscussion(payload)
+    }
+
+    @Post('/code-review/discussion/remove')
+    @OnUndefined(204)
+    @UseBefore(codeReviewDiscussionValidation)
+    async removeCodeReviewDiscussion(@Body() payload: CodeReviewDiscussionDTO) {
+        await this.service.removeCodeReviewDiscussion(payload)
     }
 
     @Post('/message/reaction/add')

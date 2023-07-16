@@ -17,6 +17,8 @@ export const testWebhookId = 'testWebhookId'
 export const testUserId = 'testUserId'
 export const testMessageId = 'testMessageId'
 export const testChannelId = 'testChannelId'
+export const testDiscussionId = 'testDiscussionId'
+export const testReviewId = 'testReviewId'
 
 export const testAdminEmail = 'testAdmin@email.com'
 export const testAdminPassword = 'testAdminPassword'

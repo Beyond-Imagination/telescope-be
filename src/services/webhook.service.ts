@@ -1,7 +1,7 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { Organization } from '@models/organization'
-import { CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
 import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
 import { StarService } from '@services/star.service'
@@ -128,6 +128,20 @@ export class WebhookService {
                 })
             }
         }
+    }
+
+    async createCodeReviewDiscussion(payload: CodeReviewDiscussionDTO) {
+        await Achievement.saveAchievement({
+            clientId: payload.clientId,
+            user: payload.payload.meta.principal.details.user.id,
+            discussionId: payload.payload.discussion.discussion.id,
+            reviewId: payload.payload.review.id,
+            type: AchievementType.CodeReviewDiscussion,
+        })
+    }
+
+    async removeCodeReviewDiscussion(payload: CodeReviewDiscussionDTO) {
+        await Achievement.deleteCodeReviewDiscussionAchievement(payload.clientId, payload.payload.discussion.discussion.id, payload.payload.review.id)
     }
 
     async handleAddMessageReactionWebhook(payload: ReactionDTO, organization: Organization, axiosOption: any) {
