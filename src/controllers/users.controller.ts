@@ -1,7 +1,10 @@
-import { Controller, Get, HeaderParam, Param, QueryParams } from 'routing-controllers'
+import { Controller, Get, HeaderParam, Param, QueryParams, Req } from 'routing-controllers'
 import { UserService } from '@services/user.service'
 import { getDaysBefore } from '@utils/date'
 import { SpaceClient } from '@/client/space.client'
+import { StarService } from '@services/star.service'
+import { Request } from 'express'
+import { OrganizationModel } from '@/models/organization'
 
 class UserQuery {
     serverUrl: string
@@ -14,9 +17,15 @@ class PictureQuery {
     profilePicture: string
 }
 
+class StarQuery {
+    serverUrl: string
+    userId: string
+}
+
 @Controller('/api/users')
 export class UsersController {
     service: UserService = new UserService()
+    starService: StarService = StarService.getInstance()
     spaceClient = SpaceClient.getInstance()
 
     @Get('/picture')
@@ -32,5 +41,11 @@ export class UsersController {
         const to = query.to ? new Date(query.to) : new Date()
         const serverUrl = decodeURI(query.serverUrl)
         return this.service.getUserScore(serverUrl, from, to, id)
+    }
+
+    @Get('/remainStar')
+    async remainStar(@QueryParams() query: StarQuery) {
+        const organization = await OrganizationModel.findByServerUrl(query.serverUrl)
+        return this.starService.getRemainStar(organization.clientId, query.userId)
     }
 }
