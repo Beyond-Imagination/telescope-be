@@ -161,6 +161,26 @@ export const codeReviewDiscussionValidation = (request: Request, response: Respo
     }
 }
 
+export const reviewerReviewValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+        if (requestBody.payload.className === 'CodeReviewParticipantWebhookEvent') {
+            const userId = requestBody.payload.meta.principal.details.user?.id
+            const reviewId = requestBody.payload.review?.id
+            const isMergeRequest = requestBody.payload.isMergeRequest
+            if (isMergeRequest && userId && reviewId) {
+                next()
+            } else {
+                response.status(204).end()
+            }
+        } else {
+            throw new WrongClassNameException()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
 function checkClassName(className: string, expectValue: string) {
     if (className !== expectValue) throw new WrongClassNameException()
 }

@@ -33,6 +33,26 @@ const data: space.installInfo = {
                 eventTypeCode: 'CodeReview.Discussion.Removed',
             },
         },
+        reviewer_accepted_changes: {
+            name: 'reviewer_accepted_changes',
+            url: `${SERVER_URL}/webhooks/code-review/reviewer/accepted`,
+            payloadFields: 'payload(className,isMergeRequest,review(id),meta(principal(details(user(id)))),reviewerState(old,new)),clientId',
+            subscription: {
+                name: 'reviewer_accepted_changes',
+                subjectCode: 'CodeReview',
+                eventTypeCode: 'CodeReview.Participant.ChangesAccepted',
+            },
+        },
+        reviewer_resume_review: {
+            name: 'reviewer_resume_review',
+            url: `${SERVER_URL}/webhooks/code-review/reviewer/resume`,
+            payloadFields: 'payload(className,isMergeRequest,review(id),meta(principal(details(user(id)))),reviewerState(old,new)),clientId',
+            subscription: {
+                name: 'reviewer_resume_review',
+                subjectCode: 'CodeReview',
+                eventTypeCode: 'CodeReview.Participant.ResumeReview',
+            },
+        },
     },
     uiExtension: {
         contextIdentifier: v0_8_0.uiExtension.contextIdentifier,

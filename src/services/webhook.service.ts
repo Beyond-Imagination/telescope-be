@@ -1,7 +1,7 @@
 import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { Organization } from '@models/organization'
-import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
 import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
 import { StarService } from '@services/star.service'
@@ -142,6 +142,27 @@ export class WebhookService {
 
     async removeCodeReviewDiscussion(payload: CodeReviewDiscussionDTO) {
         await Achievement.deleteCodeReviewDiscussionAchievement(payload.clientId, payload.payload.discussion.discussion.id, payload.payload.review.id)
+    }
+
+    async handleReviewerAcceptedChangesWebhook(payload: ReviewerReviewDTO) {
+        if (payload.payload.reviewerState?.new === 'Accepted' && payload.payload.reviewerState?.old !== 'Accepted') {
+            await Achievement.saveAchievement({
+                clientId: payload.clientId,
+                user: payload.payload.meta.principal.details.user.id,
+                reviewId: payload.payload.review.id,
+                type: AchievementType.AcceptCodeReview,
+            })
+        }
+    }
+
+    async handleReviewerResumeReviewWebhook(payload: ReviewerReviewDTO) {
+        if (payload.payload.reviewerState?.old === 'Accepted' && payload.payload.reviewerState?.new !== 'Accepted') {
+            await Achievement.deleteReviewerAcceptedChangesAchievement(
+                payload.clientId,
+                payload.payload.review.id,
+                payload.payload.meta.principal.details.user.id,
+            )
+        }
     }
 
     async handleAddMessageReactionWebhook(payload: ReactionDTO, organization: Organization, axiosOption: any) {

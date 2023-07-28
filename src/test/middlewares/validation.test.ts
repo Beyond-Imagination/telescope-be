@@ -2,6 +2,7 @@ import {
     changeServerUrlValidation,
     codeReviewDiscussionValidation,
     issueWebhookValidation,
+    reviewerReviewValidation,
     webhookValidation,
 } from '@middlewares/validation.middleware'
 import { InvalidRequestException } from '@exceptions/InvalidRequestException'
@@ -12,6 +13,7 @@ import {
     testClientSecret,
     testDiscussionId,
     testOrganizationAdmin,
+    testReviewId,
     testSpaceURL,
     testUserId,
 } from '@/test/test.util'
@@ -231,6 +233,67 @@ describe('validation.middleware 모듈', () => {
             })
         })
 
+        describe('payload의 className이 CodeReviewParticipantWebhookEvent 일때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'CodeReviewParticipantWebhookEvent',
+                        meta: {
+                            principal: {
+                                details: {
+                                    user: {
+                                        id: testUserId,
+                                    },
+                                },
+                            },
+                        },
+                        review: {
+                            id: testReviewId,
+                        },
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('userId가 비어있어도 codeReviewParticipantWebhookValidation가 성공한다', async () => {
+                body.payload.meta.principal.details.user.id = undefined
+                await expect(testCodeReviewParticipantWebhookValidation()).resolves.not.toThrow()
+            })
+
+            it('reviewId가 비어있어도 codeReviewParticipantWebhookValidation가 성공한다', async () => {
+                body.payload.review.id = undefined
+                await expect(testCodeReviewParticipantWebhookValidation()).resolves.not.toThrow()
+            })
+
+            it('isMergeRequest가 false여도 codeReviewParticipantWebhookValidation가 성공한다', async () => {
+                body.payload.isMergeRequest = false
+                await expect(testCodeReviewParticipantWebhookValidation()).resolves.not.toThrow()
+            })
+
+            it('항상 codeReviewParticipantWebhookValidation가 성공한다', async () => {
+                await expect(testCodeReviewParticipantWebhookValidation()).resolves.not.toThrow()
+            })
+        })
+
+        describe('payload의 className이 CodeReviewParticipantWebhookEvent가 아닐 때', () => {
+            beforeEach(() => {
+                body = {
+                    payload: {
+                        className: 'whatever',
+                    },
+                }
+                req = {
+                    body: body,
+                }
+            })
+
+            it('WrongClassNameException 이 발생한다', async () => {
+                await expect(testCodeReviewParticipantWebhookValidation()).rejects.toThrowError(WrongClassNameException)
+            })
+        })
+
         async function testWebHookValidation(publicKeySignature: string) {
             const res: any = {
                 locals: {},
@@ -274,6 +337,17 @@ describe('validation.middleware 모듈', () => {
                 if (e) throw e
             }
             await codeReviewDiscussionValidation(req, res, next)
+        }
+
+        async function testCodeReviewParticipantWebhookValidation() {
+            const res: any = {
+                locals: {},
+                status: jest.fn().mockReturnValue({ end: jest.fn() }),
+            }
+            const next = e => {
+                if (e) throw e
+            }
+            await reviewerReviewValidation(req, res, next)
         }
     })
 })

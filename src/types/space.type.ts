@@ -24,6 +24,8 @@ export namespace space {
             remove_chat_message_reaction?: webhookInfo
             create_code_review_discussion?: webhookInfo
             remove_code_review_discussion?: webhookInfo
+            reviewer_accepted_changes?: webhookInfo
+            reviewer_resume_review?: webhookInfo
         }
         uiExtension: {
             contextIdentifier: string

@@ -9,6 +9,7 @@ export enum AchievementType {
     MergeMr = 'merge_mr',
     ReceiveStar = 'receive_star',
     CodeReviewDiscussion = 'code_review_discussion',
+    AcceptCodeReview = 'accept_code_review',
 }
 
 @index({ clientId: 1, achievedAt: -1 })
@@ -133,6 +134,15 @@ export class Achievement extends Document {
             discussionId,
             reviewId,
             type: AchievementType.CodeReviewDiscussion,
+        })
+    }
+
+    static async deleteReviewerAcceptedChangesAchievement(clientId: string, reviewId: string, user: string) {
+        return AchievementModel.deleteOne({
+            clientId,
+            reviewId,
+            user,
+            type: AchievementType.AcceptCodeReview,
         })
     }
 

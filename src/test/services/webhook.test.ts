@@ -18,7 +18,7 @@ import {
 } from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
-import { CodeReviewDiscussionDTO, ReactionDTO } from '@dtos/webhooks.dtos'
+import { CodeReviewDiscussionDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { Achievement } from '@models/achievement'
 
 describe('WebhookService 클래스', () => {
@@ -26,6 +26,7 @@ describe('WebhookService 클래스', () => {
     let codeReviewDto, issueDto
     let reactionDto: ReactionDTO
     let codeReviewDiscussionDto: CodeReviewDiscussionDTO
+    let reviewerReviewDto: ReviewerReviewDTO
     const starGiver = 'starGiver'
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
@@ -148,6 +149,29 @@ describe('WebhookService 클래스', () => {
                 },
                 review: {
                     id: testReviewId,
+                },
+            },
+        }
+        reviewerReviewDto = {
+            clientId: testClientId,
+            payload: {
+                className: 'CodeReviewParticipantWebhookEvent',
+                meta: {
+                    principal: {
+                        details: {
+                            user: {
+                                id: testUserId,
+                            },
+                        },
+                    },
+                },
+                review: {
+                    id: testReviewId,
+                },
+                isMergeRequest: true,
+                reviewerState: {
+                    old: null,
+                    new: 'ACCEPTED',
                 },
             },
         }
@@ -284,6 +308,18 @@ describe('WebhookService 클래스', () => {
     describe('removeCodeReviewDiscussion 메소드에서', () => {
         it('정상적인 요청이면 성공한다', async () => {
             await expect(sut.removeCodeReviewDiscussion(codeReviewDiscussionDto)).resolves.not.toThrowError()
+        })
+    })
+
+    describe('handleReviewerAcceptedChangesWebhook 메소드에서', () => {
+        it('정상적인 요청이면 성공한다', async () => {
+            await expect(sut.handleReviewerAcceptedChangesWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+        })
+    })
+
+    describe('handleReviewerResumeReviewWebhook 메소드에서', () => {
+        it('정상적인 요청이면 성공한다', async () => {
+            await expect(sut.handleReviewerResumeReviewWebhook(reviewerReviewDto)).resolves.not.toThrowError()
         })
     })
 })

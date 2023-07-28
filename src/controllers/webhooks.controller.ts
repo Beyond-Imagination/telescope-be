@@ -1,6 +1,11 @@
 import { Body, Controller, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
-import { codeReviewDiscussionValidation, issueWebhookValidation, webhookValidation } from '@middlewares/validation.middleware'
-import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO } from '@dtos/webhooks.dtos'
+import {
+    codeReviewDiscussionValidation,
+    issueWebhookValidation,
+    reviewerReviewValidation,
+    webhookValidation,
+} from '@middlewares/validation.middleware'
+import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
 import { Request } from 'express'
 import { setOrganizationByClientId } from '@middlewares/organization.middleware'
@@ -62,6 +67,20 @@ export class WebhooksController {
     @UseBefore(codeReviewDiscussionValidation)
     async removeCodeReviewDiscussion(@Body() payload: CodeReviewDiscussionDTO) {
         await this.service.removeCodeReviewDiscussion(payload)
+    }
+
+    @Post('/code-review/reviewer/accepted')
+    @OnUndefined(204)
+    @UseBefore(reviewerReviewValidation)
+    async reviewerAcceptedChanges(@Body() payload: ReviewerReviewDTO) {
+        await this.service.handleReviewerAcceptedChangesWebhook(payload)
+    }
+
+    @Post('/code-review/reviewer/resume')
+    @OnUndefined(204)
+    @UseBefore(reviewerReviewValidation)
+    async reviewerResumeReview(@Body() payload: ReviewerReviewDTO) {
+        await this.service.handleReviewerResumeReviewWebhook(payload)
     }
 
     @Post('/message/reaction/add')

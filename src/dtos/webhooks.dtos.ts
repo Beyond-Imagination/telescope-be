@@ -112,6 +112,33 @@ export class CodeReviewDiscussionDTO {
     }
 }
 
+export class ReviewerReviewDTO {
+    @IsNotEmpty()
+    clientId: string
+
+    @IsNotEmpty()
+    payload: {
+        className: string
+        isMergeRequest: boolean
+        review: {
+            id: string
+        }
+        meta: {
+            principal: {
+                details: {
+                    user: {
+                        id: string
+                    }
+                }
+            }
+        }
+        reviewerState: {
+            old: string
+            new: string
+        }
+    }
+}
+
 export class UpdateWebhookDTO {
     @IsNotEmpty()
     clientId: string
