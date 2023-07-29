@@ -9,6 +9,8 @@ export class AchievementCount {
     createCodeReview = 0
     mergeMr = 0
     receiveStar = 0
+    codeReviewDiscussion = 0
+    acceptCodeReview = 0
 }
 
 export class ScoreDtos extends AchievementCount {
@@ -21,6 +23,15 @@ export class ScoreDtos extends AchievementCount {
         this.createCodeReview = point.createCodeReview * count.createCodeReview
         this.mergeMr = point.mergeMr * count.mergeMr
         this.receiveStar = point.receiveStar * count.receiveStar
-        this.total = this.createIssue + this.resolveIssue + this.createCodeReview + this.mergeMr + this.receiveStar
+        this.codeReviewDiscussion = point.codeReviewDiscussion * count.codeReviewDiscussion
+        this.acceptCodeReview = point.acceptCodeReview * count.acceptCodeReview
+        this.total =
+            this.createIssue +
+            this.resolveIssue +
+            this.createCodeReview +
+            this.mergeMr +
+            this.receiveStar +
+            this.codeReviewDiscussion +
+            this.acceptCodeReview
     }
 }

@@ -198,6 +198,8 @@ export class Achievement extends Document {
                     createCodeReview: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CreateCodeReview] }, 1, 0] } },
                     mergeMr: { $sum: { $cond: [{ $eq: ['$type', AchievementType.MergeMr] }, 1, 0] } },
                     receiveStar: { $sum: { $cond: [{ $eq: ['$type', AchievementType.ReceiveStar] }, 1, 0] } },
+                    codeReviewDiscussion: { $sum: { $cond: [{ $eq: ['$type', AchievementType.CodeReviewDiscussion] }, 1, 0] } },
+                    acceptCodeReview: { $sum: { $cond: [{ $eq: ['$type', AchievementType.AcceptCodeReview] }, 1, 0] } },
                 },
             },
         ]

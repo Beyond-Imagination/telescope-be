@@ -24,6 +24,12 @@ export class Point {
 
     @prop({ default: 1 })
     public receiveStar: number
+
+    @prop({ default: 1 })
+    public codeReviewDiscussion: number
+
+    @prop({ default: 1 })
+    public acceptCodeReview: number
 }
 
 @plugin(mongoosePaginate)
