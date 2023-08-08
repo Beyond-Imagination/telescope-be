@@ -132,10 +132,93 @@ async function getVerifyInfo(organization: Organization, request: Request) {
 export const issueWebhookValidation = (request: Request, response: Response, next: NextFunction) => {
     try {
         const requestBody = request.body
+
         if (requestBody.payload.className === 'IssueWebhookEvent') {
             next()
         } else {
             throw new WrongClassNameException()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+export const createIssueWebhookValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+
+        if (requestBody.clientId && requestBody.payload.issue.id) {
+            if (requestBody.payload.meta.principal.details.user?.id) {
+                next()
+            } else {
+                response.sendStatus(204).end()
+            }
+        } else {
+            throw new InvalidRequestException()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const updateIssueStatusWebhookValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+        const assignee = requestBody.payload.issue.assignee
+
+        if (assignee) {
+            if (requestBody.clientId && assignee.id && requestBody.payload.issue.id) {
+                next()
+            } else {
+                throw new InvalidRequestException()
+            }
+        } else {
+            response.status(204).end()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const updateIssueAssigneeValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+
+        const newAssignee = requestBody.payload.assignee.new
+        const oldAssignee = requestBody.payload.assignee.old
+
+        if (requestBody.clientId && requestBody.payload.issue.id) {
+            if (newAssignee) {
+                if (!newAssignee.id) {
+                    throw new InvalidRequestException()
+                }
+            }
+            if (oldAssignee) {
+                if (!oldAssignee.id) {
+                    throw new InvalidRequestException()
+                }
+            }
+            next()
+        } else {
+            throw new InvalidRequestException()
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const deleteIssueWebhookValidation = (request: Request, response: Response, next: NextFunction) => {
+    try {
+        const requestBody = request.body
+
+        const assignee = requestBody.payload.issue.assignee
+        if (assignee) {
+            if (requestBody.clientId && assignee.id && requestBody.payload.issue.id) {
+                next()
+            } else {
+                throw new InvalidRequestException()
+            }
+        } else {
+            response.status(204).end()
         }
     } catch (error) {
         next(error)

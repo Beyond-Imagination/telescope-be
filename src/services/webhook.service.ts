@@ -3,7 +3,6 @@ import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { Organization } from '@models/organization'
 import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
-import { InvalidRequestException } from '@/exceptions/InvalidRequestException'
 import { StarService } from '@services/star.service'
 
 export class WebhookService {
@@ -11,45 +10,29 @@ export class WebhookService {
     starService: StarService = StarService.getInstance()
 
     public async createIssue(issueDTO: IssueDTO) {
-        if (issueDTO.clientId && issueDTO.payload.meta.principal.details.user?.id && issueDTO.payload.issue.id) {
-            await AchievementModel.saveAchievement({
-                clientId: issueDTO.clientId,
-                user: issueDTO.payload.meta.principal.details.user.id,
-                projectId: issueDTO.payload.issue.projectId,
-                issueId: issueDTO.payload.issue.id,
-                type: AchievementType.CreateIssue,
-            })
-            if (issueDTO.payload.status.new.resolved && issueDTO.payload.assignee) {
-                // 이슈를 생성하면서 동시에 Done처리도 가능한데 이경우를 확인한다
-                await AchievementModel.saveAchievement({
-                    clientId: issueDTO.clientId,
-                    user: issueDTO.payload.assignee.new.id,
-                    projectId: issueDTO.payload.issue.projectId,
-                    issueId: issueDTO.payload.issue.id,
-                    type: AchievementType.ResolveIssue,
-                })
-            }
-        }
+        await AchievementModel.saveAchievement({
+            clientId: issueDTO.clientId,
+            user: issueDTO.payload.meta.principal.details.user.id,
+            projectId: issueDTO.payload.issue.projectId,
+            issueId: issueDTO.payload.issue.id,
+            type: AchievementType.CreateIssue,
+        })
     }
 
     public async updateIssueStatus(issueDTO: IssueDTO) {
         const assignee = issueDTO.payload.issue.assignee
 
         if (assignee) {
-            if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
-                if (issueDTO.isResolved()) {
-                    await AchievementModel.saveAchievement({
-                        clientId: issueDTO.clientId,
-                        user: assignee.id,
-                        projectId: issueDTO.payload.issue.projectId,
-                        issueId: issueDTO.payload.issue.id,
-                        type: AchievementType.ResolveIssue,
-                    })
-                } else if (issueDTO.isUnresolved()) {
-                    await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
-                }
-            } else {
-                throw new InvalidRequestException()
+            if (issueDTO.isResolved()) {
+                await AchievementModel.saveAchievement({
+                    clientId: issueDTO.clientId,
+                    user: assignee.id,
+                    projectId: issueDTO.payload.issue.projectId,
+                    issueId: issueDTO.payload.issue.id,
+                    type: AchievementType.ResolveIssue,
+                })
+            } else if (issueDTO.isUnresolved()) {
+                await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
             }
         }
     }
@@ -61,31 +44,17 @@ export class WebhookService {
 
             if (newAssignee) {
                 // issue가 unassigned되는 케이스를 방어한다
-                if (issueDTO.clientId && newAssignee.id && issueDTO.payload.issue.id) {
-                    await AchievementModel.saveAchievement({
-                        clientId: issueDTO.clientId,
-                        user: newAssignee.id,
-                        projectId: issueDTO.payload.issue.projectId,
-                        issueId: issueDTO.payload.issue.id,
-                        type: AchievementType.ResolveIssue,
-                    })
-                } else {
-                    throw new InvalidRequestException()
-                }
+                await AchievementModel.saveAchievement({
+                    clientId: issueDTO.clientId,
+                    user: newAssignee.id,
+                    projectId: issueDTO.payload.issue.projectId,
+                    issueId: issueDTO.payload.issue.id,
+                    type: AchievementType.ResolveIssue,
+                })
             }
-
             if (oldAssignee) {
                 // 기존에 issue가 unassigned되어있는 경우를 방어한다
-                if (issueDTO.clientId && oldAssignee.id && issueDTO.payload.issue.id) {
-                    await AchievementModel.deleteAchievement(
-                        issueDTO.clientId,
-                        oldAssignee.id,
-                        issueDTO.payload.issue.id,
-                        AchievementType.ResolveIssue,
-                    )
-                } else {
-                    throw new InvalidRequestException()
-                }
+                await AchievementModel.deleteAchievement(issueDTO.clientId, oldAssignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
             }
         }
     }
@@ -93,11 +62,7 @@ export class WebhookService {
     public async deleteIssue(issueDTO: IssueDTO) {
         const assignee = issueDTO.payload.issue.assignee
         if (assignee && issueDTO.checkResolved()) {
-            if (issueDTO.clientId && assignee.id && issueDTO.payload.issue.id) {
-                await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
-            } else {
-                throw new InvalidRequestException()
-            }
+            await AchievementModel.deleteAchievement(issueDTO.clientId, assignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
         }
     }
 
