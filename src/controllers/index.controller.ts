@@ -11,8 +11,8 @@ import { space } from '@/types/space.type'
 export class IndexController {
     service = new IndexService()
 
-    @Get('/')
-    index() {
+    @Get('/version')
+    version() {
         return { version: VERSION }
     }
 
