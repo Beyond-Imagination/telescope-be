@@ -54,15 +54,6 @@ describe('validation.middleware 모듈', () => {
                 await expect(testWebHookValidation('Wrong signature!')).rejects.toThrowError(InvalidRequestException)
             })
 
-            it('serverUrl이 .jetbrains.space로 끝나지 않으면 에러가 발생한다', async () => {
-                body['serverUrl'] = 'https://wrong.url.com'
-                await expect(
-                    testWebHookValidation(
-                        'Wi3wC9T8Ur6mRsftZ1IIPeCGkzaRpkwEy9ZRIm/t/r8h7ZCtGG8Nfkl+Lbvm1mfbT+KiXKmLSGa5T+EejENBa3gVdomV/KUAU/VqvOQ9KNkB+ajSXnfHOeGdsm+9GRT7KKeuVmjPmEOk6Kl00b3AwSZ6viDPGKtVRPN2cse/RkewPvM+GPypm58bYKwHd+ABWHCkfV9EtbKrAzLze5IGhdCscFULeXslsOTnpV5fIP4w1Eu/XtW4+5jo19ra7c4HrvP6EGv3IME2cvwD3B/ff106xDg4yyye3DgWhtEqAmipUlSObYvTFAHrRwCPNqaMjXFHmrJgJsUveTZL1bPJ9Q==',
-                    ),
-                ).rejects.toThrowError(InvalidRequestException)
-            })
-
             it('정상 요청에 대해 webhookValidation가 성공한다', async () => {
                 await expect(
                     testWebHookValidation(

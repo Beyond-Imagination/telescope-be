@@ -99,13 +99,9 @@ async function verifyRequest(verifyInfo: any) {
 }
 
 async function getOrganization(requestBody: any) {
-    let organization
+    let organization: Organization
     if (requestBody.className == 'InitPayload') {
         organization = requestBody
-        if (!new URL(organization.serverUrl).hostname.endsWith('.jetbrains.space')) {
-            // https://*.jetbrains.space 형태의 URL이 아니면 실패
-            throw new InvalidRequestException()
-        }
     } else {
         organization = await OrganizationModel.findByClientId(requestBody.clientId)
         if (!organization) {
