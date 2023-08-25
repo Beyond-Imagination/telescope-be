@@ -174,9 +174,15 @@ export class Achievement extends Document {
         toDate: Date,
         targetUser: string,
     ) {
-        const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, '$user')
+        const pipeline = this.getAggregationPipeline(clientId, fromDate, toDate, {
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$achievedAt' } },
+        })
         pipeline[0]['$match']['user'] = targetUser
-        pipeline.push({ $unset: '_id' })
+        pipeline.push({
+            $sort: {
+                '_id.date': 1,
+            },
+        })
         return this.aggregate(pipeline)
     }
 
