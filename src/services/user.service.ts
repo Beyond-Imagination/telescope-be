@@ -13,7 +13,7 @@ export class UserService {
     }
 
     public async getUserScoreList(organization: Organization, from: Date, to: Date, userId: string) {
-        const achievementCounts = await AchievementModel.getUserScoreByClientId(organization.clientId, from, to, userId)
+        const achievementCounts = await AchievementModel.getUserScoreByClientIdGroupByDate(organization.clientId, from, to, userId)
 
         let index = 0
         const results = {}
