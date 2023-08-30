@@ -42,6 +42,7 @@
         "jsonwebtoken": "^9.0.0",
         "jwk-to-pem": "^2.0.5",
         "lru-cache": "^7.14.1",
+        "moment-timezone": "^0.5.43",
         "mongoose": "^6.6.2",
         "mongoose-paginate-v2": "^1.7.1",
         "newrelic": "^10.0.0",

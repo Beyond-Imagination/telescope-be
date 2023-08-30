@@ -1,6 +1,7 @@
 import { Controller, Get, QueryParams } from 'routing-controllers'
 import { OrganizationService } from '@services/organization.service'
 import { getDaysBefore } from '@utils/date'
+import moment from 'moment-timezone'
 
 class OrganizationScoreQuery {
     serverUrl: string
@@ -10,6 +11,8 @@ class OrganizationScoreQuery {
     to: Date | null
 
     size: number | null
+
+    timezone = 'Etc/UTC'
 }
 
 class OrganizationScoreListQuery {
@@ -18,6 +21,8 @@ class OrganizationScoreListQuery {
     from: Date | null
 
     to: Date | null
+
+    timezone = 'Etc/UTC'
 }
 
 @Controller('/api/organization')
@@ -32,8 +37,13 @@ export class OrganizationController {
     score(@QueryParams() query: OrganizationScoreQuery) {
         const from = query.from ? new Date(query.from) : getDaysBefore(7)
         const to = query.to ? new Date(query.to) : new Date()
+
+        const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
+        const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
+
         const serverUrl = decodeURI(query.serverUrl)
-        return this.service.getOrganizationScore(serverUrl, from, to)
+
+        return this.service.getOrganizationScore(serverUrl, fromDate, toDate)
     }
 
     /**
@@ -43,9 +53,14 @@ export class OrganizationController {
     @Get('/score/list')
     scoreList(@QueryParams() query: OrganizationScoreListQuery) {
         const serverUrl = decodeURI(query.serverUrl)
+
         const from = query.from ? new Date(query.from) : getDaysBefore(14)
         const to = query.to ? new Date(query.to) : new Date()
-        return this.service.getOrganizationScoreList(serverUrl, from, to)
+
+        const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
+        const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
+
+        return this.service.getOrganizationScoreList(serverUrl, fromDate, toDate)
     }
 
     /**
@@ -56,7 +71,11 @@ export class OrganizationController {
     rankings(@QueryParams() query: OrganizationScoreQuery) {
         const from = query.from ? new Date(query.from) : getDaysBefore(7)
         const to = query.to ? new Date(query.to) : new Date()
+
+        const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
+        const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
+
         const serverUrl = decodeURI(query.serverUrl)
-        return this.service.getRankingsInOrganization(serverUrl, from, to, query.size)
+        return this.service.getRankingsInOrganization(serverUrl, fromDate, toDate, query.size)
     }
 }

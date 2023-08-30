@@ -39,10 +39,8 @@ export class StarService {
         await this.spaceClient.sendMessage(serverUrl, axiosOption, userId, `You can send ${remainStar} more star(s) today.`)
     }
 
-    async getRemainStar(clientId: string, userId: string) {
-        const startOfDay = new Date()
-        startOfDay.setHours(0, 0, 0, 0)
-        const remainStar = await Achievement.getRemainStarCountByUserId(clientId, startOfDay, new Date(), userId)
+    async getRemainStar(clientId: string, userId: string, startOfDay: Date, endOfDay: Date) {
+        const remainStar = await Achievement.getRemainStarCountByUserId(clientId, startOfDay, endOfDay, userId)
 
         return { remainStar }
     }

@@ -12,6 +12,7 @@ export class OrganizationService {
     // serverUrl에 해당하는 조직의 점수를 반환한다.
     public async getOrganizationScore(serverUrl: string, from: Date, to: Date) {
         const organization = await OrganizationModel.findByServerUrl(serverUrl)
+
         const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreByClientId(organization.clientId, from, to)
 
         const result = new ScoreDtos(organization.points, achievementCounts[0])
@@ -21,6 +22,7 @@ export class OrganizationService {
 
     public async getOrganizationScoreList(serverUrl: string, from: Date, to: Date) {
         const organization = await OrganizationModel.findByServerUrl(serverUrl)
+
         const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreListByClientId(organization.clientId, from, to)
         const results = {}
         let index = 0
