@@ -1,7 +1,9 @@
-import { Controller, Get, QueryParams } from 'routing-controllers'
+import { Controller, Get, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { OrganizationService } from '@services/organization.service'
 import { getDaysBefore } from '@utils/date'
 import moment from 'moment-timezone'
+import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
+import { Request } from 'express'
 
 class OrganizationScoreQuery {
     serverUrl: string
@@ -34,16 +36,15 @@ export class OrganizationController {
      * @param query OrganizationScoreQuery
      */
     @Get('/score')
-    score(@QueryParams() query: OrganizationScoreQuery) {
+    @UseBefore(setOrganizationByServerUrl)
+    score(@Req() req: Request, @QueryParams() query: OrganizationScoreQuery) {
         const from = query.from ? new Date(query.from) : getDaysBefore(7)
         const to = query.to ? new Date(query.to) : new Date()
 
         const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
         const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
 
-        const serverUrl = decodeURI(query.serverUrl)
-
-        return this.service.getOrganizationScore(serverUrl, fromDate, toDate)
+        return this.service.getOrganizationScore(req.organization, fromDate, toDate)
     }
 
     /**
@@ -51,16 +52,15 @@ export class OrganizationController {
      * @param query OrganizationScoreListQuery
      */
     @Get('/score/list')
-    scoreList(@QueryParams() query: OrganizationScoreListQuery) {
-        const serverUrl = decodeURI(query.serverUrl)
-
+    @UseBefore(setOrganizationByServerUrl)
+    scoreList(@Req() req: Request, @QueryParams() query: OrganizationScoreListQuery) {
         const from = query.from ? new Date(query.from) : getDaysBefore(14)
         const to = query.to ? new Date(query.to) : new Date()
 
         const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
         const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
 
-        return this.service.getOrganizationScoreList(serverUrl, fromDate, toDate)
+        return this.service.getOrganizationScoreList(req.organization, fromDate, toDate)
     }
 
     /**

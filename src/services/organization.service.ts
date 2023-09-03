@@ -1,5 +1,5 @@
 import { AchievementModel } from '@models/achievement'
-import { OrganizationModel } from '@models/organization'
+import { Organization, OrganizationModel } from '@models/organization'
 import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
 import { RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
@@ -10,9 +10,7 @@ export class OrganizationService {
     spaceClient = SpaceClient.getInstance()
 
     // serverUrl에 해당하는 조직의 점수를 반환한다.
-    public async getOrganizationScore(serverUrl: string, from: Date, to: Date) {
-        const organization = await OrganizationModel.findByServerUrl(serverUrl)
-
+    public async getOrganizationScore(organization: Organization, from: Date, to: Date) {
         const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreByClientId(organization.clientId, from, to)
 
         const result = new ScoreDtos(organization.points, achievementCounts[0])
@@ -20,9 +18,7 @@ export class OrganizationService {
         return { from: from, to: to, score: result }
     }
 
-    public async getOrganizationScoreList(serverUrl: string, from: Date, to: Date) {
-        const organization = await OrganizationModel.findByServerUrl(serverUrl)
-
+    public async getOrganizationScoreList(organization: Organization, from: Date, to: Date) {
         const achievementCounts: AchievementCount[] = await AchievementModel.getOrganizationScoreListByClientId(organization.clientId, from, to)
         const results = {}
         let index = 0

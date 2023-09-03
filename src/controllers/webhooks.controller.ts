@@ -1,13 +1,13 @@
 import { Body, Controller, OnUndefined, Post, Req, UseBefore } from 'routing-controllers'
 import {
-    issueWebhookValidation,
-    webhookValidation,
-    createIssueWebhookValidation,
-    updateIssueStatusWebhookValidation,
-    updateIssueAssigneeValidation,
-    deleteIssueWebhookValidation,
     codeReviewDiscussionValidation,
+    createIssueWebhookValidation,
+    deleteIssueWebhookValidation,
+    issueWebhookValidation,
     reviewerReviewValidation,
+    updateIssueAssigneeValidation,
+    updateIssueStatusWebhookValidation,
+    webhookValidation,
 } from '@middlewares/validation.middleware'
 import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { WebhookService } from '@services/webhook.service'
