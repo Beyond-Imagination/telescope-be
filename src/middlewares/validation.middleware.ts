@@ -149,7 +149,7 @@ export const createIssueWebhookValidation = (request: Request, response: Respons
                 response.sendStatus(204).end()
             }
         } else {
-            throw new InvalidRequestException()
+            response.sendStatus(204).end()
         }
     } catch (error) {
         next(error)
@@ -165,7 +165,7 @@ export const updateIssueStatusWebhookValidation = (request: Request, response: R
             if (requestBody.clientId && assignee.id && requestBody.payload.issue.id) {
                 next()
             } else {
-                throw new InvalidRequestException()
+                response.sendStatus(204).end()
             }
         } else {
             response.status(204).end()
@@ -195,7 +195,7 @@ export const updateIssueAssigneeValidation = (request: Request, response: Respon
             }
             next()
         } else {
-            throw new InvalidRequestException()
+            response.sendStatus(204).end()
         }
     } catch (error) {
         next(error)
@@ -211,7 +211,7 @@ export const deleteIssueWebhookValidation = (request: Request, response: Respons
             if (requestBody.clientId && assignee.id && requestBody.payload.issue.id) {
                 next()
             } else {
-                throw new InvalidRequestException()
+                response.sendStatus(204).end()
             }
         } else {
             response.status(204).end()
