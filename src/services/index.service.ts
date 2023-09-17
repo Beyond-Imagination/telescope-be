@@ -22,14 +22,14 @@ export class IndexService {
 
         const installInfo = Space.getInstallInfo()
         const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
-        await Promise.all([
-            // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
-            limiter.schedule(() => this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo)),
-            this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption).map(fn => {
-                limiter.schedule(() => fn())
-            }),
-            limiter.schedule(() => this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption)),
-        ])
+        await limiter.schedule(() => {
+            return Promise.all([
+                // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
+                this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
+                this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
+                ...this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
+            ])
+        })
         await this.insertDBData(dto, null)
     }
 
@@ -103,9 +103,14 @@ export class IndexService {
     private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, axiosOption: any) {
         const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
         return Object.values(installInfo.webhooks).map(webHookInfo => {
-            return async () => {
-                await this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
-            }
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    await this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
+                    resolve()
+                } catch (e) {
+                    reject(e)
+                }
+            })
         })
     }
 

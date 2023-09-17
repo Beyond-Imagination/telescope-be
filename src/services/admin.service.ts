@@ -148,12 +148,12 @@ export class AdminService {
             )
             const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
-            await Promise.all([
-                this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo).map(fn =>
-                    limiter.schedule(() => fn()),
-                ),
-                limiter.schedule(() => this.updateUIExtension(organization, token, installInfo)),
-            ])
+            await limiter.schedule(() => {
+                return Promise.all([
+                    this.updateUIExtension(organization, token, installInfo),
+                    ...this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo),
+                ])
+            })
             await OrganizationModel.updateOrganization(organization, installInfo)
         } catch (e) {
             logger.error(e.message)
@@ -209,26 +209,47 @@ export class AdminService {
         const promises = []
 
         create.forEach(info => {
-            promises.push(async () => {
-                const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks`
-                const option = getAxiosOption(token)
-                const response = await this.client.registerWebHook(url, info, option)
-                const webHookId = response.data.id
-                await this.client.registerSubscription(url, info, webHookId, option)
-            })
+            promises.push(
+                new Promise<void>(async (resolve, reject) => {
+                    try {
+                        const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks`
+                        const option = getAxiosOption(token)
+                        const response = await this.client.registerWebHook(url, info, option)
+                        const webHookId = response.data.id
+                        await this.client.registerSubscription(url, info, webHookId, option)
+                        resolve()
+                    } catch (e) {
+                        reject(e)
+                    }
+                }),
+            )
         })
 
         update.forEach(info => {
-            promises.push(async () => {
-                await this.client.updateWebhook(organization, token, info.webhookId, info)
-                await this.client.updateSubscription(organization, token, info.webhookId, info.subscriptionId, target.version, info)
-            })
+            promises.push(
+                new Promise<void>(async (resolve, reject) => {
+                    try {
+                        await this.client.updateWebhook(organization, token, info.webhookId, info)
+                        await this.client.updateSubscription(organization, token, info.webhookId, info.subscriptionId, target.version, info)
+                        resolve()
+                    } catch (e) {
+                        reject(e)
+                    }
+                }),
+            )
         })
 
         remove.forEach(info => {
-            promises.push(async () => {
-                await this.client.deleteWebhook(organization, token, info.webhookId, info.subscriptionId)
-            })
+            promises.push(
+                new Promise<void>(async (resolve, reject) => {
+                    try {
+                        await this.client.deleteWebhook(organization, token, info.webhookId, info.subscriptionId)
+                        resolve()
+                    } catch (e) {
+                        reject(e)
+                    }
+                }),
+            )
         })
 
         return promises
