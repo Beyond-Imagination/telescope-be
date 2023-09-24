@@ -1,7 +1,7 @@
 import { AchievementModel } from '@models/achievement'
 import { Organization, OrganizationModel } from '@models/organization'
 import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
-import { RankingsDtos } from '@dtos/rankings.dtos'
+import { MonthStarryPeopleDto, RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
 import { getBearerToken } from '@utils/verify.util'
 import { SpaceClient } from '@/client/space.client'
@@ -47,17 +47,11 @@ export class OrganizationService {
 
     public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
         const organization = await OrganizationModel.findByServerUrl(serverUrl)
-        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
 
-        const [userAchievements, profilesArray] = await Promise.all([
+        const [userAchievements, profileMap] = await Promise.all([
             AchievementModel.getRankingsByClientId(organization.clientId, from, to),
-            this.spaceClient.requestProfiles(token, serverUrl),
+            this.getProfileMap(serverUrl, organization),
         ])
-
-        const profileMap = profilesArray.data.data.reduce((map, obj) => {
-            map.set(obj.id, obj)
-            return map
-        }, new Map())
 
         const rankings: Array<RankingsDtos> = []
         userAchievements.forEach(achievement => {
@@ -80,5 +74,35 @@ export class OrganizationService {
         }
 
         return { size: size, from: from, to: to, rankings: rankings }
+    }
+
+    public async getStarryPeopleInOrganization(serverUrl: string, from: Date, to: Date) {
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+        const [userList, profileMap] = await Promise.all([
+            AchievementModel.getMostStarPeopleByClientId(organization.clientId, from, to),
+            this.getProfileMap(serverUrl, organization),
+        ])
+
+        const people: Array<MonthStarryPeopleDto> = []
+        userList.forEach(user => {
+            const profile = profileMap.get(user._id)
+            if (!profile) {
+                return
+            }
+            const name = `${profile.name.firstName} ${profile.name.lastName}`
+            const profilePicture = profile.profilePicture
+            people.push(new MonthStarryPeopleDto(user._id, user.userId, name, user.score, profilePicture))
+        })
+        return people
+    }
+
+    private async getProfileMap(serverUrl: string, organization: Organization) {
+        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
+        const profilesArray = await this.spaceClient.requestProfiles(token, serverUrl)
+
+        return profilesArray.data.data.reduce((map, obj) => {
+            map.set(obj.id, obj)
+            return map
+        }, new Map())
     }
 }

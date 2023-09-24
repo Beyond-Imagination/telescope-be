@@ -1,6 +1,6 @@
 import { Controller, Get, QueryParams, Req, UseBefore } from 'routing-controllers'
 import { OrganizationService } from '@services/organization.service'
-import { getDaysBefore } from '@utils/date'
+import { getDaysBefore, getMonthsBefore } from '@utils/date'
 import moment from 'moment-timezone'
 import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
 import { Request } from 'express'
@@ -77,5 +77,17 @@ export class OrganizationController {
 
         const serverUrl = decodeURI(query.serverUrl)
         return this.service.getRankingsInOrganization(serverUrl, fromDate, toDate, query.size)
+    }
+
+    @Get('/star/rankings')
+    starRankings(@QueryParams() query: OrganizationScoreListQuery) {
+        const from = query.from ? new Date(query.from) : getMonthsBefore(10)
+        const to = query.to ? new Date(query.to) : getMonthsBefore(1)
+
+        const fromDate = moment(from).tz(query.timezone).startOf('month').toDate()
+        const toDate = moment(to).tz(query.timezone).endOf('month').toDate()
+
+        const serverUrl = decodeURI(query.serverUrl)
+        return this.service.getStarryPeopleInOrganization(serverUrl, fromDate, toDate)
     }
 }

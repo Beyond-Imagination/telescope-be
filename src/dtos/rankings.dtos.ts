@@ -13,3 +13,21 @@ export class RankingsDtos {
         this.score = score
     }
 }
+
+export class MonthStarryPeopleDto {
+    year: number
+    month: number
+    id: string
+    name: string
+    score: number
+    profilePicture: string | null
+
+    constructor(date, id, name, score, profilePicture) {
+        this.year = date.year
+        this.month = date.month
+        this.id = id
+        this.name = name
+        this.score = score
+        this.profilePicture = profilePicture
+    }
+}
