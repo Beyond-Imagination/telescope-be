@@ -85,7 +85,7 @@ export class OrganizationService {
 
         const people: Array<MonthStarryPeopleDto> = []
         userList.forEach(user => {
-            const profile = profileMap.get(user._id)
+            const profile = profileMap.get(user.userId)
             if (!profile) {
                 return
             }
