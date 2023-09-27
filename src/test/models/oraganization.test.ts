@@ -1,14 +1,21 @@
 import { OrganizationModel } from '@models/organization'
-import { setTestDB, testClientId, testClientSecret, testOrganizationAdmin, testSpaceURL } from '@/test/test.util'
+import {
+    setTestDB,
+    testClientId,
+    testClientSecret,
+    testOrganizationAdmin,
+    testSpaceURL,
+    testWebhooks,
+} from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 
 describe('Organization 클래스', () => {
-    setTestDB(async () => await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null))
+    setTestDB(async () => await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, testWebhooks, null))
 
     describe('saveOrganization 메소드에서', () => {
         it('항상 성공한다', async () => {
             await expect(
-                OrganizationModel.saveOrganization('testClientId2', testClientSecret, 'https://test2.jetbrains.space', testOrganizationAdmin, null),
+                OrganizationModel.saveOrganization('testClientId2', testClientSecret, 'https://test2.jetbrains.space', testOrganizationAdmin, testWebhooks, null),
             ).resolves.not.toThrow()
         })
     })

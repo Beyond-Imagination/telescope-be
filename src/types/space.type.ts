@@ -11,6 +11,35 @@ export namespace space {
         }
     }
 
+    export const webhookNameCamelCase = (name: string): string => {
+        switch (name) {
+            case 'create_issue':
+                return 'createIssue'
+            case 'update_issue_status':
+                return 'updateIssueStatue'
+            case 'update_issue_assignee':
+                return 'updateIssueAssignee'
+            case 'delete_issue':
+                return 'deleteIssue'
+            case 'create_code_review':
+                return 'createCodeReview'
+            case 'close_code_review':
+                return 'closeCodeReview'
+            case 'add_chat_message_reaction':
+                return 'addChatMessageReaction'
+            case 'remove_chat_message_reaction':
+                return 'removeChatMessageReaction'
+            case 'create_code_review_discussion':
+                return 'createCodeReviewDiscussion'
+            case 'remove_code_review_discussion':
+                return 'removeCodeReviewDiscussion'
+            case 'reviewer_accepted_changes':
+                return 'reviewerAcceptedChanges'
+            case 'reviewer_resume_review':
+                return 'reviewerResumeReview'
+        }
+    }
+
     export interface installInfo {
         version: string
         webhooks: {

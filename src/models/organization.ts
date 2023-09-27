@@ -32,6 +32,52 @@ export class Point {
     public acceptCodeReview: number
 }
 
+export class Webhook {
+    @prop()
+    webhookId: string
+
+    @prop()
+    subscriptionId: string
+}
+
+export class Webhooks {
+    @prop({ _id: false })
+    public createIssue: Webhook
+
+    @prop({ _id: false })
+    public updateIssueStatus: Webhook
+
+    @prop({ _id: false })
+    public updateIssueAssignee: Webhook
+
+    @prop({ _id: false })
+    public deleteIssue: Webhook
+
+    @prop({ _id: false })
+    public createCodeReview: Webhook
+
+    @prop({ _id: false })
+    public closeCodeReview: Webhook
+
+    @prop({ _id: false })
+    public addChatMessageReaction: Webhook
+
+    @prop({ _id: false })
+    public removeChatMessageReaction: Webhook
+
+    @prop({ _id: false })
+    public createCodeReviewDiscussion: Webhook
+
+    @prop({ _id: false })
+    public removeCodeReviewDiscussion: Webhook
+
+    @prop({ _id: false })
+    public reviewerAcceptedChanges: Webhook
+
+    @prop({ _id: false })
+    public reviewerResumeReview: Webhook
+}
+
 @plugin(mongoosePaginate)
 @index({ clientId: 1 })
 @index({ serverUrl: 1 })
@@ -48,6 +94,9 @@ export class Organization extends Document {
 
     @prop({ _id: false })
     public points: Point
+
+    @prop({ _id: false })
+    public webhooks: Webhooks
 
     @prop({ type: String })
     public admin: string[]
@@ -107,6 +156,7 @@ export class Organization extends Document {
         clientSecret: string,
         serverUrl: string,
         admin: string,
+        webhooks: Webhooks,
         session: ClientSession,
     ): Promise<Organization> {
         return new OrganizationModel({
@@ -115,6 +165,7 @@ export class Organization extends Document {
             serverUrl: serverUrl,
             admin: [admin],
             points: new Point(),
+            webhooks: webhooks,
             version: VERSION,
         }).save({ session })
     }

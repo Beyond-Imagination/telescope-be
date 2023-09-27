@@ -1,6 +1,6 @@
 import MockAdapter from 'axios-mock-adapter'
 import axios from 'axios'
-import { Point } from '@models/organization'
+import { Point, Webhooks } from '@models/organization'
 import { VERSION } from '@config'
 import { InMemoryDB } from '@/test/inMemoryDB'
 import { getAxiosOption, getBearerToken } from '@utils/verify.util'
@@ -14,11 +14,14 @@ export const testClientSecret = 'test_client_secret'
 export const testOrganizationAdmin = 'testAdmin'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
+export const testSubscriptionId = 'testSubscriptionId'
 export const testUserId = 'testUserId'
 export const testMessageId = 'testMessageId'
 export const testChannelId = 'testChannelId'
 export const testDiscussionId = 'testDiscussionId'
 export const testReviewId = 'testReviewId'
+
+export const testWebhooks = new Webhooks()
 
 export const testAdminEmail = 'testAdmin@email.com'
 export const testAdminPassword = 'testAdminPassword'
@@ -31,6 +34,7 @@ export const mockOrganization = {
     serverUrl: testSpaceURL,
     admin: [testOrganizationAdmin],
     points: new Point(),
+    webhooks: testWebhooks,
     version: VERSION,
     createdAt: new Date(),
     __v: 0,
@@ -65,7 +69,9 @@ export function mockingAxios() {
     mockAxios.onPost(`${testSpaceURL}/api/http/applications/clientId:${testClientId}/webhooks`).reply(200, { id: testWebhookId })
 
     // subscription 등록하는 부분을 mocking
-    mockAxios.onPost(`${testSpaceURL}/api/http/applications/clientId:${testClientId}/webhooks/${testWebhookId}/subscriptions`).reply(200)
+    mockAxios
+        .onPost(`${testSpaceURL}/api/http/applications/clientId:${testClientId}/webhooks/${testWebhookId}/subscriptions`)
+        .reply(200, { id: testSubscriptionId })
 
     // ui-extension 등록하는 부분을 mocking
     mockAxios.onPatch(`${testSpaceURL}/api/http/applications/ui-extensions`).reply(200)

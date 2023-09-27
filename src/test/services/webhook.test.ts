@@ -14,7 +14,7 @@ import {
     testReviewId,
     testSpaceURL,
     testUserId,
-    testWebhookId,
+    testWebhookId, testWebhooks,
 } from '@/test/test.util'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
@@ -34,7 +34,7 @@ describe('WebhookService 클래스', () => {
     mockingAxios()
 
     setTestDB(async () => {
-        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, null)
+        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, testWebhooks, null)
         codeReviewDto = {
             clientId: testClientId,
             payload: {

@@ -1,4 +1,4 @@
-import { Organization, OrganizationModel } from '@models/organization'
+import { Organization, OrganizationModel, Webhook, Webhooks } from '@models/organization'
 import { ChangeServerUrlDto, InstallAndUninstallDTO, MessagePayloadDto } from '@dtos/index.dtos'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
@@ -21,16 +21,17 @@ export class IndexService {
         await this.deleteOrganizationIfExist(dto.serverUrl)
 
         const installInfo = Space.getInstallInfo()
+        const webhooks = new Webhooks()
         const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
         await limiter.schedule(() => {
             return Promise.all([
                 // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
                 this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
                 this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
-                ...this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, axiosOption),
+                ...this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, webhooks, axiosOption),
             ])
         })
-        await this.insertDBData(dto, null)
+        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, webhooks, null)
     }
 
     async uninstall(dto: InstallAndUninstallDTO) {
@@ -96,16 +97,12 @@ export class IndexService {
         await mongooseTransactionHandler(transactionHandlerMethod)
     }
 
-    private async insertDBData(dto: InstallAndUninstallDTO, session: ClientSession) {
-        await Organization.saveOrganization(dto.clientId, dto.clientSecret, dto.serverUrl, dto.userId, session)
-    }
-
-    private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, axiosOption: any) {
+    private addWebhooks(url: string, clientId: string, installInfo: space.installInfo, webhooks: Webhooks, axiosOption: any) {
         const webHookRegisterUrl = `${url}/api/http/applications/clientId:${clientId}/webhooks`
         return Object.values(installInfo.webhooks).map(webHookInfo => {
             return new Promise<void>(async (resolve, reject) => {
                 try {
-                    await this.addWebhook(webHookRegisterUrl, webHookInfo, axiosOption)
+                    await this.addWebhook(webHookRegisterUrl, webHookInfo, webhooks, axiosOption)
                     resolve()
                 } catch (e) {
                     reject(e)
@@ -114,9 +111,15 @@ export class IndexService {
         })
     }
 
-    private async addWebhook(url: string, webHookInfo: space.webhookInfo, axiosOption: any) {
-        const response = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
-        const webHookId = response.data.id
-        await this.spaceClient.registerSubscription(url, webHookInfo, webHookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
+    private async addWebhook(url: string, webHookInfo: space.webhookInfo, webhooks: Webhooks, axiosOption: any) {
+        const webhookName = space.webhookNameCamelCase(webHookInfo.name)
+        const webhookResponse = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
+        const webhookId = webhookResponse.data.id
+        const subscriptionResponse = await this.spaceClient.registerSubscription(url, webHookInfo, webhookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
+        const subscriptionId = subscriptionResponse.data.id
+        webhooks[webhookName] = {
+            webhookId,
+            subscriptionId,
+        }
     }
 }
