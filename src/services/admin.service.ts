@@ -21,7 +21,7 @@ import { AdminApprovedException } from '@exceptions/AdminApprovedException'
 import { AdminRejectException } from '@exceptions/AdminRejectException'
 import { v4 } from 'uuid'
 import { getAxiosOption, getBearerToken } from '@utils/verify.util'
-import { Organization, OrganizationModel } from '@models/organization'
+import { Organization, OrganizationModel, Webhooks } from '@models/organization'
 import { SpaceClient } from '@/client/space.client'
 import { WebhookAndSubscriptionsInfo } from '@dtos/WebHookInfo'
 import { VersionUpdateFailedException } from '@exceptions/VersionUpdateFailedException'
@@ -146,15 +146,16 @@ export class AdminService {
                 token,
                 organization.clientId,
             )
+            const webhooks = new Webhooks()
             const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await limiter.schedule(() => {
                 return Promise.all([
                     this.updateUIExtension(organization, token, installInfo),
-                    ...this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo),
+                    ...this.updateWebhooksAndSubscription(organization, token, webhookAndSubscriptionsInfo, installInfo, webhooks),
                 ])
             })
-            await OrganizationModel.updateOrganization(organization, installInfo)
+            await OrganizationModel.updateOrganization(organization, installInfo, webhooks)
         } catch (e) {
             logger.error(e.message)
             throw new VersionUpdateFailedException(e)
@@ -174,6 +175,7 @@ export class AdminService {
         token: string,
         current: WebhookAndSubscriptionsInfo,
         target: space.installInfo,
+        webhooks: Webhooks,
     ) {
         const keys = new Set<string>()
         Object.keys(target.webhooks).forEach(key => {
@@ -215,8 +217,14 @@ export class AdminService {
                         const url = `${organization.serverUrl}/api/http/applications/clientId:${organization.clientId}/webhooks`
                         const option = getAxiosOption(token)
                         const response = await this.client.registerWebHook(url, info, option)
-                        const webHookId = response.data.id
-                        await this.client.registerSubscription(url, info, webHookId, option)
+                        const webhookId = response.data.id
+                        const subscriptionResponse = await this.client.registerSubscription(url, info, webhookId, option)
+                        const subscriptionId = subscriptionResponse.data.id
+                        const webhookName = space.webhookNameCamelCase(info.name)
+                        webhooks[webhookName] = {
+                            webhookId,
+                            subscriptionId,
+                        }
                         resolve()
                     } catch (e) {
                         reject(e)
@@ -231,6 +239,11 @@ export class AdminService {
                     try {
                         await this.client.updateWebhook(organization, token, info.webhookId, info)
                         await this.client.updateSubscription(organization, token, info.webhookId, info.subscriptionId, target.version, info)
+                        const webhookName = space.webhookNameCamelCase(info.name)
+                        webhooks[webhookName] = {
+                            webhookId: info.webhookId,
+                            subscriptionId: info.subscriptionId,
+                        }
                         resolve()
                     } catch (e) {
                         reject(e)

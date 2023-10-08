@@ -135,7 +135,12 @@ export class Organization extends Document {
         return OrganizationModel.deleteMany({ clientId: clientId }).session(session)
     }
 
-    public static async updateOrganization(this: ReturnModelType<typeof Organization>, organization: Organization, installInfo: space.installInfo) {
+    public static async updateOrganization(
+        this: ReturnModelType<typeof Organization>,
+        organization: Organization,
+        installInfo: space.installInfo,
+        webhooks: Webhooks,
+    ) {
         await OrganizationModel.findOneAndUpdate(
             { clientId: organization.clientId },
             {
@@ -143,6 +148,7 @@ export class Organization extends Document {
                 // @prop({ default: 1 }) 데코레이터로 DB에 값이 없어도 select 할때 값이 채워져 있다
                 // 따라서 해당 정보를 바로 저장하면 자연스럽게 마이그레이션이 된다
                 points: organization.points,
+                webhooks: webhooks,
             },
         )
     }
