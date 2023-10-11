@@ -259,7 +259,8 @@ export class Achievement extends Document {
             },
             {
                 // 각 (월 & user)기준으로는 오름차순 별 받은 횟수기준으로 내림차순 정렬
-                $sort: { '_id.year': 1, '_id.month': 1, count: -1 },
+                // 만약 동점자가 있다면 id가 앞선순
+                $sort: { '_id.year': 1, '_id.month': 1, count: -1, '_id.user': 1 },
             },
             {
                 $group: {
