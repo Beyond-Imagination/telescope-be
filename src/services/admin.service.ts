@@ -12,7 +12,7 @@ import { Admin, AdminModel } from '@models/admin'
 import { AdminExistException } from '@exceptions/AdminExistException'
 import { deleteCache, revokeToken } from '@utils/cache.util'
 import { AdminNotFoundException } from '@exceptions/AdminNotFoundException'
-import { SECRET_KEY } from '@config'
+import { BOTTLENECK_MAX_CONCURRENT, BOTTLENECK_MIN_TIME, SECRET_KEY } from '@config'
 import { AdminNotApprovedException } from '@exceptions/AdminNotApprovedException'
 import { PageInfoDTO } from '@dtos/pagination.dtos'
 import jwt from 'jsonwebtoken'
@@ -146,8 +146,8 @@ export class AdminService {
                 token,
                 organization.clientId,
             )
+            const limiter = new Bottleneck({ maxConcurrent: BOTTLENECK_MAX_CONCURRENT, minTime: BOTTLENECK_MIN_TIME })
             const webhooks = new Webhooks()
-            const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
             // 기존에 있는 웹훅만을 업데이트할 경우 subscription update 와 webhook update 사이에는 순서가 없습니다.
             await limiter.schedule(() => {
                 return Promise.all([

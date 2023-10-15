@@ -1,4 +1,4 @@
-import { Organization, OrganizationModel, Webhook, Webhooks } from '@models/organization'
+import { Organization, OrganizationModel, Webhooks } from '@models/organization'
 import { ChangeServerUrlDto, InstallAndUninstallDTO, MessagePayloadDto } from '@dtos/index.dtos'
 import { mongooseTransactionHandler } from '@utils/util'
 import { Achievement } from '@models/achievement'
@@ -11,6 +11,7 @@ import { space } from '@/types/space.type'
 import Bottleneck from 'bottleneck'
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { StarService } from '@services/star.service'
+import { BOTTLENECK_MAX_CONCURRENT, BOTTLENECK_MIN_TIME } from '@config'
 
 export class IndexService {
     spaceClient = SpaceClient.getInstance()
@@ -22,7 +23,7 @@ export class IndexService {
 
         const installInfo = Space.getInstallInfo()
         const webhooks = new Webhooks()
-        const limiter = new Bottleneck({ maxConcurrent: 5, minTime: 100 })
+        const limiter = new Bottleneck({ maxConcurrent: BOTTLENECK_MAX_CONCURRENT, minTime: BOTTLENECK_MIN_TIME })
         await limiter.schedule(() => {
             return Promise.all([
                 // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다

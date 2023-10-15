@@ -15,7 +15,8 @@ import {
     testOrganizationAdmin,
     testReviewId,
     testSpaceURL,
-    testUserId, testWebhooks,
+    testUserId,
+    testWebhooks,
 } from '@/test/test.util'
 import { OrganizationNotFoundException } from '@exceptions/OrganizationNotFoundException'
 import { OrganizationModel } from '@models/organization'
@@ -160,7 +161,14 @@ describe('validation.middleware 모듈', () => {
             })
 
             it('정당한 newServerUrl과 clientId에 대해서, 성공한다', async () => {
-                const org = await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, testWebhooks, null)
+                const org = await OrganizationModel.saveOrganization(
+                    testClientId,
+                    testClientSecret,
+                    testSpaceURL,
+                    testOrganizationAdmin,
+                    testWebhooks,
+                    null,
+                )
                 request.body.clientId = org.clientId
                 await expect(testChangeServerUrlValidation(request)).resolves.not.toThrow()
             })
