@@ -29,7 +29,7 @@ job("Backend Deploy 'develop'") {
                 git status
 
                 git remote add heroku https://token:${'$'}HEROKU_API_KEY@git.heroku.com/bi-telescope-api.git
-                git push heroku develop:main
+                git push heroku develop:main -f
             """
         }
     }
