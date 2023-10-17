@@ -11,6 +11,7 @@ job("Backend Deploy 'develop'") {
         refSpec {
             +"refs/heads/develop"
         }
+        depth = UNLIMITED_DEPTH
     }
 
     container(displayName = "Push heroku remote", image = "alpine:3.18") {
@@ -29,6 +30,7 @@ job("Backend Deploy 'develop'") {
                 git status
 
                 git remote add heroku https://token:${'$'}HEROKU_API_KEY@git.heroku.com/bi-telescope-api.git
+                git fetch --all --unshallow
                 git push heroku develop:main -f
             """
         }
