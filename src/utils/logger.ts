@@ -55,6 +55,9 @@ const loggerMiddleware = expressWinston.logger({
     ...winstonOption,
     requestWhitelist: ['headers.origin', 'body', 'query'],
     responseWhitelist: ['body', 'statusCode'],
+    bodyBlacklist: ['password', 'clientSecret', 'token', 'jwt', 'jwtPayload'],
+    headerBlacklist: ['authorization'],
+
     ignoreRoute: function (req, res) {
         if (req.url.startsWith('/api/users/picture')) {
             return res.statusCode < 300
