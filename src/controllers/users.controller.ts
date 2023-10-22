@@ -54,10 +54,10 @@ export class UsersController {
     @UseBefore(setOrganizationByServerUrl)
     scoreListByUserId(@Req() req: Request, @Param('userId') id: string, @QueryParams() query: UserQuery) {
         const from = query.from ? new Date(query.from) : getDaysBefore(174) // 7 * 25 - 1
-        from.setDate(from.getDate() + ((7 - from.getDay()) % 7)) // 시작을 항상 일요일로 맞추기 위해 계산해준다
         const to = query.to ? new Date(query.to) : new Date()
 
         const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
+        fromDate.setDate(fromDate.getDate() + ((7 - fromDate.getDay()) % 7)) // 시작을 항상 일요일로 맞추기 위해 계산해준다
         const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
 
         return this.service.getUserScoreList(req.organization, fromDate, toDate, id)
