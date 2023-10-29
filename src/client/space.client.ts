@@ -61,6 +61,16 @@ export class SpaceClient {
                 },
                 acceptedHttpResponseCodes: [],
                 payloadFields: webHookInfo.payloadFields,
+                subscriptions: [
+                    {
+                        name: webHookInfo.subscription.name,
+                        subscription: {
+                            subjectCode: webHookInfo.subscription.subjectCode,
+                            filters: webHookInfo.subscription.filters || [],
+                            eventTypeCodes: webHookInfo.subscription.eventTypeCode,
+                        },
+                    },
+                ],
             },
             axiosOption,
         )

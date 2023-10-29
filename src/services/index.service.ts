@@ -115,12 +115,9 @@ export class IndexService {
     private async addWebhook(url: string, webHookInfo: space.webhookInfo, webhooks: Webhooks, axiosOption: any) {
         const webhookName = space.webhookNameCamelCase(webHookInfo.name)
         const webhookResponse = await this.spaceClient.registerWebHook(url, webHookInfo, axiosOption)
-        const webhookId = webhookResponse.data.id
-        const subscriptionResponse = await this.spaceClient.registerSubscription(url, webHookInfo, webhookId, axiosOption) // 웹훅이 등록이 된 후에 subscription을 등록
-        const subscriptionId = subscriptionResponse.data.id
         webhooks[webhookName] = {
-            webhookId,
-            subscriptionId,
+            webhookId: webhookResponse.data.id,
+            subscriptionId: webhookResponse.data.subscriptions?.[0]?.id,
         }
     }
 }
