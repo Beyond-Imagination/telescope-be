@@ -13,6 +13,7 @@ import jwkToPem from 'jwk-to-pem'
 import { deleteCache } from '@utils/cache.util'
 import { WrongServerUrlException } from '@exceptions/WrongServerUrlException'
 import { space } from '@/types/space.type'
+import { data } from '@services/messages/dev'
 
 const client = SpaceClient.getInstance()
 
@@ -306,5 +307,17 @@ export const spacePayloadValidation = (request: Request, response: Response, nex
         default:
             throw new WrongClassNameException()
     }
+
     validator(request, response, next)
+}
+
+export const checkMessageId = (request: Request, response: Response, next: NextFunction) => {
+    const messageId = request.params.id
+    const messageArray = Object.values(data)
+
+    if (!messageArray.find(message => message.id === messageId)) {
+        throw new InvalidRequestException()
+    }
+
+    next()
 }

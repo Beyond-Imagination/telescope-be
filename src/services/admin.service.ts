@@ -32,6 +32,7 @@ import Bottleneck from 'bottleneck'
 import { ClientSession } from 'mongoose'
 import { Achievement } from '@models/achievement'
 import { mongooseTransactionHandler } from '@utils/util'
+import { data as messages, getMessageById } from '@services/messages/dev'
 
 export class AdminService {
     private client = SpaceClient.getInstance()
@@ -281,6 +282,38 @@ export class AdminService {
         } catch (error) {
             logger.error(`'updateUIExtension' failed ${error.message}`)
             throw error
+        }
+    }
+
+    async messageList() {
+        return {
+            messages,
+        }
+    }
+
+    async broadcastMessage(id: string, serverUrls: string[]) {
+        const message = getMessageById(id).content
+
+        for (const serverUrl of serverUrls) {
+            await this.sendMessageToUsers(serverUrl, message)
+        }
+    }
+
+    async sendMessageToUsers(serverUrl: string, message: string) {
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+
+        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
+
+        const axiosOption = {
+            headers: {
+                Authorization: `${token}`,
+            },
+        }
+
+        const profilesArray = await this.client.requestProfiles(token, serverUrl)
+
+        for (const obj of profilesArray.data.data) {
+            await this.client.sendMessage(serverUrl, axiosOption, obj.id, message)
         }
     }
 }

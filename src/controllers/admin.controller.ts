@@ -1,4 +1,18 @@
-import { Authorized, Body, BodyParam, Controller, Delete, Get, OnUndefined, Patch, Post, QueryParams, Req, UseBefore } from 'routing-controllers'
+import {
+    Authorized,
+    Body,
+    BodyParam,
+    Controller,
+    Delete,
+    Get,
+    OnUndefined,
+    Patch,
+    Post,
+    QueryParams,
+    Req,
+    UseBefore,
+    Param,
+} from 'routing-controllers'
 import { AdminService } from '@services/admin.service'
 import {
     AdminListQueryDTO,
@@ -7,10 +21,12 @@ import {
     OrganizationListQueryDTO,
     OrganizationWebhookQueryDto,
     VersionUpdateDTO,
+    MessageQueryDTO,
 } from '@dtos/admin.dtos'
 import { adminLog } from '@middlewares/log.middleware'
 import { Request } from 'express'
 import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
+import { checkMessageId } from '@middlewares/validation.middleware'
 
 @UseBefore(adminLog)
 @Controller('/admin')
@@ -80,5 +96,19 @@ export class AdminController {
     @OnUndefined(204)
     async delete(@Req() req: Request) {
         await this.service.deleteOrganization(req.organization)
+    }
+
+    @Authorized()
+    @Get('/messages')
+    async messageList() {
+        return await this.service.messageList()
+    }
+
+    @Authorized()
+    @Post('/messages/:id/send')
+    @UseBefore(checkMessageId)
+    @OnUndefined(204)
+    async sendMessage(@Param('id') id: string, @Body() dto: MessageQueryDTO) {
+        return await this.service.broadcastMessage(id, dto.serverUrls)
     }
 }

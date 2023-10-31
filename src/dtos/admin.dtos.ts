@@ -117,3 +117,7 @@ export class OrganizationWebhookQueryDto {
     @IsNotEmpty()
     serverUrl: string
 }
+
+export class MessageQueryDTO {
+    serverUrls: string[]
+}
