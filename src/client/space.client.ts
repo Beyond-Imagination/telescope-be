@@ -133,12 +133,12 @@ export class SpaceClient {
             })
     }
 
-    async getCodeReviewInfo(serverUrl, projectKey, reviewId, headers: any) {
-        const url = `${serverUrl}/api/http/projects/key:${projectKey}/code-reviews/id:${reviewId}`
+    async getCommitFilesDiff(serverUrl, projectKey, reviewId, headers: any) {
+        const url = `${serverUrl}/api/http/projects/key:${projectKey}/code-reviews/id:${reviewId}/files`
         const axiosOption = {
             headers: headers,
             params: {
-                $fields: 'createdBy(id),branchPairs(isMerged)',
+                $fields: 'data(change(diffSize))',
             },
         }
         return (await axios.get(url, axiosOption)).data

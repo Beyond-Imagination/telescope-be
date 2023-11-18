@@ -4,6 +4,7 @@ import { Organization } from '@models/organization'
 import { CodeReviewDiscussionDTO, CodeReviewDTO, IssueDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
 import { SpaceClient } from '@/client/space.client'
 import { StarService } from '@services/star.service'
+import { CodeLineDiff } from '@models/CodeLineDiff'
 
 export class WebhookService {
     spaceClient = SpaceClient.getInstance()
@@ -66,7 +67,7 @@ export class WebhookService {
         }
     }
 
-    public async handleCodeReviewWebHook(codeReviewDTO: CodeReviewDTO, axiosOption: any, isOpen: boolean) {
+    public async handleCodeReviewWebHook(codeReviewDTO: CodeReviewDTO, organization: Organization, axiosOption: any, isOpen: boolean) {
         if (codeReviewDTO.payload.className !== 'CodeReviewWebhookEvent') {
             throw new WrongClassNameException()
         }
@@ -83,14 +84,32 @@ export class WebhookService {
                 })
             } else if (codeReviewDTO.payload.review.className === 'MergeRequestRecord' && codeReviewDTO.payload.review.branchPairs[0]?.isMerged) {
                 // MR이면서 머지가 됐을때만 저장한다
-                await Achievement.saveAchievement({
-                    clientId: codeReviewDTO.clientId,
-                    user: codeReviewDTO.payload.review.createdBy.id,
-                    projectId: codeReviewDTO.payload.review?.projectId,
-                    reviewId: codeReviewDTO.payload.review.id,
-                    repository: codeReviewDTO.payload.repository,
-                    type: AchievementType.MergeMr,
-                })
+
+                const commitDiff = await this.spaceClient.getCommitFilesDiff(
+                    organization.serverUrl,
+                    codeReviewDTO.payload.review.project.key,
+                    codeReviewDTO.payload.review.id,
+                    axiosOption.headers,
+                )
+                await Promise.all([
+                    Achievement.saveAchievement({
+                        clientId: codeReviewDTO.clientId,
+                        user: codeReviewDTO.payload.review.createdBy.id,
+                        projectId: codeReviewDTO.payload.review.projectId,
+                        reviewId: codeReviewDTO.payload.review.id,
+                        repository: codeReviewDTO.payload.repository,
+                        type: AchievementType.MergeMr,
+                    }),
+                    CodeLineDiff.saveCodeLineDiff({
+                        clientId: codeReviewDTO.clientId,
+                        user: codeReviewDTO.payload.review.createdBy.id,
+                        projectId: codeReviewDTO.payload.review.projectId,
+                        reviewId: codeReviewDTO.payload.review.id,
+                        repository: codeReviewDTO.payload.repository,
+                        added: commitDiff.data.reduce((prev, curr) => prev + curr.change.diffSize.added, 0),
+                        deleted: commitDiff.data.reduce((prev, curr) => prev + curr.change.diffSize.deleted, 0),
+                    }),
+                ])
             }
         }
     }

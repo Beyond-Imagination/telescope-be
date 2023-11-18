@@ -182,22 +182,26 @@ describe('WebhookService 클래스', () => {
         describe('코드리뷰가 생성될때', () => {
             it('className이 CodeReviewWebhookEvent가 아니면 에러가 발생한다', async () => {
                 codeReviewDto.payload.className = 'whatever'
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), true)).rejects.toThrowError(WrongClassNameException)
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, mockOrganization, getTestAxiosOption(), true)).rejects.toThrowError(
+                    WrongClassNameException,
+                )
             })
 
             it('정상적인 요청이면 성공한다', async () => {
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), true)).resolves.not.toThrowError()
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, mockOrganization, getTestAxiosOption(), true)).resolves.not.toThrowError()
             })
         })
 
         describe('MR이 머지될때', () => {
             it('className이 CodeReviewWebhookEvent가 아니면 에러가 발생한다', async () => {
                 codeReviewDto.payload.className = 'whatever'
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), false)).rejects.toThrowError(WrongClassNameException)
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, mockOrganization, getTestAxiosOption(), false)).rejects.toThrowError(
+                    WrongClassNameException,
+                )
             })
 
             it('정상적인 요청이면 성공한다', async () => {
-                await expect(sut.handleCodeReviewWebHook(codeReviewDto, getTestAxiosOption(), false)).resolves.not.toThrowError()
+                await expect(sut.handleCodeReviewWebHook(codeReviewDto, mockOrganization, getTestAxiosOption(), false)).resolves.not.toThrowError()
             })
         })
     })

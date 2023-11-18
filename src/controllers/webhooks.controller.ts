@@ -48,15 +48,17 @@ export class WebhooksController {
     }
 
     @Post('/code-review/create')
+    @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async createCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
-        await this.service.handleCodeReviewWebHook(payload, request.axiosOption, true)
+        await this.service.handleCodeReviewWebHook(payload, request.organization, request.axiosOption, true)
     }
 
     @Post('/code-review/close')
+    @UseBefore(setOrganizationByClientId)
     @OnUndefined(204)
     async closeCodeReview(@Body() payload: CodeReviewDTO, @Req() request: Request) {
-        await this.service.handleCodeReviewWebHook(payload, request.axiosOption, false)
+        await this.service.handleCodeReviewWebHook(payload, request.organization, request.axiosOption, false)
     }
 
     @Post('/code-review/discussion/create')
