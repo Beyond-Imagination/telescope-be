@@ -1,4 +1,5 @@
 import { ScoreDtos } from '@dtos/score.dtos'
+import { CodeLinesDtos } from '@dtos/codeLines.dtos'
 
 export class RankingsDtos {
     id: string
@@ -29,5 +30,19 @@ export class MonthStarryPeopleDto {
         this.name = name
         this.score = score
         this.profilePicture = profilePicture
+    }
+}
+
+export class CodeLinesRankingsDtos {
+    id: string
+    name: string
+    profilePicture: string | null
+    codeLines: CodeLinesDtos
+
+    constructor(id, name, codeLines, profilePicture) {
+        this.id = id
+        this.name = name
+        this.profilePicture = profilePicture
+        this.codeLines = codeLines
     }
 }

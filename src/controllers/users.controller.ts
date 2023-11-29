@@ -6,6 +6,7 @@ import { StarService } from '@services/star.service'
 import { setOrganizationByServerUrl } from '@middlewares/organization.middleware'
 import { Request } from 'express'
 import moment from 'moment-timezone'
+import { setFromToDate } from '@middlewares/date.middleware'
 
 class UserQuery {
     serverUrl: string
@@ -31,25 +32,33 @@ export class UsersController {
     starService: StarService = StarService.getInstance()
     spaceClient = SpaceClient.getInstance()
 
+    /**
+     * @param token string
+     * @param query PictureQuery
+     */
     @Get('/picture')
     async picture(@HeaderParam('Authorization') token: string, @QueryParams() query: PictureQuery) {
         const response = await this.spaceClient.requestProfileImage(token, query.serverUrl, query.profilePicture)
         return response.data
     }
 
+    /**
+     * @param req Request
+     * @param id string
+     * @param query UserQuery
+     */
     @Get('/:userId/score')
     @UseBefore(setOrganizationByServerUrl)
-    scoreByUserId(@Req() req: Request, @Param('userId') id: string, @QueryParams() query: UserQuery) {
-        // 기본 전략은 organization score API 와 동일
-        const from = query.from ? new Date(query.from) : getDaysBefore(7)
-        const to = query.to ? new Date(query.to) : new Date()
-
-        const fromDate = moment(from).tz(query.timezone).startOf('day').toDate()
-        const toDate = moment(to).tz(query.timezone).endOf('day').toDate()
-
-        return this.service.getUserScore(req.organization, fromDate, toDate, id)
+    @UseBefore(setFromToDate(7))
+    scoreByUserId(@Req() req: Request, @Param('userId') id: string) {
+        return this.service.getUserScore(req.organization, req.fromDate, req.toDate, id)
     }
 
+    /**
+     * @param req Request
+     * @param id string
+     * @param query UserQuery
+     */
     @Get('/:userId/score/list')
     @UseBefore(setOrganizationByServerUrl)
     scoreListByUserId(@Req() req: Request, @Param('userId') id: string, @QueryParams() query: UserQuery) {
@@ -63,6 +72,22 @@ export class UsersController {
         return this.service.getUserScoreList(req.organization, fromDate, toDate, id)
     }
 
+    /**
+     * @param req Request
+     * @param id string
+     * @param query UserQuery
+     */
+    @Get('/:userId/code-lines')
+    @UseBefore(setOrganizationByServerUrl)
+    @UseBefore(setFromToDate(7))
+    codeLinesByUserId(@Req() req: Request, @Param('userId') id: string) {
+        return this.service.getUserCodeLines(req.organization, req.fromDate, req.toDate, id)
+    }
+
+    /**
+     * @param req Request
+     * @param query StarQuery
+     */
     @Get('/remainStar')
     @UseBefore(setOrganizationByServerUrl)
     async remainStar(@Req() req: Request, @QueryParams() query: StarQuery) {

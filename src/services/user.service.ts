@@ -1,6 +1,8 @@
 import { Organization } from '@models/organization'
 import { AchievementModel } from '@models/achievement'
 import { ScoreDtos } from '@dtos/score.dtos'
+import { CodeLineDiffModel } from '@models/CodeLineDiff'
+import { CodeLinesDtos } from '@dtos/codeLines.dtos'
 
 export class UserService {
     public async getUserScore(organization: Organization, from: Date, to: Date, userId: string) {
@@ -33,5 +35,12 @@ export class UserService {
             }
         }
         return results
+    }
+
+    public async getUserCodeLines(organization: Organization, from: Date, to: Date, userId: string) {
+        const result = await CodeLineDiffModel.getUserCodeLinesByClientId(organization.clientId, from, to, userId)
+
+        const codeLines = new CodeLinesDtos(result[0]) // 각 항목의 가중치는 조직의 정책에 따른다
+        return { from, to, userId, codeLines }
     }
 }

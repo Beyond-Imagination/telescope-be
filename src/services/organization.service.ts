@@ -1,10 +1,12 @@
 import { AchievementModel } from '@models/achievement'
 import { Organization, OrganizationModel } from '@models/organization'
 import { AchievementCount, ScoreDtos } from '@dtos/score.dtos'
-import { MonthStarryPeopleDto, RankingsDtos } from '@dtos/rankings.dtos'
+import { CodeLinesRankingsDtos, MonthStarryPeopleDto, RankingsDtos } from '@dtos/rankings.dtos'
 import { isNumber } from 'class-validator'
 import { getBearerToken } from '@utils/verify.util'
 import { SpaceClient } from '@/client/space.client'
+import { CodeLineDiffModel } from '@models/CodeLineDiff'
+import { CodeLinesDtos, CodeLinesSummary } from '@dtos/codeLines.dtos'
 
 export class OrganizationService {
     spaceClient = SpaceClient.getInstance()
@@ -45,35 +47,17 @@ export class OrganizationService {
         return results
     }
 
-    public async getRankingsInOrganization(serverUrl: string, from: Date, to: Date, size: number | null) {
-        const organization = await OrganizationModel.findByServerUrl(serverUrl)
-
-        const [userAchievements, profileMap] = await Promise.all([
+    public async getRankingsInOrganization(organization: Organization, from: Date, to: Date, size: number | null) {
+        const rankings: Array<RankingsDtos> = await this.getRankingsArray(
             AchievementModel.getRankingsByClientId(organization.clientId, from, to),
-            this.getProfileMap(serverUrl, organization),
-        ])
+            organization,
+            size,
+            (item: AchievementCount) => new ScoreDtos(organization.points, item),
+            (item, score, name, profilePicture) => new RankingsDtos(item._id, name, score, profilePicture),
+            (r1, r2) => r2.score.total - r1.score.total,
+        )
 
-        const rankings: Array<RankingsDtos> = []
-        userAchievements.forEach(achievement => {
-            const profile = profileMap.get(achievement._id)
-            if (!profile) {
-                return
-            }
-            const name = `${profile.name.firstName} ${profile.name.lastName}`
-            const profilePicture = profile.profilePicture
-            const score = new ScoreDtos(organization.points, achievement)
-            rankings.push(new RankingsDtos(achievement._id, name, score, profilePicture))
-        })
-
-        rankings.sort((a, b) => b.score.total - a.score.total)
-
-        if (isNumber(size) && size > rankings.length) {
-            rankings.splice(size)
-        } else {
-            size = rankings.length
-        }
-
-        return { size: size, from: from, to: to, rankings: rankings }
+        return { size: rankings.length, from: from, to: to, rankings: rankings }
     }
 
     public async getStarryPeopleInOrganization(serverUrl: string, from: Date, to: Date) {
@@ -94,6 +78,56 @@ export class OrganizationService {
             people.push(new MonthStarryPeopleDto(user._id, user.userId, name, user.score, profilePicture))
         })
         return people
+    }
+
+    public async getCodeLinesRankingsInOrganization(organization: Organization, from: Date, to: Date, size: number | null) {
+        const codeLines = await this.getRankingsArray(
+            CodeLineDiffModel.getRankingsByClientId(organization.clientId, from, to),
+            organization,
+            size,
+            (item: CodeLinesSummary) => new CodeLinesDtos(item),
+            (item, codeLines, name, profilePicture) => new CodeLinesRankingsDtos(item._id, name, codeLines, profilePicture),
+            (r1, r2) => r2.codeLines.total - r1.codeLines.total,
+        )
+
+        return { size: codeLines.length, from: from, to: to, codeLines: codeLines }
+    }
+
+    /**
+     * @type D 가공하기전 원천데이터의 타입
+     * @type T 1차 가공된 임시 데이터의 타입
+     * @type R 최종 반환할 데이터의 타입이자 랭킹정보를 포함한 데이터 타입
+     */
+    private async getRankingsArray<D extends { _id: any }, T, R>(
+        dataListPromise: Promise<Array<D>>,
+        organization: Organization,
+        size: number,
+        dataToTemporalFactory: (d: D) => T,
+        rankInfoFactory: (d: D, T: T, name: string, profilePicture: string) => R,
+        compareFn: (r1: R, r2: R) => number,
+    ) {
+        const [list, profileMap] = await Promise.all([dataListPromise, this.getProfileMap(organization.serverUrl, organization)])
+        const rankings: Array<R> = []
+
+        list.forEach(dataItem => {
+            const profile = profileMap.get(dataItem._id)
+            if (!profile) {
+                return
+            }
+            const name = `${profile.name.firstName} ${profile.name.lastName}`
+            const profilePicture = profile.profilePicture
+            const temporalValue = dataToTemporalFactory(dataItem)
+            rankings.push(rankInfoFactory(dataItem, temporalValue, name, profilePicture))
+        })
+
+        rankings.sort(compareFn)
+
+        if (isNumber(size) && size > rankings.length) {
+            rankings.splice(size)
+        } else {
+            rankings.length
+        }
+        return rankings
     }
 
     private async getProfileMap(serverUrl: string, organization: Organization) {

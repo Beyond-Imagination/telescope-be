@@ -9,7 +9,10 @@ declare global {
             _routeWhitelists: any
             _routeBlacklists: any
             organization: Organization
+            fromDate: Date
+            toDate: Date
         }
+
         interface Response {
             error: Error
         }
