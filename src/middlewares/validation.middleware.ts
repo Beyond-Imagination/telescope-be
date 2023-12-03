@@ -313,9 +313,9 @@ export const spacePayloadValidation = (request: Request, response: Response, nex
 
 export const checkMessageId = (request: Request, response: Response, next: NextFunction) => {
     const messageId = request.params.id
-    const messageArray = Object.values(data)
+    const message = data[messageId]
 
-    if (!messageArray.find(message => message.id === messageId)) {
+    if (!message) {
         throw new InvalidRequestException()
     }
 
