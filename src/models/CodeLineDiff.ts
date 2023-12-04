@@ -2,6 +2,7 @@ import { getModelForClass, index, prop, ReturnModelType } from '@typegoose/typeg
 import { Document } from '@models/document'
 import { CodeLinesSummary } from '@dtos/codeLines.dtos'
 
+@index({ clientId: 1, mergedAt: -1 })
 @index({ clientId: 1, user: 1, mergedAt: -1 })
 export class CodeLineDiff extends Document {
     @prop()
