@@ -106,8 +106,12 @@ export class WebhookService {
                         projectId: codeReviewDTO.payload.review.projectId,
                         reviewId: codeReviewDTO.payload.review.id,
                         repository: codeReviewDTO.payload.repository,
-                        added: commitDiff.data.reduce((prev, curr) => prev + curr.change.diffSize.added, 0),
-                        deleted: commitDiff.data.reduce((prev, curr) => prev + curr.change.diffSize.deleted, 0),
+
+                        // commitDiff.data : not null
+                        // commitDiff.data.change : not null
+                        // commitDiff.data.change.diffSize : 바이너리 파일일 경우 null
+                        added: commitDiff.data.reduce((prev, curr) => prev + (curr.change.diffSize ? curr.change.diffSize.added : 0), 0),
+                        deleted: commitDiff.data.reduce((prev, curr) => prev + (curr.change.diffSize ? curr.change.diffSize.deleted : 0), 0),
                     }),
                 ])
             }
