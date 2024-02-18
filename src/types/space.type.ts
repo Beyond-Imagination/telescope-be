@@ -64,6 +64,12 @@ export namespace space {
                 uniqueCode?: string
                 iframeUrl?: string
             }[]
+            // startedUiExtension도 extension의 일종이지만 사용방법이 달라 따로 정의
+            startedUiExtension?: {
+                className: string
+                gettingStartedUrl: string
+                gettingStartedTitle: string
+            }
         }
         right: {
             codes: string[]

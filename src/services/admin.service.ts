@@ -163,6 +163,38 @@ export class AdminService {
         }
     }
 
+    async messageList() {
+        return {
+            messages,
+        }
+    }
+
+    async broadcastMessage(id: string, serverUrls: string[]) {
+        const message = getMessageById(id).content
+
+        for (const serverUrl of serverUrls) {
+            await this.sendMessageToUsers(serverUrl, message)
+        }
+    }
+
+    async sendMessageToUsers(serverUrl: string, message: string) {
+        const organization = await OrganizationModel.findByServerUrl(serverUrl)
+
+        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
+
+        const axiosOption = {
+            headers: {
+                Authorization: `${token}`,
+            },
+        }
+
+        const profilesArray = await this.client.requestProfiles(token, serverUrl)
+
+        for (const obj of profilesArray.data.data) {
+            await this.client.sendMessage(serverUrl, axiosOption, obj.id, message)
+        }
+    }
+
     private async getCredentials(organization: Organization) {
         return getBearerToken(organization.serverUrl, organization.clientId, organization.clientSecret)
     }
@@ -278,42 +310,10 @@ export class AdminService {
         }
 
         try {
-            await this.client.registerUIExtension(organization.serverUrl, installInfo, axiosOption)
+            await this.client.registerUIExtension(organization.serverUrl, installInfo, 'Telescope', axiosOption)
         } catch (error) {
             logger.error(`'updateUIExtension' failed ${error.message}`)
             throw error
-        }
-    }
-
-    async messageList() {
-        return {
-            messages,
-        }
-    }
-
-    async broadcastMessage(id: string, serverUrls: string[]) {
-        const message = getMessageById(id).content
-
-        for (const serverUrl of serverUrls) {
-            await this.sendMessageToUsers(serverUrl, message)
-        }
-    }
-
-    async sendMessageToUsers(serverUrl: string, message: string) {
-        const organization = await OrganizationModel.findByServerUrl(serverUrl)
-
-        const token = await getBearerToken(serverUrl, organization.clientId, organization.clientSecret)
-
-        const axiosOption = {
-            headers: {
-                Authorization: `${token}`,
-            },
-        }
-
-        const profilesArray = await this.client.requestProfiles(token, serverUrl)
-
-        for (const obj of profilesArray.data.data) {
-            await this.client.sendMessage(serverUrl, axiosOption, obj.id, message)
         }
     }
 }

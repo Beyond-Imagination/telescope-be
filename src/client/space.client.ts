@@ -31,6 +31,15 @@ export class SpaceClient {
         return publicKeyResponse.keys
     }
 
+    getApplicationInfo(url: string, clientId: string, axiosOption: any) {
+        return axios.get(`${url}/api/http/applications/clientId:${clientId}`, {
+            ...axiosOption,
+            params: {
+                $fields: 'id,name',
+            },
+        })
+    }
+
     requestPermissions(url: string, clientId: string, axiosOption: any, installInfo: space.installInfo) {
         return axios.patch(
             `${url}/api/http/applications/clientId:${clientId}/authorizations/authorized-rights/request-rights`,
@@ -91,12 +100,15 @@ export class SpaceClient {
         )
     }
 
-    registerUIExtension(url: string, installInfo: space.installInfo, axiosOption: any) {
+    registerUIExtension(url: string, installInfo: space.installInfo, applicationName: string, axiosOption: any) {
+        // 설치후 유저가 처음으로 볼 화면으로 유도하는 extension
+        const startedUiExtension = Object.assign({}, installInfo.uiExtension.startedUiExtension)
+        startedUiExtension.gettingStartedUrl = startedUiExtension.gettingStartedUrl.replace('{applicationName}', applicationName)
         return axios.patch(
             `${url}/api/http/applications/ui-extensions`,
             {
                 contextIdentifier: installInfo.uiExtension.contextIdentifier,
-                extensions: installInfo.uiExtension.extension,
+                extensions: [...installInfo.uiExtension.extension, startedUiExtension],
             },
             axiosOption,
         )

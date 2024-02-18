@@ -28,7 +28,11 @@ export class IndexService {
             return Promise.all([
                 // 아래의 API들은 상호 순서가 없고 병렬 처리가 가능하다
                 this.spaceClient.requestPermissions(dto.serverUrl, dto.clientId, axiosOption, installInfo),
-                this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, axiosOption),
+                this.spaceClient.getApplicationInfo(dto.serverUrl, dto.clientId, axiosOption).then(applicationInfo => {
+                    // 설치 완료후 홈페이지 화면으로 유도하기위해 applicationName을 알야아 한다
+                    const applicationName = applicationInfo.data.name + '-' + applicationInfo.data.id
+                    this.spaceClient.registerUIExtension(dto.serverUrl, installInfo, applicationName, axiosOption)
+                }),
                 ...this.addWebhooks(dto.serverUrl, dto.clientId, installInfo, webhooks, axiosOption),
             ])
         })

@@ -11,6 +11,7 @@ import ProvidesHookCallback = jest.ProvidesHookCallback
 export const testSpaceURL = 'https://test.jetbrains.space'
 export const testClientId = 'test_client_id'
 export const testClientSecret = 'test_client_secret'
+export const testApplicationId = 'test_application_id'
 export const testOrganizationAdmin = 'testAdmin'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
@@ -64,6 +65,10 @@ export function mockingAxios() {
                 use: 'sig',
             },
         ],
+    })
+    mockAxios.onGet(`${testSpaceURL}/api/http/applications/clientId:${testClientId}`).reply(200, {
+        name: 'Telescope',
+        id: testApplicationId,
     })
     // 웹훅 등록하는 부분을 mocking
     mockAxios.onPost(`${testSpaceURL}/api/http/applications/clientId:${testClientId}/webhooks`).reply(200, { id: testWebhookId })
