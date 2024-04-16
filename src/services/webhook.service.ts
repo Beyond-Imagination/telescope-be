@@ -18,6 +18,18 @@ export class WebhookService {
             issueId: issueDTO.payload.issue.id,
             type: AchievementType.CreateIssue,
         })
+
+        if (issueDTO.payload.status.new.resolved && issueDTO.payload.assignee?.new.id) {
+            // 할당된 유저가 없을수도 있음
+            // 생성하면서 동시에 resolve 될수도 있음
+            await AchievementModel.saveAchievement({
+                clientId: issueDTO.clientId,
+                user: issueDTO.payload.assignee.new.id,
+                projectId: issueDTO.payload.issue.projectId,
+                issueId: issueDTO.payload.issue.id,
+                type: AchievementType.ResolveIssue,
+            })
+        }
     }
 
     public async updateIssueStatus(issueDTO: IssueDTO) {
@@ -58,6 +70,34 @@ export class WebhookService {
                 await AchievementModel.deleteAchievement(issueDTO.clientId, oldAssignee.id, issueDTO.payload.issue.id, AchievementType.ResolveIssue)
             }
         }
+    }
+
+    // 이슈의 프로젝트를 옮기면서 한번에 assignee와 이슈 상태를 바꿀수 있다
+    public async updateIssueProject(issueDTO: IssueDTO) {
+        const achievements = await AchievementModel.getAchievementByIssueId(issueDTO.clientId, issueDTO.payload.issue.id)
+        const promises = []
+        achievements.forEach(achievement => {
+            if (achievement.type === AchievementType.CreateIssue) {
+                // 기존의 assignee가 이슈 생성이라면 생성한 원래의 유저에게 점수를 준다
+                promises.push(AchievementModel.updateOne({ _id: achievement._id }, { projectId: issueDTO.payload.issue.projectId }))
+            } else if (achievement.type === AchievementType.ResolveIssue && issueDTO.checkResolved()) {
+                // 기존에 ResolveIssue로 achievement가 있었어도 현재 이슈의 상태도 resolved 일때만 점수를 준다
+                // 이때는 assignee도 바뀔수가 있어서 웹훅으로 들어오는 데이터를 사용한다
+                promises.push(
+                    AchievementModel.updateOne(
+                        { _id: achievement._id },
+                        {
+                            user: issueDTO.payload.issue.assignee.id,
+                            projectId: issueDTO.payload.issue.projectId,
+                        },
+                    ),
+                )
+            } else {
+                // 나머지는 그냥 삭제
+                promises.push(AchievementModel.deleteAchievement(achievement.clientId, achievement.user, achievement.issueId, achievement.type))
+            }
+        })
+        await Promise.all(promises)
     }
 
     public async deleteIssue(issueDTO: IssueDTO) {

@@ -55,6 +55,7 @@ export namespace space {
             remove_code_review_discussion?: webhookInfo
             reviewer_accepted_changes?: webhookInfo
             reviewer_resume_review?: webhookInfo
+            update_issue_project?: webhookInfo
         }
         uiExtension: {
             contextIdentifier: string

@@ -52,8 +52,9 @@ export class Achievement extends Document {
 
     public static async saveAchievement(achievement): Promise<any> {
         return new AchievementModel({
-            ...achievement,
+            // achievedAt가 없으면 현재 시간으로 설정
             achievedAt: new Date(),
+            ...achievement,
         }).save()
     }
 
@@ -63,6 +64,13 @@ export class Achievement extends Document {
             user,
             issueId,
             type,
+        })
+    }
+
+    public static async getAchievementByIssueId(clientId: string, issueId: string): Promise<Array<Achievement>> {
+        return AchievementModel.find({
+            clientId,
+            issueId,
         })
     }
 

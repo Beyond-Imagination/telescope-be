@@ -40,6 +40,13 @@ export class WebhooksController {
         await this.service.updateIssueAssignee(payload)
     }
 
+    @Post('/issue/update/project')
+    @OnUndefined(204)
+    @UseBefore(issueWebhookValidation)
+    async updateIssueProject(@Body() payload: IssueDTO) {
+        await this.service.updateIssueProject(payload)
+    }
+
     @Post('/issue/delete')
     @OnUndefined(204)
     @UseBefore(issueWebhookValidation, deleteIssueWebhookValidation)
