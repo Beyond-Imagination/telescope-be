@@ -17,9 +17,12 @@
         "deploy:dev": "pm2 start ecosystem.config.js --only dev",
         "reload:prod": "yarn build && pm2 reload ecosystem.config.js --only prod",
         "reload:dev": "pm2 reload ecosystem.config.js --only dev",
-        "docker:run": "node dist/server.js"
+        "docker:run": "node dist/server.js",
+        "reviewer": "cross-env NODE_ENV=development node -r @swc-node/register src/scripts/reviewers.ts"
     },
     "dependencies": {
+        "@swc-node/register": "^1.9.0",
+        "@swc/helpers": "^0.5.10",
         "@typegoose/typegoose": "^9.12.1",
         "@types/newrelic": "^9.13.0",
         "axios": "^1.0.0",

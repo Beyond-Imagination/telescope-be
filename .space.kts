@@ -10,32 +10,57 @@ job("[BE] Merge Request") {
         }
     }
 
-    container(displayName = "build & test", image = "node:alpine") {
 
-        cache {
-            // package.json의 내용을 해시를 하고 그 값을 캐싱키로 사용
-            // 이를 통해 package.json이 동일하면 캐시를 사용하도록 유도하고 달라지면 캐시를 새로 만든다
-            // 참고: https://www.jetbrains.com/help/space/cache-files.html#upload-and-reuse-cached-files
-            storeKey = "npm-{{ hashFiles('package.json') }}"
+    parallel {
+        container(displayName = "build & test", image = "node:alpine") {
 
-            // Fallback 옵션인데 불필요 할것 같아서 주석처리
-            /*restoreKeys {
-                +"npm-master"
-            }*/
+            cache {
+                // package.json의 내용을 해시를 하고 그 값을 캐싱키로 사용
+                // 이를 통해 package.json이 동일하면 캐시를 사용하도록 유도하고 달라지면 캐시를 새로 만든다
+                // 참고: https://www.jetbrains.com/help/space/cache-files.html#upload-and-reuse-cached-files
+                storeKey = "npm-{{ hashFiles('package.json') }}"
 
-            // 캐시가 들어갈 디렉토리
-            localPath = "node_modules"
+                // Fallback 옵션인데 불필요 할것 같아서 주석처리
+                /*restoreKeys {
+                    +"npm-master"
+                }*/
+
+                // 캐시가 들어갈 디렉토리
+                localPath = "node_modules"
+            }
+
+            shellScript {
+                content = """
+                    set -e
+                    if [ -z "${'$'}(ls -A node_modules)" ]; then
+                        # 캐시 디렉토리가 비어있을때에만 yarn install 실행
+                        yarn install
+                    fi
+                    yarn build
+                """
+            }
         }
 
-        shellScript {
-            content = """
-                set -e
-                if [ -z "${'$'}(ls -A node_modules)" ]; then
-                    # 캐시 디렉토리가 비어있을때에만 yarn install 실행
-                    yarn install
-                fi
-                yarn build
-            """
+        container(displayName = "add reviewer", image = "node:alpine") {
+            env["REVIEW_ID"] = "{{ run:review.id }}"
+            env["PROJECT_ID"] = "{{ run:project.id }}"
+            env["SPACE_AUTOMATION_AUTHORIZATION"] = "{{ project:SPACE_AUTOMATION_AUTHORIZATION }}"
+
+            cache {
+                storeKey = "npm-{{ hashFiles('package.json') }}"
+                localPath = "node_modules"
+            }
+
+            shellScript {
+                content = """
+                    set -e
+                    if [ -z "${'$'}(ls -A node_modules)" ]; then
+                        # 캐시 디렉토리가 비어있을때에만 yarn install 실행
+                        yarn install
+                    fi
+                    yarn reviewer
+                """
+            }
         }
     }
 }

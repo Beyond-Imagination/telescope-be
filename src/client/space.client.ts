@@ -4,6 +4,7 @@ import { Cached } from '@utils/cache.util'
 import { space } from '@/types/space.type'
 import { logger } from '@utils/logger'
 import { Organization } from '@models/organization'
+import { Team } from '@dtos/team'
 
 export class SpaceClient {
     private static instance: SpaceClient
@@ -254,5 +255,42 @@ export class SpaceClient {
                 channel: `id:${channelId}`,
             },
         })
+    }
+
+    async addReviewParticipant(token: string, serverUrl: string, projectId: string, reviewId: string, userId: string): Promise<void> {
+        const url = `${serverUrl}/api/http/projects/id:${projectId}/code-reviews/id:${reviewId}/participants/id:${userId}`
+        const response = await axios.post(
+            url,
+            {
+                role: 'Reviewer',
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            },
+        )
+
+        if (response.status !== 200) {
+            throw new InvalidRequestException()
+        }
+    }
+
+    async getTeam(token: string, serverUrl: string): Promise<Team> {
+        const url = `${serverUrl}/api/http/team-directory/teams/name:Beyond_Imagination?$fields=id,name,memberships(member(id,username))`
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json',
+            },
+        })
+
+        if (response.status !== 200) {
+            throw new InvalidRequestException()
+        }
+
+        return response.data
     }
 }
