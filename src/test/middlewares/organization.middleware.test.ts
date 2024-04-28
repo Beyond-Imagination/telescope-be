@@ -15,11 +15,11 @@ jest.mock('@models/organization', () => {
 })
 
 describe('setOrganizationByServerUrl', () => {
-    it('should fail without serverUrl', () => {
+    it('should fail without serverUrl', async () => {
         const req = getMockReq({})
         const { res, next } = getMockRes({})
 
-        setOrganizationByServerUrl(req, res, next)
+        await setOrganizationByServerUrl(req, res, next)
 
         expect(next).nthCalledWith(1, new OrganizationNotFoundException())
     })
@@ -48,11 +48,11 @@ describe('setOrganizationByServerUrl', () => {
 })
 
 describe('setOrganizationByClientId', () => {
-    it('should fail without clientId', () => {
+    it('should fail without clientId', async () => {
         const req = getMockReq({})
         const { res, next } = getMockRes({})
 
-        setOrganizationByClientId(req, res, next)
+        await setOrganizationByClientId(req, res, next)
 
         expect(next).nthCalledWith(1, new OrganizationNotFoundException())
     })
