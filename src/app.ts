@@ -19,6 +19,7 @@ import { AdminModel } from '@models/admin'
 import { AdminDTO } from '@dtos/admin.dtos'
 import jwt from 'jsonwebtoken'
 import { checkTokenIsRevoked } from '@utils/cache.util'
+import { classNameRouter } from '@middlewares/space.middleware'
 
 class App {
     public app: express.Application
@@ -76,6 +77,7 @@ class App {
         this.app.use(express.json())
         this.app.use(express.urlencoded({ extended: true }))
         this.app.use(cookieParser())
+        this.app.use('/', classNameRouter)
     }
 
     private initializeRoutes(controllers: Function[]) {
