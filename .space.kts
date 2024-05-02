@@ -62,6 +62,17 @@ job("[BE] Merge Request") {
                 """
             }
         }
+        container(displayName = "send automation result", image = "gradle:6.1.1-jre11") {
+            env["REVIEW_ID"] = "{{ run:review.id }}"
+            kotlinScript { api ->
+                api.space().chats.messages.sendMessage(
+                    channel = ChannelIdentifier.Review(ReviewIdentifier.Id(System.getenv("REVIEW_ID"))),
+                    content = ChatMessage.Text(
+                        text = api.executionUrl()
+                    )
+                )
+            }
+        }
     }
 }
 
