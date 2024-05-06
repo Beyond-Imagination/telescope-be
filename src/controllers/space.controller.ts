@@ -5,6 +5,7 @@ import { spacePayloadValidation } from '@middlewares/validation.middleware'
 
 @Controller('/space')
 @UseBefore(spacePayloadLogging)
+@UseBefore(spacePayloadValidation)
 export class SpaceController {
     service = new IndexService()
 

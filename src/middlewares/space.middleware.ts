@@ -1,7 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { logger } from '@utils/logger'
-import { NotFoundError } from 'routing-controllers'
-import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { space } from '@/types/space.type'
 
 // @See Also:
@@ -23,13 +20,10 @@ const classNameMapper = new Map<String, OutBoundInfo>([
 
 export const classNameRouter = (req: Request, res: Response, next: NextFunction) => {
     const className = req.body.className
-    if (classNameMapper.has(className)) {
+    if (className && classNameMapper.has(className)) {
         const { url, method } = classNameMapper.get(className)
         req.url = url
         req.method = method
-        next()
-    } else {
-        logger.error('[Webhook Router] Not Found Supported Webhook Type', { className })
-        next(new WrongClassNameException())
     }
+    next()
 }
