@@ -6,13 +6,15 @@ import { InMemoryDB } from '@/test/inMemoryDB'
 import { getAxiosOption, getBearerToken } from '@utils/verify.util'
 import { clearCache } from '@utils/cache.util'
 import bcrypt from 'bcrypt'
+import { SpaceClient } from '@/client/space.client'
 import ProvidesHookCallback = jest.ProvidesHookCallback
 
 export const testSpaceURL = 'https://test.jetbrains.space'
 export const testClientId = 'test_client_id'
 export const testClientSecret = 'test_client_secret'
 export const testApplicationId = 'test_application_id'
-export const testOrganizationAdmin = 'testAdmin'
+export const testOrganizationAdminId = 'testAdminId'
+export const testProjectId = 'testProjectId'
 export const testIssueId = 'issueId'
 export const testWebhookId = 'testWebhookId'
 export const testSubscriptionId = 'testSubscriptionId'
@@ -28,12 +30,14 @@ export const testAdminEmail = 'testAdmin@email.com'
 export const testAdminPassword = 'testAdminPassword'
 export const testAdminHashedPassword = bcrypt.hashSync(testAdminPassword, 12)
 export const testAdminName = 'testAdminName'
+export const testUserName = 'testUserName'
+export const testProfilePicture = 'testProfilePicture'
 
 export const mockOrganization = {
     clientId: testClientId,
     clientSecret: testClientSecret,
     serverUrl: testSpaceURL,
-    admin: [testOrganizationAdmin],
+    admin: [testOrganizationAdminId],
     points: new Point(),
     webhooks: testWebhooks,
     version: VERSION,
@@ -82,12 +86,26 @@ export function mockingAxios() {
     mockAxios.onPatch(`${testSpaceURL}/api/http/applications/ui-extensions`).reply(200)
 
     // 사용자들의 프로필을 가져오는 부분을 mocking
-    mockAxios.onGet(`${testSpaceURL}/api/http/team-directory/profiles`).reply(200)
+    mockAxios.onGet(`${testSpaceURL}/api/http/team-directory/profiles`).reply(200, {
+        data: [
+            {
+                profilePicture: testProfilePicture,
+                id: testOrganizationAdminId,
+                name: { firstName: '', lastName: testAdminName },
+            },
+            {
+                profilePicture: testProfilePicture,
+                id: testUserId,
+                name: { firstName: '', lastName: testUserName },
+            },
+        ],
+        totalCount: 2,
+    })
 
     // 코드리뷰 정보를 가져오는 부분을 mocking
     mockAxios
         .onGet(new RegExp(`${testSpaceURL}/api/http/projects/key:.*`))
-        .reply(200, { createdBy: { id: testOrganizationAdmin }, branchPairs: [{ isMerged: true }] })
+        .reply(200, { createdBy: { id: testOrganizationAdminId }, branchPairs: [{ isMerged: true }] })
 
     // 사용자에게 메시지 보내는 부분을 mocking
     mockAxios.onPost(`${testSpaceURL}/api/http/chats/messages/send-message`).reply(200)
@@ -118,4 +136,12 @@ export function setTestDB(beforeEachFun: ProvidesHookCallback = null) {
 
 export async function getTestAxiosOption() {
     return getAxiosOption(await getBearerToken(testSpaceURL, testClientId, testClientSecret))
+}
+
+export function spySpaceClient(spaceClient: SpaceClient) {
+    Object.getOwnPropertyNames(Object.getPrototypeOf(spaceClient)).forEach(name => {
+        if (typeof spaceClient[name] == 'function') {
+            jest.spyOn(spaceClient, name as any)
+        }
+    })
 }

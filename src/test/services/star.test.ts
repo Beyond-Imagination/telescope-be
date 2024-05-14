@@ -76,7 +76,7 @@ describe('StarService 클래스', () => {
             const mockFunction = jest.fn()
             Achievement.deleteStar = mockFunction
             await expect(sut.deletePoint(testSpaceURL, testClientId, testMessageId, null, getTestAxiosOption())).resolves.not.toThrow()
-            await expect(mockFunction).toHaveBeenCalledTimes(0)
+            expect(mockFunction).toHaveBeenCalledTimes(0)
             Achievement.deleteStar = original // 다시 원복을 해놔야 다른 테스트에 영향을 끼치지 않는다
         })
 

@@ -12,7 +12,7 @@ import {
     testClientId,
     testClientSecret,
     testDiscussionId,
-    testOrganizationAdmin,
+    testOrganizationAdminId,
     testReviewId,
     testSpaceURL,
     testUserId,
@@ -94,7 +94,7 @@ describe('validation.middleware 모듈', () => {
             })
 
             it('Organization이 존재하면 webhookValidation가 성공한다', async () => {
-                await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, testWebhooks, null)
+                await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdminId, testWebhooks, null)
                 await expect(
                     testWebHookValidation(
                         'khXVxzytjnPUHklP1YvJlT4WtTAzivvVg6kjIt35QRVsvPx8ViJF3dofP4P+r+ajoh8OkfNDMQb7Rhs/xub/V7rH0E9tv6Bcqww6ajO20vvXAtWvGtrc1WYiRZf1BCS/CC8glijJbxnKkp+Dv3XqyNa0BtV5vsTSyiyhdLOu2rxeg5ayQtAOYYp6yJHVQEXyixriNtGODl76sm4+zG0ghvn+nWp7l2ZyWkVIxVj+7PnL5j+lFSmSppPELYe80w1vTJ3y0l/Wxqo3o2BXH1PVwm49lHwtAU/zLtrydB2jY88CqyBtY5UEG3CzOJB4kBB9OY0Pk/br1N2EBeHOKvG1lA==',
@@ -165,7 +165,7 @@ describe('validation.middleware 모듈', () => {
                     testClientId,
                     testClientSecret,
                     testSpaceURL,
-                    testOrganizationAdmin,
+                    testOrganizationAdminId,
                     testWebhooks,
                     null,
                 )

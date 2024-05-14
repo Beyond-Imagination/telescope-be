@@ -10,7 +10,7 @@ import {
     testDiscussionId,
     testIssueId,
     testMessageId,
-    testOrganizationAdmin,
+    testOrganizationAdminId,
     testReviewId,
     testSpaceURL,
     testUserId,
@@ -20,7 +20,7 @@ import {
 import { WrongClassNameException } from '@exceptions/WrongClassNameException'
 import { OrganizationModel } from '@models/organization'
 import { CodeReviewDiscussionDTO, ReactionDTO, ReviewerReviewDTO } from '@dtos/webhooks.dtos'
-import { Achievement } from '@models/achievement'
+import { Achievement, AchievementModel, AchievementType } from '@models/achievement'
 
 describe('WebhookService 클래스', () => {
     const sut = new WebhookService()
@@ -35,7 +35,7 @@ describe('WebhookService 클래스', () => {
     mockingAxios()
 
     setTestDB(async () => {
-        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdmin, testWebhooks, null)
+        await OrganizationModel.saveOrganization(testClientId, testClientSecret, testSpaceURL, testOrganizationAdminId, testWebhooks, null)
         codeReviewDto = {
             clientId: testClientId,
             payload: {
@@ -172,7 +172,7 @@ describe('WebhookService 클래스', () => {
                 isMergeRequest: true,
                 reviewerState: {
                     old: null,
-                    new: 'ACCEPTED',
+                    new: 'Accepted',
                 },
             },
         }
@@ -271,7 +271,7 @@ describe('WebhookService 클래스', () => {
             )
         })
 
-        it('유효한 요청이 들어오면 점수가 추가된다 않는다', async () => {
+        it('유효한 요청이 들어오면 점수가 추가된다', async () => {
             await sut.handleAddMessageReactionWebhook(reactionDto, mockOrganization, getTestAxiosOption())
             const now = new Date()
             await expect(Achievement.getStarCountByUserId(testClientId, startOfDay, now, testUserId)).resolves.toBe(1)
@@ -307,24 +307,70 @@ describe('WebhookService 클래스', () => {
     describe('createCodeReviewDiscussion 메소드에서', () => {
         it('정상적인 요청이면 성공한다', async () => {
             await expect(sut.createCodeReviewDiscussion(codeReviewDiscussionDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(1)
         })
     })
 
     describe('removeCodeReviewDiscussion 메소드에서', () => {
         it('정상적인 요청이면 성공한다', async () => {
+            await AchievementModel.saveAchievement({
+                clientId: testClientId,
+                user: testUserId,
+                discussionId: testDiscussionId,
+                reviewId: testReviewId,
+                type: AchievementType.CodeReviewDiscussion,
+            })
             await expect(sut.removeCodeReviewDiscussion(codeReviewDiscussionDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(0)
         })
     })
 
     describe('handleReviewerAcceptedChangesWebhook 메소드에서', () => {
         it('정상적인 요청이면 성공한다', async () => {
             await expect(sut.handleReviewerAcceptedChangesWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(1)
+        })
+
+        it('새로운 상태가 승인이 아니면 무시한다', async () => {
+            reviewerReviewDto.payload.reviewerState.new = 'Pending'
+            await expect(sut.handleReviewerAcceptedChangesWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(0)
+        })
+
+        it('이미 받은 리뷰어가 다시 받은 리뷰를 수락하면 무시한다', async () => {
+            reviewerReviewDto.payload.reviewerState.old = 'Accepted'
+            await expect(sut.handleReviewerAcceptedChangesWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(0)
         })
     })
 
     describe('handleReviewerResumeReviewWebhook 메소드에서', () => {
         it('정상적인 요청이면 성공한다', async () => {
+            await Achievement.saveAchievement({
+                clientId: testClientId,
+                user: testUserId,
+                reviewId: testReviewId,
+                type: AchievementType.AcceptCodeReview,
+            })
+            reviewerReviewDto.payload.reviewerState.old = 'Accepted'
+            reviewerReviewDto.payload.reviewerState.new = 'Pending'
             await expect(sut.handleReviewerResumeReviewWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            await expect(AchievementModel.countDocuments({}).exec()).resolves.toBe(0)
+        })
+
+        it('이전의 상태가 Accepted가 아니면 무시한다', async () => {
+            reviewerReviewDto.payload.reviewerState.old = 'Pending'
+            jest.spyOn(AchievementModel, 'deleteReviewerAcceptedChangesAchievement')
+            await expect(sut.handleReviewerResumeReviewWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            expect(AchievementModel.deleteReviewerAcceptedChangesAchievement).not.toBeCalled()
+        })
+
+        it('이미 받은 리뷰어가 다시 받은 리뷰를 수락하면 무시한다', async () => {
+            reviewerReviewDto.payload.reviewerState.old = 'Accepted'
+            reviewerReviewDto.payload.reviewerState.old = 'Accepted'
+            jest.spyOn(AchievementModel, 'deleteReviewerAcceptedChangesAchievement')
+            await expect(sut.handleReviewerResumeReviewWebhook(reviewerReviewDto)).resolves.not.toThrowError()
+            expect(AchievementModel.deleteReviewerAcceptedChangesAchievement).not.toBeCalled()
         })
     })
 })
