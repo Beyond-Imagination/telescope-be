@@ -23,6 +23,7 @@ export const testMessageId = 'testMessageId'
 export const testChannelId = 'testChannelId'
 export const testDiscussionId = 'testDiscussionId'
 export const testReviewId = 'testReviewId'
+export const testRepositoryId = 'testRepositoryId'
 
 export const testWebhooks = new Webhooks()
 

@@ -77,33 +77,6 @@ describe('OrganizationService 클래스', () => {
         adminScoreDtos = new ScoreDtos(organization.points, achievementCounts)
     })
 
-    describe('getRankingsInOrganization 메소드에서', () => {
-        it('조직의 랭킹을 반환한다.', async () => {
-            await AchievementModel.saveAchievement({
-                clientId: testClientId,
-                user: testUserId,
-                issueId: testIssueId,
-                type: AchievementType.CreateIssue,
-            })
-            const from = new Date()
-            from.setTime(from.getTime() - 1000)
-            const to = new Date()
-
-            const result = await sut.getRankingsInOrganization(organization, from, to, 10)
-
-            expect(result.size).toBe(2)
-
-            expect(result.rankings[0]).toStrictEqual(
-                new RankingsDtos(testOrganizationAdminId, ` ${testAdminName}`, adminScoreDtos, testProfilePicture),
-            )
-            const achievementCounts = new AchievementCount()
-            achievementCounts.createIssue = 1
-            expect(result.rankings[1]).toStrictEqual(
-                new RankingsDtos(testUserId, ` ${testUserName}`, new ScoreDtos(organization.points, achievementCounts), testProfilePicture),
-            )
-        })
-    })
-
     describe('getStarryPeopleInOrganization 메소드에서', () => {
         it('조직의 별을 가장 많이 받은 사람을 반환한다.', async () => {
             await AchievementModel.saveAchievement({
@@ -130,6 +103,33 @@ describe('OrganizationService 클래스', () => {
                     1,
                     testProfilePicture,
                 ),
+            )
+        })
+    })
+
+    describe('getRankingsInOrganization 메소드에서', () => {
+        it('조직의 랭킹을 반환한다.', async () => {
+            await AchievementModel.saveAchievement({
+                clientId: testClientId,
+                user: testUserId,
+                issueId: testIssueId,
+                type: AchievementType.CreateIssue,
+            })
+            const from = new Date()
+            from.setTime(from.getTime() - 1000)
+            const to = new Date()
+
+            const result = await sut.getRankingsInOrganization(organization, from, to, 10)
+
+            expect(result.size).toBe(2)
+
+            expect(result.rankings[0]).toStrictEqual(
+                new RankingsDtos(testOrganizationAdminId, ` ${testAdminName}`, adminScoreDtos, testProfilePicture),
+            )
+            const achievementCounts = new AchievementCount()
+            achievementCounts.createIssue = 1
+            expect(result.rankings[1]).toStrictEqual(
+                new RankingsDtos(testUserId, ` ${testUserName}`, new ScoreDtos(organization.points, achievementCounts), testProfilePicture),
             )
         })
     })
