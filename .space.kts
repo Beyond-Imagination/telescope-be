@@ -32,11 +32,12 @@ job("[BE] Merge Request") {
             shellScript {
                 content = """
                     set -e
+                    npm install -g pnpm
                     if [ -z "${'$'}(ls -A node_modules)" ]; then
-                        # 캐시 디렉토리가 비어있을때에만 yarn install 실행
-                        yarn install
+                        # 캐시 디렉토리가 비어있을때에만 pnpm install 실행
+                        pnpm install
                     fi
-                    yarn build
+                    pnpm build
                 """
             }
         }
@@ -54,11 +55,12 @@ job("[BE] Merge Request") {
             shellScript {
                 content = """
                     set -e
+                    npm install -g pnpm
                     if [ -z "${'$'}(ls -A node_modules)" ]; then
-                        # 캐시 디렉토리가 비어있을때에만 yarn install 실행
-                        yarn install
+                        # 캐시 디렉토리가 비어있을때에만 pnpm install 실행
+                        pnpm install
                     fi
-                    yarn reviewer
+                    pnpm reviewer
                 """
             }
         }

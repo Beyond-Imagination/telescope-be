@@ -1,3 +1,5 @@
 {
-    "*.ts": ["yarn lint"]
+    "*.ts": [
+        "pnpm lint"
+    ]
 }

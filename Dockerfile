@@ -16,11 +16,11 @@ FROM common-build-stage as development-build-stage
 
 ENV NODE_ENV development
 
-CMD ["yarn", "docker:run"]
+CMD ["pnpm install", "docker:run"]
 
 # Production build stage
 FROM common-build-stage as production-build-stage
 
 ENV NODE_ENV production
 
-CMD ["yarn", "docker:run"]
+CMD ["pnpm install", "docker:run"]
