@@ -9,7 +9,7 @@ import {
     testUserId,
 } from '@/test/test.util'
 import { AchievementModel, AchievementType } from '@models/achievement'
-import { getDaysBefore, getMonthsBefore } from '@utils/date'
+import { getDaysBefore, getStartOfMonthsBefore } from '@utils/date'
 import moment from 'moment-timezone'
 
 describe('Achievement 클래스', () => {
@@ -292,9 +292,8 @@ describe('Achievement 클래스', () => {
 
     describe('getMostStarPeopleByClientId 메소드에서', () => {
         it('각 월의 최다 star를 받은 사람을 반환한다', async () => {
-            const fromDate = moment(getMonthsBefore(1)).startOf('month').toDate()
-            const toDate = moment(getMonthsBefore(0)).endOf('month').toDate()
-
+            const fromDate = moment(getStartOfMonthsBefore(1)).startOf('month').toDate()
+            const toDate = moment(getStartOfMonthsBefore(0)).endOf('month').toDate()
             // 지난달에 어드민이 2건 받았고 testUserId가 0건 받았다
             // 이번달에 testUserId가 2건 받았고 어드민이 1건 받았다
             await new AchievementModel({
@@ -303,7 +302,7 @@ describe('Achievement 클래스', () => {
                 starGiver: testUserId,
                 messageId: testMessageId,
                 type: AchievementType.ReceiveStar,
-                achievedAt: getMonthsBefore(1),
+                achievedAt: getStartOfMonthsBefore(1),
             }).save()
             await new AchievementModel({
                 clientId: testClientId,
@@ -311,7 +310,7 @@ describe('Achievement 클래스', () => {
                 starGiver: testUserId,
                 messageId: testMessageId,
                 type: AchievementType.ReceiveStar,
-                achievedAt: getMonthsBefore(1),
+                achievedAt: getStartOfMonthsBefore(1),
             }).save()
             await AchievementModel.insertStar(testClientId, testUserId, testOrganizationAdminId, testMessageId + '1')
             await AchievementModel.insertStar(testClientId, testUserId, testOrganizationAdminId, testMessageId + '2')
