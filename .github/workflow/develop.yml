@@ -14,5 +14,5 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.13.15
         with:
           heroku-api-key: ${{secrets.HEROKU_API_KEY}}
-          heroku-app-name: ${{secrets.HEROKU_ORBIT_BE}}
+          heroku-app-name: ${{secrets.HEROKU_APP_NAME}}
           branch: main # git push heroku develop:main
