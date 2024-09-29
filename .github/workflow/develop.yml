@@ -1,0 +1,18 @@
+# check if `HEROKU_API_KEY` existed
+name: '[BE] Deploy Develop'
+on:
+  push:
+    branches: [ develop ]
+jobs:
+  build:
+    runs-on: alpine:3.18
+    steps:
+      # cloning and checkout ${target} branch
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: akhileshns/heroku-deploy@v3.13.15
+        with:
+          heroku-api-key: ${{secrets.HEROKU_API_KEY}}
+          heroku-app-name: ${{secrets.HEROKU_APP_NAME}}
+          branch: main # git push heroku develop:main
