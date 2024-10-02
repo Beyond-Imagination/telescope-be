@@ -5,7 +5,7 @@ on:
     branches: [ develop ]
 jobs:
   build:
-    runs-on: alpine:3.18
+    runs-on: ubuntu-latest
     steps:
       # cloning and checkout ${target} branch
       - uses: actions/checkout@v4
