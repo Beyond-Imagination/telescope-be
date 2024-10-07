@@ -33,11 +33,11 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1
       class-validator:
-        specifier: ^0.13.2
-        version: 0.13.2
+        specifier: 0.14.1
+        version: 0.14.1
       class-validator-jsonschema:
         specifier: ^3.1.1
-        version: 3.1.1(class-transformer@0.5.1)(class-validator@0.13.2)
+        version: 3.1.1(class-transformer@0.5.1)(class-validator@0.14.1)
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -103,10 +103,10 @@ importers:
         version: 0.1.14
       routing-controllers:
         specifier: ^0.9.0
-        version: 0.9.0(class-transformer@0.5.1)(class-validator@0.13.2)
+        version: 0.9.0(class-transformer@0.5.1)(class-validator@0.14.1)
       routing-controllers-openapi:
         specifier: ^3.1.0
-        version: 3.1.0(routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.13.2))
+        version: 3.1.0(routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.14.1))
       swagger-ui-express:
         specifier: ^4.5.0
         version: 4.6.3(express@4.19.2)
@@ -1269,6 +1269,9 @@ packages:
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
+  '@types/validator@13.12.2':
+    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
+
   '@types/webidl-conversions@7.0.3':
     resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
 
@@ -1732,8 +1735,8 @@ packages:
       class-transformer: ^0.4.0 || ^0.5.0
       class-validator: ^0.13.1
 
-  class-validator@0.13.2:
-    resolution: {integrity: sha512-yBUcQy07FPlGzUjoLuUfIOXzgynnQPPruyK1Ge2B74k9ROwnle1E+NxLWnUv5OLU8hA/qL5leAE9XnXq3byaBw==}
+  class-validator@0.14.1:
+    resolution: {integrity: sha512-2VEG9JICxIqTpoK1eMzZqaV+u/EiwEJkMGzTrZf6sU/fwsnOITVgYJ8yojSy6CaXtO9V0Cc6ZQZ8h8m4UBuLwQ==}
 
   clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
@@ -6382,6 +6385,8 @@ snapshots:
 
   '@types/uuid@9.0.8': {}
 
+  '@types/validator@13.12.2': {}
+
   '@types/webidl-conversions@7.0.3': {}
 
   '@types/whatwg-url@8.2.2':
@@ -6929,18 +6934,19 @@ snapshots:
 
   class-transformer@0.5.1: {}
 
-  class-validator-jsonschema@3.1.1(class-transformer@0.5.1)(class-validator@0.13.2):
+  class-validator-jsonschema@3.1.1(class-transformer@0.5.1)(class-validator@0.14.1):
     dependencies:
       class-transformer: 0.5.1
-      class-validator: 0.13.2
+      class-validator: 0.14.1
       lodash.groupby: 4.6.0
       lodash.merge: 4.6.2
       openapi3-ts: 2.0.2
       reflect-metadata: 0.1.14
       tslib: 2.6.2
 
-  class-validator@0.13.2:
+  class-validator@0.14.1:
     dependencies:
+      '@types/validator': 13.12.2
       libphonenumber-js: 1.11.2
       validator: 13.12.0
 
@@ -9549,7 +9555,7 @@ snapshots:
 
   ringbufferjs@2.0.0: {}
 
-  routing-controllers-openapi@3.1.0(routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.13.2)):
+  routing-controllers-openapi@3.1.0(routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.14.1)):
     dependencies:
       lodash.capitalize: 4.2.1
       lodash.merge: 4.6.2
@@ -9557,13 +9563,13 @@ snapshots:
       openapi3-ts: 2.0.2
       path-to-regexp: 2.4.0
       reflect-metadata: 0.1.14
-      routing-controllers: 0.9.0(class-transformer@0.5.1)(class-validator@0.13.2)
+      routing-controllers: 0.9.0(class-transformer@0.5.1)(class-validator@0.14.1)
       tslib: 2.6.2
 
-  routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.13.2):
+  routing-controllers@0.9.0(class-transformer@0.5.1)(class-validator@0.14.1):
     dependencies:
       class-transformer: 0.5.1
-      class-validator: 0.13.2
+      class-validator: 0.14.1
       cookie: 0.4.2
       express-session: 1.18.0
       glob: 7.2.3
