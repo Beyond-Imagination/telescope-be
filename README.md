@@ -3,8 +3,8 @@
 telescope backend 개발을 위한 소스코드 입니다.
 
 ## marketplace link
-telescope 는 space marketplace 에서 설치해서 사용하실수 있습니다.
-https://plugins.jetbrains.com/plugin/20332-telescope
+telescope 는 [space marketplace](https://plugins.jetbrains.com/plugin/20332-telescope) 에서 설치해서 사용하실수 있습니다.
+
 
 ## 필요 사항
 
